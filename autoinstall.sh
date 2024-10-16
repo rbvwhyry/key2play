@@ -1,10 +1,12 @@
 #!/bin/bash
 
+
 # Function to display error message and exit
 display_error() {
   echo "Error: $1" >&2
   exit 1
 }
+
 
 # Function to execute a command and handle errors, with optional internet connectivity check
 execute_command() {
@@ -47,17 +49,19 @@ execute_command() {
 }
 
 
-
 # Function to update the OS
 update_os() {
   execute_command "sudo apt-get update" "check_internet"
   execute_command "sudo apt-get upgrade -y"
 }
 
+
 # Function to create and configure the autoconnect script
 configure_autoconnect_script() {
   # Create connectall.py file
   cat <<EOF | sudo tee /usr/local/bin/connectall.py > /dev/null
+
+  
 #!/usr/bin/python3
 import subprocess
 
@@ -106,22 +110,26 @@ EOF
   execute_command "sudo systemctl start midi.service"
 }
 
+
 # Function to enable SPI interface
 enable_spi_interface() {
   # Edit config.txt file to enable SPI interface
   execute_command "sudo sed -i '$ a\dtparam=spi=on' /boot/config.txt"
 }
 
+
 # Function to install required packages
 install_packages() {
   execute_command "sudo apt-get install -y ruby git python3-pip autotools-dev libtool autoconf libopenblas-dev libasound2-dev libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev python3 libatlas-base-dev libopenjp2-7 libtiff6 libjack0 libjack-dev libasound2-dev fonts-freefont-ttf gcc make build-essential git scons swig libavahi-client3 abcmidi dnsmasq hostapd" "check_internet"
 }
+
 
 # Function to disable audio output
 disable_audio_output() {
   echo 'blacklist snd_bcm2835' | sudo tee -a /etc/modprobe.d/snd-blacklist.conf > /dev/null
   sudo sed -i 's/dtparam=audio=on/#dtparam=audio=on/' /boot/config.txt
 }
+
 
 # Function to install RTP-midi server
 install_rtpmidi_server() {
@@ -131,6 +139,7 @@ install_rtpmidi_server() {
   execute_command "sudo apt -f install"
   execute_command "rm rtpmidid_21.11_armhf.deb"
 }
+
 
 # Function to create Hot-Spot
 create_hotspot() {
@@ -143,7 +152,7 @@ create_hotspot() {
   hotspot_config_content=$(cat <<EOT
 interface=wlan0
 driver=nl80211
-ssid=PianoLEDVisualizer
+ssid=key2play
 hw_mode=g
 channel=7
 wmm_enabled=0
@@ -151,7 +160,7 @@ macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
 wpa=2
-wpa_passphrase=visualizer
+wpa_passphrase=playkey
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
@@ -179,18 +188,18 @@ wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
   echo "Network interfaces configuration added to $interfaces_file."
 }
 
-# Function to install Piano-LED-Visualizer
-install_piano_led_visualizer() {
+# Function to install key2play
+install_key2play() {
   execute_command "cd /home/"
-  execute_command "sudo git clone https://github.com/onlaj/Piano-LED-Visualizer" "check_internet"
-  execute_command "sudo chown -R $USER:$USER /home/Piano-LED-Visualizer"
-  execute_command "sudo chmod -R u+rwx /home/Piano-LED-Visualizer"
-  execute_command "cd Piano-LED-Visualizer"
+  execute_command "sudo git clone https://github.com/rbvwhyry/key2play" "check_internet"
+  execute_command "sudo chown -R $USER:$USER /home/key2play"
+  execute_command "sudo chmod -R u+rwx /home/key2play"
+  execute_command "cd key2play"
   execute_command "sudo pip3 install -r requirements.txt --break-system-packages" "check_internet"
   execute_command "sudo raspi-config nonint do_boot_behaviour B2"
   cat <<EOF | sudo tee /lib/systemd/system/visualizer.service > /dev/null
 [Unit]
-Description=Piano LED Visualizer
+Description=key2play
 After=network-online.target
 Wants=network-online.target
 
@@ -198,7 +207,7 @@ Wants=network-online.target
 WantedBy=multi-user.target
 
 [Service]
-ExecStart=sudo python3 /home/Piano-LED-Visualizer/visualizer.py
+ExecStart=sudo python3 /home/key2play/visualizer.py
 Restart=always
 Type=simple
 User=plv
@@ -208,10 +217,10 @@ EOF
   execute_command "sudo systemctl enable visualizer.service"
   execute_command "sudo systemctl start visualizer.service"
 
-  execute_command "sudo chmod a+rwxX -R /home/Piano-LED-Visualizer/"
+  execute_command "sudo chmod a+rwxX -R /home/key2play/"
 
-  execute_command "sudo chmod +x /home/Piano-LED-Visualizer/disable_ap.sh"
-  execute_command "sudo chmod +x /home/Piano-LED-Visualizer/enable_ap.sh"
+  execute_command "sudo chmod +x /home/key2play/disable_ap.sh"
+  execute_command "sudo chmod +x /home/key2play/enable_ap.sh"
 }
 
 finish_installation() {
@@ -219,32 +228,15 @@ finish_installation() {
   echo "------------------"
   echo "Installation complete. Raspberry Pi will automatically restart in 60 seconds."
   echo "If the Raspberry Pi does not restart on its own, please wait for 2 minutes and then manually reboot."
-  echo "After the reboot, please wait for up to 10 minutes. The Visualizer should start, and the Hotspot 'PianoLEDVisualizer' will become available."
+  echo "After the reboot, please wait for up to 10 minutes. The Visualizer should start, and the Hotspot 'key2play' will become available."
 
   execute_command "sudo shutdown -r +1"
-  execute_command "sudo /home/Piano-LED-Visualizer/enable_ap.sh"
+  execute_command "sudo /home/key2play/enable_ap.sh"
   sleep 60
   # Reboot Raspberry Pi
   execute_command "sudo reboot"
 }
 
-echo "
-#    _____  _                        _       ______  _____
-#   |  __ \\(_)                      | |     |  ____||  __ \\
-#   | |__) |_   __ _  _ __    ___   | |     | |__   | |  | |
-#   |  ___/| | / _\` || '_ \\  / _ \\  | |     |  __|  | |  | |
-#   | |    | || (_| || | | || (_) | | |____ | |____ | |__| |
-#   |_|    |_| \\__,_||_| |_| \\___/  |______||______||_____/
-#   __      __ _                     _  _
-#   \\ \\    / /(_)                   | |(_)
-#    \\ \\  / /  _  ___  _   _   __ _ | | _  ____ ___  _ __
-#     \\ \\/ /  | |/ __|| | | | / _\` || || ||_  // _ \\| '__|
-#      \\  /   | |\\__ \\| |_| || (_| || || | / /|  __/| |
-#       \\/    |_||___/ \\__,_| \\__,_||_||_|/___|\\___||_|
-#
-# Autoinstall script
-# - by Onlaj
-"
 
 # Main script execution
 update_os
@@ -253,7 +245,7 @@ enable_spi_interface
 install_packages
 disable_audio_output
 install_rtpmidi_server
-install_piano_led_visualizer
+install_key2play
 configure_network_interfaces
 create_hotspot
 finish_installation
