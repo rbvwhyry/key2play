@@ -1,10 +1,10 @@
 Install [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/) on your SD card.
 
-If you are not able to connect your monitor, mouse and keyboard to RPi you can connect to it using SSH over [Wi-Fi](https://github.com/onlaj/Piano-LED-Visualizer/blob/master/Docs/wifi_setup.md)
+If you are not able to connect your monitor, mouse and keyboard to RPi you can connect to it using SSH over [Wi-Fi](https://github.com/rbvwhyry/key2play/blob/main/Docs/wifi_setup.md)
 
 Run installation script:
 
-`sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/onlaj/Piano-LED-Visualizer/master/autoinstall.sh)"`
+`sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/rbvwhyry/key2play/main/autoinstall.sh)"`
 
 **or follow those steps:**
  
@@ -148,7 +148,7 @@ dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h' | sudo tee --append /etc/
 
 `echo 'interface=wlan0
 driver=nl80211
-ssid=PianoLEDVisualizer
+ssid=key2play
 hw_mode=g
 channel=7
 wmm_enabled=0
@@ -156,7 +156,7 @@ macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
 wpa=2
-wpa_passphrase=visualizer
+wpa_passphrase=playkey
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP' | sudo tee --append /etc/hostapd/hostapd.conf`
@@ -171,16 +171,16 @@ wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf' | sudo tee --append /etc/netwo
 `sudo systemctl start hostapd && sudo systemctl start dnsmasq`
 
 
-### 8. **Installing Piano-LED-Visualizer** ###
+### 8. **Installing key2play** ###
 - Navigate to /home folder:
 
 ` cd /home/`
 
 - GIT clone repository
 
-`sudo git clone https://github.com/onlaj/Piano-LED-Visualizer`
+`sudo git clone https://github.com/rbvwhyry/key2play`
 
-`cd Piano-LED-Visualizer`
+`cd key2play`
 - Install required libraries
 
 `sudo pip3 install -r requirements.txt`
@@ -197,7 +197,7 @@ Paste and save:
 
 ```bash
 [Unit]
-Description=Piano LED Visualizer
+Description=key2play
 After=network-online.target
 Wants=network-online.target
 
@@ -205,7 +205,7 @@ Wants=network-online.target
 WantedBy=multi-user.target
 
 [Service]
-ExecStart=sudo python3 /home/Piano-LED-Visualizer/visualizer.py
+ExecStart=sudo python3 /home/key2play/visualizer.py
 Restart=always
 Type=simple
 User=pi
@@ -213,11 +213,11 @@ Group=pi
 ```
 
 *If you are using WaveShare 1.3inch 240x240 LED Hat instead of 1.44inch 128x128, edit accordingly:*
-`ExecStart=sudo python3 /home/Piano-LED-Visualizer/visualizer.py --display 1in3`
+`ExecStart=sudo python3 /home/key2play/visualizer.py --display 1in3`
 
 *If you want to use your RPi upside down add `--rotatescreen true` :*
 
-`ExecStart=sudo python3 /home/Piano-LED-Visualizer/visualizer.py --rotatescreen true`
+`ExecStart=sudo python3 /home/key2play/visualizer.py --rotatescreen true`
 
 - Reload daemon and enable service:
 
@@ -230,6 +230,6 @@ Group=pi
 
 - Change permissions:
 
-  `sudo chmod a+rwxX -R /home/Piano-LED-Visualizer/`
+  `sudo chmod a+rwxX -R /home/key2play/`
 
 Now you can type `sudo reboot` to test if everything works. After 1-3 minutes you should see Visualizer menu on RPi screen.
