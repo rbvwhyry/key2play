@@ -160,7 +160,7 @@ macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
 wpa=2
-wpa_passphrase=playkey
+wpa_passphrase=key2play
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
@@ -225,14 +225,14 @@ EOF
 
 finish_installation() {
   echo "------------------"
-  echo "------------------"
-  echo "Installation complete. Raspberry Pi will automatically restart in 60 seconds."
-  echo "If the Raspberry Pi does not restart on its own, please wait for 2 minutes and then manually reboot."
-  echo "After the reboot, please wait for up to 10 minutes. The Visualizer should start, and the Hotspot 'key2play' will become available."
+  echo ""
+  echo "Installation complete. Rasp Pi will auto restart in 30 seconds."
+  echo "If Rasp Pi does not restart on its own, wait 2 minutes, then manually reboot."
+  echo "After reboot, wait for up to 10 minutes. The Visualizer should start, and the Hotspot 'key2play' will become available."
 
   execute_command "sudo shutdown -r +1"
   execute_command "sudo /home/key2play/enable_ap.sh"
-  sleep 60
+  sleep 30
   # Reboot Raspberry Pi
   execute_command "sudo reboot"
 }
