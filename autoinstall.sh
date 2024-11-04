@@ -121,19 +121,16 @@ EOF
   execute_command "sudo systemctl start midi.service"
 }
 
-
 # Function to enable SPI interface
 enable_spi_interface() {
   # Edit config.txt file to enable SPI interface
   execute_command "sudo sed -i '$ a\dtparam=spi=on' /boot/config.txt"
 }
 
-
 # Function to install required packages
 install_packages() {
   execute_command "sudo apt-get install -y ruby git python3-pip autotools-dev libtool autoconf libopenblas-dev libasound2-dev libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev python3 libatlas-base-dev libopenjp2-7 libtiff6 libjack0 libjack-dev libasound2-dev fonts-freefont-ttf gcc make build-essential git scons swig libavahi-client3 abcmidi dnsmasq hostapd dhcpcd raspi-config" "check_internet"
 }
-
 
 # Function to disable audio output
 disable_audio_output() {
@@ -141,16 +138,14 @@ disable_audio_output() {
   sudo sed -i 's/dtparam=audio=on/#dtparam=audio=on/' /boot/config.txt
 }
 
-
 # Function to install RTP-midi server
 install_rtpmidi_server() {
   execute_command "cd /home/"
   execute_command "sudo wget https://github.com/davidmoreno/rtpmidid/releases/download/v23.10/rtpmidid_23.10_armhf.deb" "check_internet"
   execute_command "sudo dpkg -i rtpmidid_23.10_armhf.deb"
-  execute_command "sudo apt -f install"
+  execute_command "sudo apt -f --fix-broken install"
   execute_command "rm rtpmidid_23.10_armhf.deb"
 }
-
 
 # Function to create Hot-Spot
 create_hotspot() {
