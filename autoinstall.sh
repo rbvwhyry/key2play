@@ -51,7 +51,7 @@ execute_command() {
 
 # Function to add debian bullseye sources
 add_sources() {
-  cat <<EOF | sudo tee /etc/apt/source.list.d/debian-bullseye.list
+  cat <<EOF | sudo tee "/etc/apt/sources.list.d/debian-bullseye.list"
   deb http://deb.debian.org/debian bullseye main contrib non-free
   deb http://deb.debian.org/debian bullseye-updates main contrib non-free
   deb http://deb.debian.org/debian bullseye-backports main contrib non-free
