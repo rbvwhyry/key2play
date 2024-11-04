@@ -197,6 +197,7 @@ install_key2play() {
   execute_command "cd key2play"
   execute_command "sudo pip3 install -r requirements.txt --break-system-packages" "check_internet"
   execute_command "sudo raspi-config nonint do_boot_behaviour B2"
+  execute_command "sudo adduser plv"
   cat <<EOF | sudo tee /lib/systemd/system/visualizer.service > /dev/null
 [Unit]
 Description=key2play
