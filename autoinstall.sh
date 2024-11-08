@@ -129,7 +129,7 @@ enable_spi_interface() {
 
 # Function to install required packages
 install_packages() {
-  execute_command "sudo apt-get install -y ruby git python3-pip autotools-dev libtool autoconf libopenblas-dev libasound2-dev libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev python3:armhf libatlas-base-dev libopenjp2-7 libtiff6 libjack0 libjack-dev libasound2-dev fonts-freefont-ttf gcc make build-essential git scons swig libavahi-client3 abcmidi dnsmasq hostapd dhcpcd raspi-config" "check_internet"
+  execute_command "sudo apt-get install --fix-broken -y virtualenv ruby git python3-pip autotools-dev libtool autoconf libopenblas-dev libasound2-dev libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev python3:arm64 libatlas-base-dev libopenjp2-7 libtiff6 libjack0 libjack-dev libasound2-dev fonts-freefont-ttf gcc make build-essential git scons swig libavahi-client3 abcmidi dnsmasq hostapd dhcpcd raspi-config" "check_internet"
 }
 
 # Function to disable audio output
@@ -199,10 +199,11 @@ install_key2play() {
   execute_command "cd /home/"
   execute_command "sudo rm -rf key2play"
   execute_command "sudo git clone https://github.com/rbvwhyry/key2play" "check_internet"
+  execute_command "virtualenv venv"
   execute_command "sudo chown -R $USER:$USER /home/key2play"
-  execute_command "sudo chmod -R u+rwx /home/key2play"
+  execute_command "sudo chmod -R a+rwx /home/key2play"
   execute_command "cd key2play"
-  execute_command "sudo pip3 install -r requirements.txt --break-system-packages" "check_internet"
+  execute_command "sudo venv/bin/pip3 install -r requirements.txt --break-system-packages" "check_internet"
   execute_command "sudo raspi-config nonint do_boot_behaviour B2"
   execute_command "sudo adduser plv"
   echo "plv ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/plv > /dev/null
@@ -216,7 +217,7 @@ Wants=network-online.target
 WantedBy=multi-user.target
 
 [Service]
-ExecStart=sudo python3 /home/key2play/visualizer.py
+ExecStart=sudo /home/key2play/venv/bin/python3 /home/key2play/visualizer.py
 Restart=always
 Type=simple
 User=plv
