@@ -143,7 +143,7 @@ install_rtpmidi_server() {
   execute_command "cd /home/"
   execute_command "sudo wget https://github.com/davidmoreno/rtpmidid/releases/download/v23.10/rtpmidid_23.10_armhf.deb" "check_internet"
   execute_command "sudo dpkg -i rtpmidid_23.10_armhf.deb"
-  execute_command "sudo apt -f --fix-broken install"
+  execute_command "sudo apt install --fix-broken -y"
   execute_command "sudo rm rtpmidid_23.10_armhf.deb"
 }
 
