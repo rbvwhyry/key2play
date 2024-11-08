@@ -144,7 +144,7 @@ install_rtpmidi_server() {
   execute_command "sudo wget https://github.com/davidmoreno/rtpmidid/releases/download/v23.10/rtpmidid_23.10_armhf.deb" "check_internet"
   execute_command "sudo dpkg -i rtpmidid_23.10_armhf.deb"
   execute_command "sudo apt -f --fix-broken install"
-  execute_command "rm rtpmidid_23.10_armhf.deb"
+  execute_command "sudo rm rtpmidid_23.10_armhf.deb"
 }
 
 # Function to create Hot-Spot
@@ -197,6 +197,7 @@ wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
 # Function to install key2play
 install_key2play() {
   execute_command "cd /home/"
+  execute_command "sudo rm -rf key2play"
   execute_command "sudo git clone https://github.com/rbvwhyry/key2play" "check_internet"
   execute_command "sudo chown -R $USER:$USER /home/key2play"
   execute_command "sudo chmod -R u+rwx /home/key2play"
