@@ -12,6 +12,7 @@ sudo cp config/dnsmasq.conf /etc/dnsmasq.conf
 # load wan configuration
 sudo cp config/wpa_enable_ap.conf /etc/wpa_supplicant/wpa_supplicant.conf
 
+set +e # unset e to keep running commands after one returns error, seems like they do that
 sleep 1
 sudo wpa_cli -i wlan0 reconfigure
 sudo wpa_cli -i p2p-dev-wlan0 reconfigure
