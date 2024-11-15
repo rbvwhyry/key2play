@@ -241,7 +241,7 @@ finish_installation() {
   echo "After reboot, wait for up to 10 minutes. The Visualizer should start, and the Hotspot 'key2play' will become available."
 
   execute_command "sudo shutdown -r +1"
-  execute_command "sudo /home/key2play/enable_ap.sh"
+  # execute_command "sudo /home/key2play/enable_ap.sh"
   sleep 30
   # Reboot Raspberry Pi
   execute_command "sudo reboot"
