@@ -147,53 +147,6 @@ install_rtpmidi_server() {
   execute_command "sudo rm rtpmidid_23.12_arm64.deb"
 }
 
-# Function to create Hot-Spot
-create_hotspot() {
-  echo 'interface wlan0 static ip_address=192.168.4.1/24' | sudo tee --append /etc/dhcpcd.conf > /dev/null
-  sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-  sudo systemctl daemon-reload
-  sudo systemctl restart dhcpcd
-  echo 'interface=wlan0 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h' | sudo tee --append /etc/dnsmasq.conf > /dev/null
-
-  hotspot_config_content=$(cat <<EOT
-interface=wlan0
-driver=nl80211
-ssid=key2play
-hw_mode=g
-channel=7
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=key2play
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-EOT
-  )
-
-  # Use echo to send the content to the file with sudo
-  echo "$hotspot_config_content" | sudo tee /etc/hostapd/hostapd.conf > /dev/null
-
-  echo 'DAEMON_CONF="/etc/hostapd/hostapd.conf"' | sudo tee --append /etc/default/hostapd > /dev/null
-  execute_command "sudo systemctl unmask hostapd"
-  execute_command "sudo systemctl enable hostapd && sudo systemctl enable dnsmasq"
-}
-
-configure_network_interfaces() {
-  # Edit /etc/network/interfaces file
-  local interfaces_file="/etc/network/interfaces"
-  local interfaces_config="
-auto wlan0
-iface wlan0 inet manual
-wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
-"
-
-  echo "$interfaces_config" | sudo tee -a "$interfaces_file" > /dev/null
-  echo "Network interfaces configuration added to $interfaces_file."
-}
-
 # Function to install key2play
 install_key2play() {
   execute_command "cd /home/"
@@ -228,9 +181,6 @@ EOF
   execute_command "sudo systemctl start visualizer.service"
 
   execute_command "sudo chmod a+rwxX -R /home/key2play/"
-
-  execute_command "sudo chmod +x /home/key2play/disable_ap.sh"
-  execute_command "sudo chmod +x /home/key2play/enable_ap.sh"
 }
 
 finish_installation() {
@@ -241,7 +191,6 @@ finish_installation() {
   echo "After reboot, wait for up to 10 minutes. The Visualizer should start, and the Hotspot 'key2play' will become available."
 
   execute_command "sudo shutdown -r +1"
-  # execute_command "sudo /home/key2play/enable_ap.sh"
   sleep 30
   # Reboot Raspberry Pi
   execute_command "sudo reboot"
@@ -257,6 +206,4 @@ install_packages
 disable_audio_output
 install_rtpmidi_server
 install_key2play
-configure_network_interfaces
-create_hotspot
 finish_installation
