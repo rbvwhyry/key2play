@@ -288,42 +288,32 @@ grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4
 <!-- NEW CALIBRATE -->
     <div class="flex-1 p-5 bg-gray-200 dark:bg-gray-700 shadow-xl rounded-lg">
         <div class="flex">
-            <div class="flex-1 font-bold text-xl pb-2 text-gray-600 dark:text-gray-400"
-                 data-translate="calibrate">
+            <div class="flex-1 font-bold text-xl pb-2 text-gray-600 dark:text-gray-400" data-translate="calibrate">
                 Calibrate
             </div>
             <div class='has-tooltip'>
-                            <span class='inline-block tooltip rounded shadow-lg p-1 bg-gray-100
-                            dark:bg-gray-600 text-gray-600 dark:text-gray-400 -mt-8'>
-                                <div data-translate="calibrate_keys">Calibrate leds to keys.</div>
-                                <div data-translate="click_to_start">Click to start calibration.<div>
-                            </span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <span class='inline-block tooltip rounded shadow-lg p-1 bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-400 -mt-8'>
+                    <div data-translate="calibrate_keys">Calibrate leds to keys.</div>
+                    <div data-translate="click_to_start">Click to start calibration.</div>
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
         </div>
-<!--         <div class="overflow-y-auto overflow-x-hidden max-h-80">
+        <!-- <div class="overflow-y-auto overflow-x-hidden max-h-80">
             <div id="NoteOffsetEntry" class="flex-1">
             </div>
         </div> -->
-    <div id="warningButton" class="flex-1">
-        ⚠️ Click Me
-    </div>
-
-    <script>
-        document.getElementById("warningButton").addEventListener("click", () => {
-            // Show a warning box with emoji text
-            alert("⚠️ Warning! Something important happened!");
-
-            // Log a message to the console
-            console.log("Warning button clicked. ⚠️");
-        });
-    </script>
+        <div id="warningButton" class="flex-1">
+            ⚠️ Click Me
+        </div>
+    
+        <script>
+            document.getElementById("warningButton").addEventListener("click", () => {
+                alert("⚠️ Warning! Something important happened!");
+                console.log("Warning button clicked. ⚠️");
+            });
+        </script>
     </div>
 </div>
-
-
