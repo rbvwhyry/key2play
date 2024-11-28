@@ -605,7 +605,7 @@ def rainbowCycle(ledstrip, ledsettings, menu, speed="Medium"):
     fastColorWipe(strip, True, ledsettings)
 
 
-def startup_animation(ledstrip, ledsettings, duration_ms=3000, max_leds=100):
+def startup_animation(ledstrip, ledsettings, duration_ms=6000, max_leds=150):
     strip = ledstrip.strip
     total_pixels = strip.numPixels()
 
