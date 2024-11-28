@@ -285,7 +285,7 @@ grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4
         </div>
     </div>
 
-<!-- NEW -->
+<!-- NEW CALIBRATE -->
     <div class="flex-1 p-5 bg-gray-200 dark:bg-gray-700 shadow-xl rounded-lg">
         <div class="flex">
             <div class="flex-1 font-bold text-xl pb-2 text-gray-600 dark:text-gray-400"
@@ -295,8 +295,8 @@ grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4
             <div class='has-tooltip'>
                         <span class='inline-block tooltip rounded shadow-lg p-1 bg-gray-100
                         dark:bg-gray-600 text-gray-600 dark:text-gray-400 -mt-8'>
-                            <div data-translate="shift_notes_for_better_alignment">Shift notes for better alignment</div>
-                            <div data-translate="light_number_means">Light number: 92 and Offset: 2 means that notes after the LED 92 will be shifted by 2 lefts to the left</div>
+                            <div data-translate="calibrate_keys">Calibrate leds to keys.</div>
+                            <div data-translate="click_to_start">Click to start calibration.<div>
                         </span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none"
                      viewBox="0 0 24 24"
@@ -306,10 +306,24 @@ grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4
                 </svg>
             </div>
         </div>
-        <div class="overflow-y-auto overflow-x-hidden max-h-80">
+<!--         <div class="overflow-y-auto overflow-x-hidden max-h-80">
             <div id="NoteOffsetEntry" class="flex-1">
             </div>
-        </div>
+        </div> -->
+    <div id="warningButton" class="button-style">
+        ⚠️ Click Me
+    </div>
+
+    <script>
+        // Add functionality to the div
+        document.getElementById("warningButton").addEventListener("click", () => {
+            // Show a warning box with emoji text
+            alert("⚠️ Warning! Something important happened!");
+
+            // Log a message to the console
+            console.log("Warning button clicked. ⚠️");
+        });
+    </script>
     </div>
 </div>
 
