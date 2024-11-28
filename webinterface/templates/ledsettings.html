@@ -293,11 +293,11 @@ grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4
                 Calibrate
             </div>
             <div class='has-tooltip'>
-                        <span class='inline-block tooltip rounded shadow-lg p-1 bg-gray-100
-                        dark:bg-gray-600 text-gray-600 dark:text-gray-400 -mt-8'>
-                            <div data-translate="calibrate_keys">Calibrate leds to keys.</div>
-                            <div data-translate="click_to_start">Click to start calibration.<div>
-                        </span>
+                            <span class='inline-block tooltip rounded shadow-lg p-1 bg-gray-100
+                            dark:bg-gray-600 text-gray-600 dark:text-gray-400 -mt-8'>
+                                <div data-translate="calibrate_keys">Calibrate leds to keys.</div>
+                                <div data-translate="click_to_start">Click to start calibration.<div>
+                            </span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none"
                      viewBox="0 0 24 24"
                      stroke="currentColor">
@@ -310,12 +310,11 @@ grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4
             <div id="NoteOffsetEntry" class="flex-1">
             </div>
         </div> -->
-    <div id="warningButton" class="button-style">
+    <div id="warningButton" class="flex-1">
         ⚠️ Click Me
     </div>
 
-    <script>
-        // Add functionality to the div
+    <script> // Add functionality to the div
         document.getElementById("warningButton").addEventListener("click", () => {
             // Show a warning box with emoji text
             alert("⚠️ Warning! Something important happened!");
