@@ -79,3 +79,13 @@ def upload_file():
         filename = filename.replace("'", "")
         file.save(os.path.join(webinterface.config['UPLOAD_FOLDER'], filename))
         return jsonify(success=True, reload_songs=True, song_name=filename)
+
+# Add new route to light up LEDs
+@webinterface.route('/light-up', methods=['POST'])
+def light_up():
+    try:
+        # Light up the 100th LED as green for 5 seconds
+        light_up_led(99, (0, 255, 0), 5)  # Index 99, Green, 5 seconds
+        return jsonify({"success": True, "message": "LED lit successfully!"}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
