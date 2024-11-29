@@ -25,6 +25,9 @@ def before_request():
 def index():
     return render_template('index.html')
 
+@webinterface.route('/start')
+def start():
+    return render_template('start.html')
 
 @webinterface.route('/home')
 def home():
