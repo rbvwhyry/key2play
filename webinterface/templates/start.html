@@ -18,8 +18,8 @@
         Light Up LEDs
     </div>
 
+<!--      Function to send a request to the server -->
     <script>
-        // Function to send a request to the server
         document.getElementById("lightUpButton").addEventListener("click", () => {
             fetch("/light-up", { method: "POST" })
                 .then(response => {
