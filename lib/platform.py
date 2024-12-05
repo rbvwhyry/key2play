@@ -134,6 +134,7 @@ class PlatformRasp:
                 hotspot.time_without_wifi = 0
 
     def create_hotspot_config(self):
+        return
         hotspot_config_content = """
 interface=wlan0
 driver=nl80211
@@ -232,6 +233,7 @@ rsn_pairwise=CCMP
         usersettings.change_setting_value("is_hotspot_active", 1)
 
     def get_wifi_networks(self):
+        return
         try:
             output = subprocess.check_output(['sudo', 'iwlist', 'wlan0', 'scan'], stderr=subprocess.STDOUT)
             networks = output.decode().split('Cell ')
