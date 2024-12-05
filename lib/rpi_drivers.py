@@ -18,10 +18,3 @@ except ModuleNotFoundError as e:
     from lib.null_drivers import Color
     PixelStrip = None
     ws = None
-
-# spidev
-try:
-    import spidev
-except ModuleNotFoundError as e:
-    logger.warning("Module spidev not found.")
-    spidev = None
