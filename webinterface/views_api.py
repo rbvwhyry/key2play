@@ -26,6 +26,13 @@ GPIO.setup(SENSECOVER, GPIO.IN, GPIO.PUD_UP)
 
 pid = psutil.Process(os.getpid())
 
+@webinterface.route('/api/button_one', methods=['GET'])
+def button_one():
+    return jsonify(success=True)
+
+@webinterface.route('/api/button_two', methods=['GET'])
+def button_two():
+    return jsonify(success=True)
 
 @webinterface.route('/api/start_animation', methods=['GET'])
 def start_animation():
