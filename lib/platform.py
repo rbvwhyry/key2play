@@ -14,8 +14,6 @@ class Hotspot:
         self.last_wifi_check_time = 0
         self.is_hostapd_installed = platform.is_package_installed("hostapd")
 
-        subprocess.run("sudo chmod a+rwxX -R /home/key2play/", shell=True, check=True)
-
 class Platform_null:
     def __getattr__(self, name):
         return self.pass_func
