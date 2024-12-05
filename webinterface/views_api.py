@@ -28,10 +28,22 @@ pid = psutil.Process(os.getpid())
 
 @webinterface.route('/api/button_one', methods=['GET'])
 def button_one():
+    strip = webinterface.ledstrip.strip
+    numPixels = strip.numPixels()
+    strip.setBrightness(255)
+    for i in range(0, numPixels):
+        strip.setPixelColorRGB(i, 255,255,255)
+
     return jsonify(success=True)
 
 @webinterface.route('/api/button_two', methods=['GET'])
 def button_two():
+    strip = webinterface.ledstrip.strip
+    numPixels = strip.numPixels()
+    strip.setBrightness(0)
+    for i in range(0, numPixels):
+        strip.setPixelColorRGB(i, 0,0,0)
+
     return jsonify(success=True)
 
 @webinterface.route('/api/start_animation', methods=['GET'])
