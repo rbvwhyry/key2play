@@ -80,6 +80,7 @@ class PlatformRasp:
             return False
 
     def manage_hotspot(self, hotspot, usersettings, midiports, first_run=False):
+        return
         if not hotspot.is_hostapd_installed:
             return
 
@@ -184,6 +185,7 @@ rsn_pairwise=CCMP
             return False, "Error occurred while getting Wi-Fi information.", ""
 
     def connect_to_wifi(self, ssid, password, hotspot, usersettings):
+        return
         hotspot.hotspot_script_time = time.time()
         logger.info("Method:connecting to wifi")
         success, wifi_ssid, address = self.get_current_connections()
@@ -218,6 +220,7 @@ rsn_pairwise=CCMP
         usersettings.change_setting_value("is_hotspot_active", 0)
 
     def disconnect_from_wifi(self, hotspot, usersettings):
+        return
         hotspot.hotspot_script_time = time.time()
         logger.info("Running script enable_ap")
         try:
