@@ -4,18 +4,18 @@
     </p>
 </div>
 <div>
-    <button id="new-button-1" onclick="button_one_press">button one</button>
+    <button id="new-button-1" onclick="button_one_press()">button one</button>
 </div>
 <div>
-    <button id="new-button-2" onclick="button_two_press">button two</button>
+    <button id="new-button-2" onclick="button_two_press()">button two</button>
 </div>
 <script>
-    function button_one_press(name, speed) {
+    function button_one_press() {
         const xhttp = new XMLHttpRequest();
         xhttp.open("GET", "/api/button_one", true);
         xhttp.send();
     }
-    function button_one_press(name, speed) {
+    function button_one_press() {
         const xhttp = new XMLHttpRequest();
         xhttp.open("GET", "/api/button_two", true);
         xhttp.send();
