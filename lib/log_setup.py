@@ -3,7 +3,7 @@ from logging.handlers import RotatingFileHandler
 import sys
 
 # Create a custom logger
-logger = logging.getLogger("my_app")
+logger = logging.getLogger("key2play")
 
 # Set the level of this logger.
 logger.setLevel(logging.DEBUG)
