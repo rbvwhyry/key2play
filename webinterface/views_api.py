@@ -32,7 +32,7 @@ from lib.rpi_drivers import Color
 def button_one():
     strip = webinterface.ledstrip.strip
     numPixels = strip.numPixels()
-    strip.setBrightness(255)
+    strip.setBrightness(128)
     for i in range(0, numPixels):
         strip.setPixelColor(i, Color(255,255,255))
     strip.show()
