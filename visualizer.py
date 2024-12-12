@@ -195,6 +195,13 @@ frame_avg_stamp = time.perf_counter()
 backlight_cleared = False
 # Main event loop
 
+strip = ledstrip.strip
+numPixels = strip.numPixels()
+strip.setBrightness(128)
+for i in range(0, numPixels):
+    strip.setPixelColor(i, Color(255,255,255))
+strip.show()
+
 while True:
     # screensaver
     if int(menu.screensaver_delay) > 0:
