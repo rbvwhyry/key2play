@@ -9,6 +9,7 @@ import fcntl
 from lib.learnmidi import LearnMIDI
 from lib.ledsettings import LedSettings
 from lib.ledstrip import LedStrip
+from lib.menulcd import MenuLCD
 from lib.midiports import MidiPorts
 from lib.savemidi import SaveMIDI
 from lib.usersettings import UserSettings
@@ -127,6 +128,8 @@ t.start()
 learning = LearnMIDI(usersettings, ledsettings, midiports, ledstrip)
 hotspot = Hotspot(platform)
 saving = SaveMIDI()
+menu = MenuLCD("config/menu.xml", args, usersettings, ledsettings, ledstrip, learning, saving,
+               midiports, hotspot, platform)
 
 midiports.add_instance(menu)
 ledsettings.add_instance(menu, ledstrip)
