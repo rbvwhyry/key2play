@@ -30,7 +30,10 @@ from lib.rpi_drivers import Color
 
 @webinterface.route('/api/button_one', methods=['GET'])
 def button_one():
+    from lib.functions import stop_animations
     strip = webinterface.ledstrip.strip
+    menu = webinterface.menu
+    stop_animations(menu)
     numPixels = strip.numPixels()
     strip.setBrightness(128)
     for i in range(0, numPixels):
