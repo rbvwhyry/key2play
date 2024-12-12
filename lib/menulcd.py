@@ -38,17 +38,8 @@ class MenuLCD:
         if not os.path.exists(self.lcd_ttf):
             raise RuntimeError("Cannot locate font file: %s" % self.lcd_ttf)
 
-        if args.display == '1in3':
-            self.LCD = LCD_1in3.LCD()
-            self.font = ImageFont.truetype(font_dir + '/FreeMonoBold.ttf', self.scale(10))
-            self.image = Image.open('webinterface/static/logo240_240.bmp')
-        else:
-            self.LCD = LCD_1in44.LCD()
-            self.font = ImageFont.load_default()
-            self.image = Image.open('webinterface/static/logo128_128.bmp')
+        self.LCD = None
 
-        self.LCD.LCD_Init()
-        self.LCD.LCD_ShowImage(self.rotate_image(self.image), 0, 0)
         self.DOMTree = minidom.parse(xml_file_name)
         self.current_location = "menu"
         self.scroll_hold = 0
