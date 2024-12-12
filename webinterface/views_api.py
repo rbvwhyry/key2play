@@ -26,6 +26,29 @@ GPIO.setup(SENSECOVER, GPIO.IN, GPIO.PUD_UP)
 
 pid = psutil.Process(os.getpid())
 
+from lib.rpi_drivers import Color
+
+@webinterface.route('/api/button_one', methods=['GET'])
+def button_one():
+    strip = webinterface.ledstrip.strip
+    numPixels = strip.numPixels()
+    strip.setBrightness(255)
+    for i in range(0, numPixels):
+        strip.setPixelColor(i, Color(255,255,255))
+    strip.show()
+
+    return jsonify(success=True)
+
+@webinterface.route('/api/button_two', methods=['GET'])
+def button_two():
+    strip = webinterface.ledstrip.strip
+    numPixels = strip.numPixels()
+    strip.setBrightness(0)
+    for i in range(0, numPixels):
+        strip.setPixelColor(i, Color(0,0,0))
+    strip.show()
+
+    return jsonify(success=True)
 
 @webinterface.route('/api/start_animation', methods=['GET'])
 def start_animation():

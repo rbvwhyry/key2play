@@ -24,8 +24,7 @@
  # THE SOFTWARE.
  #
  
-from lib.null_drivers import SPInull
-from lib.rpi_drivers import GPIO, spidev
+from lib.rpi_drivers import GPIO
 import time
 
 # Pin definition
@@ -34,21 +33,12 @@ LCD_DC_PIN          = 25
 LCD_CS_PIN          = 8
 LCD_BL_PIN          = 24
 
-try:
-    # SPI device, bus = 0, device = 0
-    SPI = spidev.SpiDev(0, 0)
-except:
-    print("Failed loading SPI device.  Using null driver.")
-    SPI = SPInull()
-
 def epd_digital_write(pin, value):
     GPIO.output(pin, value)
 
 def Driver_Delay_ms(xms):
     time.sleep(xms / 1000.0)
 
-def SPI_Write_Byte(data):
-    SPI.writebytes(data)
 
 def GPIO_Init():
     GPIO.setmode(GPIO.BCM)
@@ -57,8 +47,6 @@ def GPIO_Init():
     GPIO.setup(LCD_DC_PIN, GPIO.OUT)
     GPIO.setup(LCD_CS_PIN, GPIO.OUT)
     GPIO.setup(LCD_BL_PIN, GPIO.OUT)
-    SPI.max_speed_hz = 9000000
-    SPI.mode = 0b00
     return 0;
 
 ### END OF FILE ###

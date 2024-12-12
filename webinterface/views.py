@@ -21,6 +21,10 @@ def before_request():
         webinterface.menu.is_idle_animation_running = False
 
 
+@webinterface.route('/newpage')
+def newpage():
+    return render_template('newpage.html')
+
 @webinterface.route('/')
 def index():
     return render_template('index.html')

@@ -14,8 +14,6 @@ class Hotspot:
         self.last_wifi_check_time = 0
         self.is_hostapd_installed = platform.is_package_installed("hostapd")
 
-        subprocess.run("sudo chmod a+rwxX -R /home/key2play/", shell=True, check=True)
-
 class Platform_null:
     def __getattr__(self, name):
         return self.pass_func
@@ -80,6 +78,7 @@ class PlatformRasp:
             return False
 
     def manage_hotspot(self, hotspot, usersettings, midiports, first_run=False):
+        return
         if not hotspot.is_hostapd_installed:
             return
 
@@ -133,6 +132,7 @@ class PlatformRasp:
                 hotspot.time_without_wifi = 0
 
     def create_hotspot_config(self):
+        return
         hotspot_config_content = """
 interface=wlan0
 driver=nl80211
@@ -184,6 +184,7 @@ rsn_pairwise=CCMP
             return False, "Error occurred while getting Wi-Fi information.", ""
 
     def connect_to_wifi(self, ssid, password, hotspot, usersettings):
+        return
         hotspot.hotspot_script_time = time.time()
         logger.info("Method:connecting to wifi")
         success, wifi_ssid, address = self.get_current_connections()
@@ -218,6 +219,7 @@ rsn_pairwise=CCMP
         usersettings.change_setting_value("is_hotspot_active", 0)
 
     def disconnect_from_wifi(self, hotspot, usersettings):
+        return
         hotspot.hotspot_script_time = time.time()
         logger.info("Running script enable_ap")
         try:
@@ -229,6 +231,7 @@ rsn_pairwise=CCMP
         usersettings.change_setting_value("is_hotspot_active", 1)
 
     def get_wifi_networks(self):
+        return
         try:
             output = subprocess.check_output(['sudo', 'iwlist', 'wlan0', 'scan'], stderr=subprocess.STDOUT)
             networks = output.decode().split('Cell ')
