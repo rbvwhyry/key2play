@@ -177,8 +177,8 @@ User=plv
 Group=plv
 EOF
   execute_command "sudo systemctl daemon-reload"
-  execute_command "sudo systemctl enable visualizer.service"
-  execute_command "sudo systemctl start visualizer.service"
+  execute_command "sudo systemctl enable key2play.service"
+  execute_command "sudo systemctl start key2play.service"
 
   execute_command "sudo chmod a+rwxX -R /home/key2play/"
 }
@@ -188,7 +188,7 @@ finish_installation() {
   echo ""
   echo "Installation complete. Rasp Pi will auto restart in 30 seconds."
   echo "If Rasp Pi does not restart on its own, wait 2 minutes, then manually reboot."
-  echo "After reboot, wait for up to 10 minutes. The Visualizer should start, and the Hotspot 'key2play' will become available."
+  echo "After reboot, wait for up to 10 minutes. The key2play server should start, and the Hotspot 'key2play' will become available."
 
   execute_command "sudo shutdown -r +1"
   sleep 30
