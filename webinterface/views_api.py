@@ -31,12 +31,11 @@ from lib.rpi_drivers import Color
 @webinterface.route('/api/button_one', methods=['GET'])
 def button_one():
     strip = webinterface.ledstrip.strip
-    
     # numPixels = strip.numPixels()
-    strip.setBrightness(58)
+    strip.setBrightness(11)
     # for i in range(0, numPixels):
     #     strip.setPixelColor(i, Color(255,255,255))
-    strip.setPixelColor(50, Color(255,0,255))
+    strip.setPixelColor(25, Color(255,0,0))
     strip.show()
     return jsonify(success=True)
 
@@ -57,13 +56,6 @@ def button_one():
 
 #     return jsonify(success=True)
 
-
-
-
-
-
-      
-
 @webinterface.route('/api/button_two', methods=['GET'])
 def button_two():
     strip = webinterface.ledstrip.strip
@@ -72,7 +64,6 @@ def button_two():
     for i in range(0, numPixels):
         strip.setPixelColor(i, Color(0,0,0))
     strip.show()
-
     return jsonify(success=True)
 
 @webinterface.route('/api/start_animation', methods=['GET'])
