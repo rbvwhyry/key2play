@@ -60,9 +60,9 @@ def button_one():
 def button_two():
     strip = webinterface.ledstrip.strip
     numPixels = strip.numPixels()
-    strip.setBrightness(0)
+    strip.setBrightness(25)
     for i in range(0, numPixels):
-        strip.setPixelColor(i, Color(0,0,0))
+        strip.setPixelColor(i, Color(0,255,0))
     strip.show()
     return jsonify(success=True)
 
