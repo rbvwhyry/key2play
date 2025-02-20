@@ -28,14 +28,17 @@ pid = psutil.Process(os.getpid())
 
 from lib.rpi_drivers import Color
 
+import random
+
 @webinterface.route('/api/button_mot', methods=['GET'])
 def button_mot():
     strip = webinterface.ledstrip.strip
+    strip.clear()
     # numPixels = strip.numPixels()
-    strip.setBrightness(11)
+    strip.setBrightness(1)
     # for i in range(0, numPixels):
     #     strip.setPixelColor(i, Color(255,255,255))
-    strip.setPixelColor(25, Color(255,0,0))
+    strip.setPixelColor(0, get_random_color())
     strip.show()
     return jsonify(success=True)
 
@@ -56,15 +59,30 @@ def button_mot():
 
 #     return jsonify(success=True)
 
+# @webinterface.route('/api/button_two', methods=['GET'])
+# def button_two():
+#     strip = webinterface.ledstrip.strip
+#     strip.clear()
+#     numPixels = strip.numPixels()
+#     strip.setBrightness(25)
+#     for i in range(0, numPixels):
+#         strip.setPixelColor(i, Color(0,255,0))
+#     strip.show()
+#     return jsonify(success=True)
+
 @webinterface.route('/api/button_two', methods=['GET'])
 def button_two():
     strip = webinterface.ledstrip.strip
-    numPixels = strip.numPixels()
-    strip.setBrightness(25)
-    for i in range(0, numPixels):
-        strip.setPixelColor(i, Color(0,255,0))
+    strip.clear()
+    strip.setBrightness(1)
+    strip.setPixelColor(1, get_random_color())
     strip.show()
     return jsonify(success=True)
+  
+def get_random_color():
+    return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+
 
 @webinterface.route('/api/start_animation', methods=['GET'])
 def start_animation():
