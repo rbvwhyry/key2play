@@ -38,7 +38,7 @@ def button_mot():
     strip.setBrightness(1)
     # for i in range(0, numPixels):
     #     strip.setPixelColor(i, Color(255,255,255))
-    strip.setPixelColor(0, get_random_color())
+    strip.setPixelColor(0, Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     strip.show()
     return jsonify(success=True)
 
@@ -75,7 +75,7 @@ def button_two():
     strip = webinterface.ledstrip.strip
     strip.clear()
     strip.setBrightness(1)
-    strip.setPixelColor(1, get_random_color())
+    strip.setPixelColor(1, Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     strip.show()
     return jsonify(success=True)
   
