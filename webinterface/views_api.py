@@ -36,9 +36,7 @@ def button_one(indexLight, color):
     strip.setBrightness(58)
     # for i in range(0, numPixels):
     #     strip.setPixelColor(i, Color(255,255,255))
-    strip.setPixelColor(50, Color(255,255,255))
-
-    strip.setPixelColor(
+    strip.setPixelColor(50, Color(255,0,255))
     strip.show()
     return jsonify(success=True)
 
