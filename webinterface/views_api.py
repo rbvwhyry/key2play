@@ -28,16 +28,42 @@ pid = psutil.Process(os.getpid())
 
 from lib.rpi_drivers import Color
 
+# @webinterface.route('/api/button_one', methods=['GET'])
+# def button_one(indexLight, color):
+#     strip = webinterface.ledstrip.strip
+    
+#     # numPixels = strip.numPixels()
+#     # strip.setBrightness(128)
+#     # for i in range(0, numPixels):
+#     #     strip.setPixelColor(i, Color(255,255,255))
+
+#     strip.setPixelColor(
+#     strip.show()
+#     return jsonify(success=True)
+
 @webinterface.route('/api/button_one', methods=['GET'])
 def button_one():
-    strip = webinterface.ledstrip.strip
-    numPixels = strip.numPixels()
-    strip.setBrightness(128)
-    for i in range(0, numPixels):
-        strip.setPixelColor(i, Color(255,255,255))
+    indexLight = request.args.get("indexLight", type=int)
+    color_str = request.args.get("color")  # Expecting "255,255,255"
+
+    if indexLight is None or color_str is None:
+        return jsonify(success=False, error="Missing parameters"), 400
+
+    # Convert color string "255,255,255" to (255, 255, 255)
+    r, g, b = map(int, color_str.split(","))
+
+    # Apply color to the specified LED
+    strip.setPixelColor(indexLight, color_str)
     strip.show()
 
     return jsonify(success=True)
+
+
+
+
+
+
+      
 
 @webinterface.route('/api/button_two', methods=['GET'])
 def button_two():
