@@ -32,6 +32,7 @@ import random
 
 @webinterface.route('/api/button_mot', methods=['GET'])
 def button_mot():
+  print("🍭Hello, mot!")
     strip = webinterface.ledstrip.strip
     strip.clear()
     # numPixels = strip.numPixels()
@@ -72,6 +73,7 @@ def button_mot():
 
 @webinterface.route('/api/button_two', methods=['GET'])
 def button_two():
+   print("🍫Hello, two!")
     strip = webinterface.ledstrip.strip
     strip.clear()
     strip.setBrightness(1)
