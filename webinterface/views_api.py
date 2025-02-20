@@ -29,7 +29,7 @@ pid = psutil.Process(os.getpid())
 from lib.rpi_drivers import Color
 
 @webinterface.route('/api/button_mot', methods=['GET'])
-def button_one():
+def button_mot():
     strip = webinterface.ledstrip.strip
     # numPixels = strip.numPixels()
     strip.setBrightness(11)
