@@ -39,7 +39,7 @@ def button_mot():
     strip.setBrightness(111)
     # for i in range(0, numPixels):
     #     strip.setPixelColor(i, Color(255,255,255))
-    strip.setPixelColor(0, 212, 44, 67)
+    strip.setPixelColor(0, Color(212, 44, 67))
     strip.show()
     return jsonify(success=True)
 
