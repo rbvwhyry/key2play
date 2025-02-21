@@ -34,12 +34,12 @@ import random
 def button_mot():
   print("🍭Hello, mot!")
     strip = webinterface.ledstrip.strip
-    strip.clear()
+    # strip.clear()
     # numPixels = strip.numPixels()
-    strip.setBrightness(1)
+    strip.setBrightness(111)
     # for i in range(0, numPixels):
     #     strip.setPixelColor(i, Color(255,255,255))
-    strip.setPixelColor(0, Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    strip.setPixelColor(0, 212, 44, 67)
     strip.show()
     return jsonify(success=True)
 
@@ -76,7 +76,7 @@ def button_two():
    print("🍫Hello, two!")
     strip = webinterface.ledstrip.strip
     strip.clear()
-    strip.setBrightness(1)
+    strip.setBrightness(111)
     strip.setPixelColor(1, Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     strip.show()
     return jsonify(success=True)
