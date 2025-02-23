@@ -75,7 +75,6 @@ def button_mot():
 def button_two():
    print("🍫Hello, two!")
    strip = webinterface.ledstrip.strip
-   strip.clear()
    strip.setBrightness(111)
    strip.setPixelColor(13, Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
    strip.show()
