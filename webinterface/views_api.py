@@ -74,12 +74,12 @@ def button_mot():
 @webinterface.route('/api/button_two', methods=['GET'])
 def button_two():
    print("🍫Hello, two!")
-    strip = webinterface.ledstrip.strip
-    strip.clear()
-    strip.setBrightness(111)
-    strip.setPixelColor(13, Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-    strip.show()
-    return jsonify(success=True)
+   strip = webinterface.ledstrip.strip
+   strip.clear()
+   strip.setBrightness(111)
+   strip.setPixelColor(13, Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+   strip.show()
+   return jsonify(success=True)
   
 def get_random_color():
     return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
