@@ -33,15 +33,15 @@ import random
 @webinterface.route('/api/button_mot', methods=['GET'])
 def button_mot():
   print("🍭Hello, mot!")
-    strip = webinterface.ledstrip.strip
-    # strip.clear()
-    # numPixels = strip.numPixels()
-    strip.setBrightness(111)
-    # for i in range(0, numPixels):
-    #     strip.setPixelColor(i, Color(255,255,255))
-    strip.setPixelColor(10, Color(212, 44, 67))
-    strip.show()
-    return jsonify(success=True)
+  strip = webinterface.ledstrip.strip
+  # strip.clear()
+  # numPixels = strip.numPixels()
+  strip.setBrightness(111)
+  # for i in range(0, numPixels):
+  #     strip.setPixelColor(i, Color(255,255,255))
+  strip.setPixelColor(10, Color(212, 44, 67))
+  strip.show()
+  return jsonify(success=True)
 
 # @webinterface.route('/api/button_one', methods=['GET'])
 # def button_one():
