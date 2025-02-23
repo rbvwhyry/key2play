@@ -170,11 +170,14 @@ Wants=network-online.target
 WantedBy=multi-user.target
 
 [Service]
-ExecStart=sudo /home/key2play/venv/bin/python3 /home/key2play/visualizer.py
+ExecStart=sudo /home/key2play/venv/bin/python3 -u /home/key2play/visualizer.py
 Restart=always
 Type=simple
 User=plv
 Group=plv
+StandardError=journal
+StandardOutput=journal
+StandardInput=null
 EOF
   execute_command "sudo systemctl daemon-reload"
   execute_command "sudo systemctl enable key2play.service"
