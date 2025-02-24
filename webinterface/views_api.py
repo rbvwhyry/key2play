@@ -34,6 +34,18 @@ from lib.rpi_drivers import Color
 
 import random
 
+@webinterface.route('/api/set_light/<light_num>')
+def set_light(light_num):
+  light_num = int(light_num)
+  strip = webinterface.ledstrip.strip
+  red = int(request.args.get("red", default=255))
+  blue = int(request.args.get("blue", default=255))
+  green = int(request.args.get("green", default=255))
+  color = Color(red, green, blue)
+  strip.setPixelColor(light_num, color)
+  strip.show()
+  return jsonify(success=true)
+
 @webinterface.route('/api/button_mot', methods=['GET'])
 def button_mot():
   print("🍭Hello, mot!")
