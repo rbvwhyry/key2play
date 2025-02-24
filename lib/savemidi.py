@@ -36,18 +36,28 @@ class SaveMIDI:
 
         if hex_color not in self.messages_to_save:
             self.messages_to_save[str(hex_color)] = []
-            self.messages_to_save[str(hex_color)].append(["note", self.first_note_time, "note_off", 0, 0])
+            self.messages_to_save[str(hex_color)].append(
+                ["note", self.first_note_time, "note_off", 0, 0]
+            )
 
         if status == "note_off":
             for key, note_off_message in self.messages_to_save.items():
-                self.messages_to_save[key].append(["note", time_value, status, note, velocity])
+                self.messages_to_save[key].append(
+                    ["note", time_value, status, note, velocity]
+                )
         else:
-            self.messages_to_save[str(hex_color)].append(["note", time_value, status, note, velocity])
+            self.messages_to_save[str(hex_color)].append(
+                ["note", time_value, status, note, velocity]
+            )
             if str(hex_color) != "main":
-                self.messages_to_save["main"].append(["note", time_value, status, note, velocity])
+                self.messages_to_save["main"].append(
+                    ["note", time_value, status, note, velocity]
+                )
 
     def add_control_change(self, status, channel, control, value, time_value):
-        self.messages_to_save["main"].append(["control_change", time_value, status, channel, control, value])
+        self.messages_to_save["main"].append(
+            ["control_change", time_value, status, channel, control, value]
+        )
 
     def save(self, filename):
         for key, multicolor_track in self.messages_to_save.items():
@@ -60,15 +70,27 @@ class SaveMIDI:
                 previous_message_time = message[1]
 
                 if message[0] == "note":
-                    self.track.append(Message(message[2], note=int(message[3]), velocity=int(message[4]),
-                                              time=int(time_delay * 40000)))
+                    self.track.append(
+                        Message(
+                            message[2],
+                            note=int(message[3]),
+                            velocity=int(message[4]),
+                            time=int(time_delay * 40000),
+                        )
+                    )
                 else:
                     self.track.append(
-                        Message(message[2], channel=int(message[3]), control=int(message[4]), value=int(message[5]),
-                                time=int(time_delay * 40000)))
+                        Message(
+                            message[2],
+                            channel=int(message[3]),
+                            control=int(message[4]),
+                            value=int(message[5]),
+                            time=int(time_delay * 40000),
+                        )
+                    )
                 self.last_note_time = message[1]
 
-            self.mid.save('Songs/' + filename + '_' + str(key) + '.mid')
+            self.mid.save("Songs/" + filename + "_" + str(key) + ".mid")
 
         self.messages_to_save = []
         self.is_recording = False

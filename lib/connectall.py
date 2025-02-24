@@ -12,7 +12,7 @@ def connectall():
             if client == "0" or "Through" in line:
                 client = "0"
         else:
-            if client == "0" or line.startswith('\t'):
+            if client == "0" or line.startswith("\t"):
                 continue
             port = line.split()[0]
             port_list.append(client + ":" + port)
@@ -23,5 +23,5 @@ def connectall():
                 subprocess.call("aconnect %s %s" % (source, target), shell=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     connectall()

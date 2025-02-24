@@ -16,19 +16,41 @@ gradients = {}
 gradients["Rainbow"] = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 0, 0)]
 
 # FastLED Rainbow - https://github.com/FastLED/FastLED/wiki/FastLED-HSV-Colors
-gradients["Rainbow-FastLED"] = [(0.0, (255, 0, 0)), (0.125, (170, 85, 0)), (0.25, (170, 170, 0)), (0.375, (0, 255, 0)),
-                                (0.5, (0, 170, 85)), (0.625, (0, 0, 255)), (1.0, (255, 0, 0))]
+gradients["Rainbow-FastLED"] = [
+    (0.0, (255, 0, 0)),
+    (0.125, (170, 85, 0)),
+    (0.25, (170, 170, 0)),
+    (0.375, (0, 255, 0)),
+    (0.5, (0, 170, 85)),
+    (0.625, (0, 0, 255)),
+    (1.0, (255, 0, 0)),
+]
 # Rainbow-FastLED-Y2: Should the 0.375 green have some red?
 # gradients["Rainbow-FastLED-Y2"] = [ (0.0, (255,0,0)), (0.125, (170,85,0)), (0.25, (255,255,0)), (0.375, (0,255,0)), (0.5, (0,170,85)), (0.625, (0,0,255)), (1.0, (255,0,0)) ]
 
 gradients["Pastel"] = [(255, 72, 72), (72, 255, 72), (72, 72, 255), (255, 72, 72)]
 
-gradients["Ice-Cyclic"] = [(0.0, (0, 128, 128)), (0.25, (0, 0, 255)), (0.5, (128, 0, 128)), (0.75, (86, 86, 86)),
-                           (1.0, (0, 128, 128))]
-gradients["Cool-Cyclic"] = [(0.0, (0, 128, 0)), (0.25, (0, 126, 128)), (0.5, (0, 0, 255)), (0.75, (86, 86, 86)),
-                            (1.0, (0, 128, 0))]
-gradients["Warm-Cyclic"] = [(0.0, (255, 0, 0)), (0.4, (170, 64, 0)), (0.6, (128, 126, 0)), (0.8, (86, 85, 86)),
-                            (1.0, (255, 0, 0))]
+gradients["Ice-Cyclic"] = [
+    (0.0, (0, 128, 128)),
+    (0.25, (0, 0, 255)),
+    (0.5, (128, 0, 128)),
+    (0.75, (86, 86, 86)),
+    (1.0, (0, 128, 128)),
+]
+gradients["Cool-Cyclic"] = [
+    (0.0, (0, 128, 0)),
+    (0.25, (0, 126, 128)),
+    (0.5, (0, 0, 255)),
+    (0.75, (86, 86, 86)),
+    (1.0, (0, 128, 0)),
+]
+gradients["Warm-Cyclic"] = [
+    (0.0, (255, 0, 0)),
+    (0.4, (170, 64, 0)),
+    (0.6, (128, 126, 0)),
+    (0.8, (86, 85, 86)),
+    (1.0, (255, 0, 0)),
+]
 
 
 # Gradients from files:
@@ -58,6 +80,7 @@ gradients["Warm-Cyclic"] = [(0.0, (255, 0, 0)), (0.4, (170, 64, 0)), (0.6, (128,
 
 # Homemade rough equivalent to matplotlib's LinearSegmentedColormap.from_list()
 
+
 def gradient_to_cmaplut(gradient, gamma=1, entries=256, int_table=True):
     """Linear-interpolate gradient to a colormap lookup."""
     _CYCLIC_UNDUP = False
@@ -82,7 +105,7 @@ def gradient_to_cmaplut(gradient, gamma=1, entries=256, int_table=True):
     elif isinstance(r[0], int):
         div255 = True
 
-    # if colormap is cyclic (first color matches last color), then do not include endpoint during calculation 
+    # if colormap is cyclic (first color matches last color), then do not include endpoint during calculation
     # to prevent index 0 and 255 being duplicate color
     if _CYCLIC_UNDUP and (r[0], g[0], b[0]) == (r[-1], g[-1], b[-1]):
         xpoints = np.linspace(0, 1, num=entries, endpoint=False)
@@ -97,7 +120,9 @@ def gradient_to_cmaplut(gradient, gamma=1, entries=256, int_table=True):
         table[i] = np.interp(xpoints, pos, c01) ** (1 / gamma)
 
     if int_table:
-        return [(round(x[0] * 255), round(x[1] * 255), round(x[2] * 255)) for x in table.T]
+        return [
+            (round(x[0] * 255), round(x[1] * 255), round(x[2] * 255)) for x in table.T
+        ]
     else:
         return [(x[0], x[1], x[2]) for x in table.T]
 
@@ -139,7 +164,9 @@ def load_colormaps():
             name = os.path.splitext(name_ext)[0]
             if name in gradients:
                 name = name + "~"
-            gradients[name] = np.loadtxt(f, converters=lambda x: float(x) ** 2.2).tolist()
+            gradients[name] = np.loadtxt(
+                f, converters=lambda x: float(x) ** 2.2
+            ).tolist()
         except Exception as e:
             logger.warning(f"Loading colormap datafile {f} failed: {e}")
 

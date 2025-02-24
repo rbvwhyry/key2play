@@ -5,7 +5,9 @@ from lib.log_setup import logger
 
 
 class UserSettings:
-    def __init__(self, config="config/settings.xml", default_config="config/default_settings.xml"):
+    def __init__(
+        self, config="config/settings.xml", default_config="config/default_settings.xml"
+    ):
         self.cache = {}
 
         self.CONFIG_FILE = config
@@ -27,13 +29,12 @@ class UserSettings:
         if self.pending_changes:
             self.save_changes()
 
-
     # get setting
 
     def __getitem__(self, key):
         if isinstance(key, str):
             return self.cache[key]
-        elif hasattr(key, '__iter__'):
+        elif hasattr(key, "__iter__"):
             # deep get
             return reduce(dict.__getitem__, key, self.cache)
 
@@ -49,7 +50,6 @@ class UserSettings:
     def get_copy(self):
         return self.cache.copy()
 
-
     # set setting
 
     def __setitem__(self, key, value):
@@ -58,7 +58,7 @@ class UserSettings:
 
         if isinstance(key, str):
             self.cache[key] = val
-        elif hasattr(key, '__iter__'):
+        elif hasattr(key, "__iter__"):
             d = reduce(dict.__getitem__, key[:-1], self.cache)
             d[key[-1]] = val
 
@@ -67,8 +67,6 @@ class UserSettings:
 
     def change_setting_value(self, name, value):
         self.set(name, value)
-
-
 
     def get_cms(self, color_mode, key=None):
         if key is None:
@@ -79,16 +77,15 @@ class UserSettings:
     def set_cms(self, color_mode, key, value):
         return self.set(("color_mode_settings", color_mode, key), value)
 
-
     def _xml_set(self, key, value):
         if isinstance(key, str):
             xpath = key
-        elif hasattr(key, '__iter__'):
-            xpath = '/'.join(key)
+        elif hasattr(key, "__iter__"):
+            xpath = "/".join(key)
 
         elem = self.root.find("./" + xpath)
         if elem is None:
-            raise Exception("XML path not found: " + xpath) 
+            raise Exception("XML path not found: " + xpath)
 
         elem.text = str(value)
         self.pending_changes = True
@@ -125,8 +122,10 @@ class UserSettings:
 
     def copy_missing(self):
         path = []
-        for event, def_elem in ET.iterparse(self.DEFAULT_CONFIG_FILE, events=("start", "end")):
-            if event == 'start':
+        for event, def_elem in ET.iterparse(
+            self.DEFAULT_CONFIG_FILE, events=("start", "end")
+        ):
+            if event == "start":
                 path.append(def_elem.tag)
 
                 # iterparse makes path[0] the root "settings"; skip root
@@ -134,25 +133,27 @@ class UserSettings:
                     continue
 
                 # Find element in settings.xml
-                findstr = './' + '/'.join(path[1:])
+                findstr = "./" + "/".join(path[1:])
                 elem = self.root.find(findstr)
 
                 # If element is missing, copy it to the correct location
                 if elem is None:
-                    #ET.dump(def_elem)
+                    # ET.dump(def_elem)
 
                     # [1: - ignore 'settings' root element
                     # :-1] - get parent; do not include current (last) element
                     if len(path[1:-1]) == 0:
                         parent_elem = self.root
                     else:
-                        parent_find = './' + '/'.join(path[1:-1])
+                        parent_find = "./" + "/".join(path[1:-1])
                         parent_elem = self.root.find(parent_find)
-                    
-                    parent_elem.insert(0, def_elem)     # better indentation preservation when inserting at top, vs append
+
+                    parent_elem.insert(
+                        0, def_elem
+                    )  # better indentation preservation when inserting at top, vs append
                     self.pending_changes = True
 
-            elif event == 'end':
+            elif event == "end":
                 path.pop()
 
         if self.pending_changes:

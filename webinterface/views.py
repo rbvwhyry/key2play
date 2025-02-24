@@ -4,16 +4,16 @@ import os
 
 import time
 
-ALLOWED_EXTENSIONS = {'mid', 'musicxml', 'mxl', 'xml', 'abc'}
+ALLOWED_EXTENSIONS = {"mid", "musicxml", "mxl", "xml", "abc"}
 
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @webinterface.before_request
 def before_request():
-    excluded_routes = ['/api/get_homepage_data']
+    excluded_routes = ["/api/get_homepage_data"]
 
     # Check if the current request path is in the excluded_routes list
     if request.path not in excluded_routes:
@@ -21,71 +21,77 @@ def before_request():
         webinterface.menu.is_idle_animation_running = False
 
 
-@webinterface.route('/newpage')
+@webinterface.route("/newpage")
 def newpage():
-    return render_template('newpage.html')
+    return render_template("newpage.html")
 
-@webinterface.route('/')
+
+@webinterface.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
-@webinterface.route('/start')
+
+@webinterface.route("/start")
 def start():
-    return render_template('start.html')
+    return render_template("start.html")
 
-@webinterface.route('/home')
+
+@webinterface.route("/home")
 def home():
-    return render_template('home.html')
+    return render_template("home.html")
 
 
-@webinterface.route('/ledsettings')
+@webinterface.route("/ledsettings")
 def ledsettings():
-    return render_template('ledsettings.html')
+    return render_template("ledsettings.html")
 
 
-@webinterface.route('/ledanimations')
+@webinterface.route("/ledanimations")
 def ledanimations():
-    return render_template('ledanimations.html')
+    return render_template("ledanimations.html")
 
 
-@webinterface.route('/songs')
+@webinterface.route("/songs")
 def songs():
-    return render_template('songs.html')
+    return render_template("songs.html")
 
 
-@webinterface.route('/sequences')
+@webinterface.route("/sequences")
 def sequences():
-    return render_template('sequences.html')
+    return render_template("sequences.html")
 
 
-@webinterface.route('/ports')
+@webinterface.route("/ports")
 def ports():
-    return render_template('ports.html')
+    return render_template("ports.html")
 
 
-@webinterface.route('/network')
+@webinterface.route("/network")
 def network():
-    return render_template('network.html')
+    return render_template("network.html")
 
 
-@webinterface.route('/upload', methods=['POST'])
+@webinterface.route("/upload", methods=["POST"])
 def upload_file():
-    if request.method == 'POST':
-        if 'file' not in request.files:
+    if request.method == "POST":
+        if "file" not in request.files:
             return jsonify(success=False, error="no file")
-        file = request.files['file']
+        file = request.files["file"]
         filename = file.filename
         if os.path.exists("Songs/" + filename):
-            return jsonify(success=False, error="file already exists", song_name=filename)
+            return jsonify(
+                success=False, error="file already exists", song_name=filename
+            )
         if not allowed_file(file.filename):
             return jsonify(success=False, error="not a midi file", song_name=filename)
 
         filename = filename.replace("'", "")
-        file.save(os.path.join(webinterface.config['UPLOAD_FOLDER'], filename))
+        file.save(os.path.join(webinterface.config["UPLOAD_FOLDER"], filename))
         return jsonify(success=True, reload_songs=True, song_name=filename)
 
+
 # Add new route to light up LEDs
-@webinterface.route('/light-up', methods=['POST'])
+@webinterface.route("/light-up", methods=["POST"])
 def light_up():
     try:
         # Light up the 100th LED as green for 5 seconds

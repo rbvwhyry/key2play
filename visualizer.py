@@ -37,7 +37,7 @@ fh = 0
 
 def singleton():
     global fh
-    fh = open(os.path.realpath(__file__), 'r')
+    fh = open(os.path.realpath(__file__), "r")
     try:
         fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except Exception as error:
@@ -52,21 +52,54 @@ def restart_script():
 
 singleton()
 
-appmode_default = 'platform'
+appmode_default = "platform"
 if isinstance(RPiException, RuntimeError):
     # If Raspberry GPIO fails (no Raspberry Pi detected) then set default to app mode
-    appmode_default = 'app'
+    appmode_default = "app"
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--clear', action='store_true', help='clear the display on exit')
-parser.add_argument('-d', '--display', type=str, help="choose type of display: '1in44' (default) | '1in3'")
-parser.add_argument('-f', '--fontdir', type=str, help="Use an alternate directory for fonts")
-parser.add_argument('-p', '--port', type=int, help="set port for webinterface (80 is default)")
-parser.add_argument('-s', '--skipupdate', action='store_true', help="Do not try to update /usr/local/bin/connectall.py")
-parser.add_argument('-w', '--webinterface', help="disable webinterface: 'true' (default) | 'false'")
-parser.add_argument('-r', '--rotatescreen', default="false", help="rotate screen: 'false' (default) | 'true'")
-parser.add_argument('-a', '--appmode', default=appmode_default, help="appmode: 'platform' (default) | 'app'")
-parser.add_argument('-l', '--leddriver', default="rpi_ws281x", help="leddriver: 'rpi_ws281x' (default) | 'emu' ")
+parser.add_argument(
+    "-c", "--clear", action="store_true", help="clear the display on exit"
+)
+parser.add_argument(
+    "-d",
+    "--display",
+    type=str,
+    help="choose type of display: '1in44' (default) | '1in3'",
+)
+parser.add_argument(
+    "-f", "--fontdir", type=str, help="Use an alternate directory for fonts"
+)
+parser.add_argument(
+    "-p", "--port", type=int, help="set port for webinterface (80 is default)"
+)
+parser.add_argument(
+    "-s",
+    "--skipupdate",
+    action="store_true",
+    help="Do not try to update /usr/local/bin/connectall.py",
+)
+parser.add_argument(
+    "-w", "--webinterface", help="disable webinterface: 'true' (default) | 'false'"
+)
+parser.add_argument(
+    "-r",
+    "--rotatescreen",
+    default="false",
+    help="rotate screen: 'false' (default) | 'true'",
+)
+parser.add_argument(
+    "-a",
+    "--appmode",
+    default=appmode_default,
+    help="appmode: 'platform' (default) | 'app'",
+)
+parser.add_argument(
+    "-l",
+    "--leddriver",
+    default="rpi_ws281x",
+    help="leddriver: 'rpi_ws281x' (default) | 'emu' ",
+)
 args = parser.parse_args()
 
 
@@ -128,8 +161,18 @@ t.start()
 learning = LearnMIDI(usersettings, ledsettings, midiports, ledstrip)
 hotspot = Hotspot(platform)
 saving = SaveMIDI()
-menu = MenuLCD("config/menu.xml", args, usersettings, ledsettings, ledstrip, learning, saving,
-               midiports, hotspot, platform)
+menu = MenuLCD(
+    "config/menu.xml",
+    args,
+    usersettings,
+    ledsettings,
+    ledstrip,
+    learning,
+    saving,
+    midiports,
+    hotspot,
+    platform,
+)
 
 midiports.add_instance(menu)
 ledsettings.add_instance(menu, ledstrip)
@@ -166,20 +209,22 @@ def start_webserver():
     webinterface.hotspot = hotspot
     webinterface.platform = platform
     webinterface.jinja_env.auto_reload = True
-    webinterface.config['TEMPLATES_AUTO_RELOAD'] = True
+    webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
     # webinterface.run(use_reloader=False, debug=False, port=80, host='0.0.0.0')
-    serve(webinterface, host='0.0.0.0', port=args.port, threads=20)
+    serve(webinterface, host="0.0.0.0", port=args.port, threads=20)
 
 
 websocket_loop = asyncio.new_event_loop()
 
 if args.webinterface != "false":
-    logger.info('Starting webinterface')
+    logger.info("Starting webinterface")
     processThread = threading.Thread(target=start_webserver, daemon=True)
     processThread.start()
 
     # Start websocket server
-    processThread = threading.Thread(target=web_mod.start_server, args=(websocket_loop,), daemon=True)
+    processThread = threading.Thread(
+        target=web_mod.start_server, args=(websocket_loop,), daemon=True
+    )
     processThread.start()
 
     # Register the shutdown handler
@@ -199,7 +244,7 @@ strip = ledstrip.strip
 numPixels = strip.numPixels()
 strip.setBrightness(128)
 for i in range(0, numPixels):
-    strip.setPixelColor(i, Color(255,255,255))
+    strip.setPixelColor(i, Color(255, 255, 255))
 strip.show()
 
 while True:
@@ -252,8 +297,18 @@ while True:
             usersettings.pending_reset = False
             ledsettings = LedSettings(usersettings)
             ledstrip = LedStrip(usersettings, ledsettings)
-            menu = MenuLCD("config/menu.xml", args, usersettings, ledsettings, ledstrip, learning,
-                           saving, midiports, hotspot, platform)
+            menu = MenuLCD(
+                "config/menu.xml",
+                args,
+                usersettings,
+                ledsettings,
+                ledstrip,
+                learning,
+                saving,
+                midiports,
+                hotspot,
+                platform,
+            )
             menu.show()
             ledsettings.add_instance(menu, ledstrip)
 
@@ -336,15 +391,20 @@ while True:
 
         # Calculate fading for Fading and Velocity modes
         # "Velocity","Pedal" starts fading right away, "Fading" starts fading on NoteOff
-        if ledsettings.mode == "Velocity" or ledsettings.mode == "Pedal" or (
-                ledsettings.mode == "Fading" and ledstrip.keylist_status[n] == 0):
+        if (
+            ledsettings.mode == "Velocity"
+            or ledsettings.mode == "Pedal"
+            or (ledsettings.mode == "Fading" and ledstrip.keylist_status[n] == 0)
+        ):
             fading = (strength / float(100)) / 10
             red = int(red * fading)
             green = int(green * fading)
             blue = int(blue * fading)
             # ledstrip.keylist[n] = ledstrip.keylist[n] - ledsettings.fadingspeed
             # ledsettings.fadingspeed is a value in seconds of how long it takes for full fade
-            decrease_amount = int((event_loop_time / float(ledsettings.fadingspeed / 1000)) * 1000)
+            decrease_amount = int(
+                (event_loop_time / float(ledsettings.fadingspeed / 1000)) * 1000
+            )
             ledstrip.keylist[n] = max(0, ledstrip.keylist[n] - decrease_amount)
             led_changed = True
 
@@ -367,7 +427,9 @@ while True:
         # Apply fade mode colors to ledstrip
         if led_changed:
             ledstrip.strip.setPixelColor(n, Color(int(red), int(green), int(blue)))
-            ledstrip.set_adjacent_colors(n, Color(int(red), int(green), int(blue)), False, fading)
+            ledstrip.set_adjacent_colors(
+                n, Color(int(red), int(green), int(blue)), False, fading
+            )
 
     # Prep midi event queue
     if len(saving.is_playing_midi) == 0 and learning.is_started_midi is False:
@@ -390,7 +452,9 @@ while True:
 
         # when a note is lifted (off)
         # midi note off can be triggered 2 ways: note_off or note_on with velocity 0
-        if (msg.type == "note_off" or (msg.type == "note_on" and msg.velocity == 0)) and ledsettings.mode != "Disabled":
+        if (
+            msg.type == "note_off" or (msg.type == "note_on" and msg.velocity == 0)
+        ) and ledsettings.mode != "Disabled":
             velocity = 0
             # changing offset to adjust the distance between the LEDs to the key spacing
             note_position = get_note_position(msg.note, ledstrip, ledsettings)
@@ -403,17 +467,33 @@ while True:
             elif ledsettings.mode == "Normal":
                 ledstrip.keylist[note_position] = 0
             elif ledsettings.mode == "Pedal":
-                ledstrip.keylist[note_position] *= (100 - ledsettings.fadepedal_notedrop)/100
+                ledstrip.keylist[note_position] *= (
+                    100 - ledsettings.fadepedal_notedrop
+                ) / 100
 
             if ledstrip.keylist[note_position] <= 0:
-                if ledsettings.backlight_brightness > 0 and menu.screensaver_is_running is not True:
-                    red_backlight = int(
-                        ledsettings.get_backlight_color("Red")) * ledsettings.backlight_brightness_percent / 100
-                    green_backlight = int(
-                        ledsettings.get_backlight_color("Green")) * ledsettings.backlight_brightness_percent / 100
-                    blue_backlight = int(
-                        ledsettings.get_backlight_color("Blue")) * ledsettings.backlight_brightness_percent / 100
-                    color_backlight = Color(int(red_backlight), int(green_backlight), int(blue_backlight))
+                if (
+                    ledsettings.backlight_brightness > 0
+                    and menu.screensaver_is_running is not True
+                ):
+                    red_backlight = (
+                        int(ledsettings.get_backlight_color("Red"))
+                        * ledsettings.backlight_brightness_percent
+                        / 100
+                    )
+                    green_backlight = (
+                        int(ledsettings.get_backlight_color("Green"))
+                        * ledsettings.backlight_brightness_percent
+                        / 100
+                    )
+                    blue_backlight = (
+                        int(ledsettings.get_backlight_color("Blue"))
+                        * ledsettings.backlight_brightness_percent
+                        / 100
+                    )
+                    color_backlight = Color(
+                        int(red_backlight), int(green_backlight), int(blue_backlight)
+                    )
                     ledstrip.strip.setPixelColor(note_position, color_backlight)
                     ledstrip.set_adjacent_colors(note_position, color_backlight, True)
                 else:
@@ -424,7 +504,11 @@ while True:
                 saving.add_track("note_off", msg.note, velocity, msg_timestamp)
 
         # when a note is pressed
-        elif msg.type == 'note_on' and msg.velocity > 0 and ledsettings.mode != "Disabled":
+        elif (
+            msg.type == "note_on"
+            and msg.velocity > 0
+            and ledsettings.mode != "Disabled"
+        ):
             velocity = msg.velocity
             note_position = get_note_position(msg.note, ledstrip, ledsettings)
             if note_position >= ledstrip.led_number or note_position < 0:
@@ -469,16 +553,24 @@ while True:
                     ledstrip.set_adjacent_colors(note_position, s_color, False)
             else:
                 if ledsettings.skipped_notes != "Normal":
-                    s_color = Color(int(int(red) / float(brightness)), int(int(green) / float(brightness)),
-                                    int(int(blue) / float(brightness)))
+                    s_color = Color(
+                        int(int(red) / float(brightness)),
+                        int(int(green) / float(brightness)),
+                        int(int(blue) / float(brightness)),
+                    )
                     ledstrip.strip.setPixelColor(note_position, s_color)
                     ledstrip.set_adjacent_colors(note_position, s_color, False)
 
             # Saving
             if saving.is_recording:
                 if ledsettings.color_mode == "Multicolor":
-                    saving.add_track("note_on", msg.note, velocity, msg_timestamp,
-                                     wc.rgb_to_hex((red, green, blue)))
+                    saving.add_track(
+                        "note_on",
+                        msg.note,
+                        velocity,
+                        msg_timestamp,
+                        wc.rgb_to_hex((red, green, blue)),
+                    )
                 else:
                     saving.add_track("note_on", msg.note, velocity, msg_timestamp)
 
@@ -494,10 +586,16 @@ while True:
             if ledsettings.sequence_active and ledsettings.next_step is not None:
                 try:
                     if "+" in ledsettings.next_step:
-                        if int(value) > int(ledsettings.next_step) and control == ledsettings.control_number:
+                        if (
+                            int(value) > int(ledsettings.next_step)
+                            and control == ledsettings.control_number
+                        ):
                             ledsettings.set_sequence(0, 1)
                     else:
-                        if int(value) < int(ledsettings.next_step) and control == ledsettings.control_number:
+                        if (
+                            int(value) < int(ledsettings.next_step)
+                            and control == ledsettings.control_number
+                        ):
                             ledsettings.set_sequence(0, 1)
                 except TypeError as e:
                     pass
@@ -505,7 +603,9 @@ while True:
                     logger.warning(f"Unexpected exception occurred: {e}")
 
             if saving.is_recording:
-                saving.add_control_change("control_change", 0, control, value, msg_timestamp)
+                saving.add_control_change(
+                    "control_change", 0, control, value, msg_timestamp
+                )
 
         color_mode.MidiEvent(msg, None, ledstrip)
 

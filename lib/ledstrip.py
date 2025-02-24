@@ -4,13 +4,16 @@ from lib.rpi_drivers import PixelStrip, ws
 from lib.LED_drivers import PixelStrip_Emu
 from lib.log_setup import logger
 
+
 class LedStrip:
     def __init__(self, usersettings, ledsettings, driver="rpi_ws281x"):
         self.usersettings = usersettings
         self.ledsettings = ledsettings
         self.driver = driver
 
-        self.brightness_percent = int(self.usersettings.get_setting_value("brightness_percent"))
+        self.brightness_percent = int(
+            self.usersettings.get_setting_value("brightness_percent")
+        )
         self.led_number = int(self.usersettings.get_setting_value("led_count"))
         self.leds_per_meter = int(self.usersettings.get_setting_value("leds_per_meter"))
         self.shift = int(self.usersettings.get_setting_value("shift"))
@@ -27,13 +30,15 @@ class LedStrip:
         self.current_fps = 0
 
         # LED strip configuration:
-        #self.LED_COUNT = int(self.led_number)  # Number of LED pixels.
+        # self.LED_COUNT = int(self.led_number)  # Number of LED pixels.
         self.LED_PIN = 18  # GPIO pin connected to the pixels (18 uses PWM!).
         # LED_PIN        = 10      # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
         self.LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
         self.LED_DMA = 10  # DMA channel to use for generating signal (try 10)
-        #self.LED_BRIGHTNESS = int(self.brightness)  # Set to 0 for darkest and 255 for brightest
-        self.LED_INVERT = False  # True to invert the signal (when using NPN transistor level shift)
+        # self.LED_BRIGHTNESS = int(self.brightness)  # Set to 0 for darkest and 255 for brightest
+        self.LED_INVERT = (
+            False  # True to invert the signal (when using NPN transistor level shift)
+        )
         self.LED_CHANNEL = 0  # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
         self.WEBEMU_FPS = 10
@@ -48,8 +53,16 @@ class LedStrip:
         if self.driver == "rpi_ws281x":
             try:
                 # Create NeoPixel object with appropriate configuration.
-                self.strip = PixelStrip(int(self.led_number), self.LED_PIN, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT,
-                                            int(self.brightness), self.LED_CHANNEL, ws.WS2811_STRIP_GRB)
+                self.strip = PixelStrip(
+                    int(self.led_number),
+                    self.LED_PIN,
+                    self.LED_FREQ_HZ,
+                    self.LED_DMA,
+                    self.LED_INVERT,
+                    int(self.brightness),
+                    self.LED_CHANNEL,
+                    ws.WS2811_STRIP_GRB,
+                )
                 # Intialize the library (must be called once before other functions).
                 self.strip.begin()
                 if "releaseGIL" in dir(self.strip):
@@ -71,7 +84,6 @@ class LedStrip:
         elif self.driver == "emu":
             self.strip = PixelStrip_Emu(int(self.led_number))
 
-
     def change_gamma(self, value):
         self.led_gamma = float(value)
         if 0.01 <= self.led_gamma <= 10.0:
@@ -90,7 +102,9 @@ class LedStrip:
         self.brightness_percent = clamp(self.brightness_percent, 1, 100)
         self.brightness = 255 * self.brightness_percent / 100
 
-        self.usersettings.change_setting_value("brightness_percent", self.brightness_percent)
+        self.usersettings.change_setting_value(
+            "brightness_percent", self.brightness_percent
+        )
 
         self.strip.setBrightness(int(self.brightness))
 
@@ -121,9 +135,16 @@ class LedStrip:
         self.usersettings.change_setting_value("reverse", self.reverse)
 
     def set_adjacent_colors(self, note, color, led_turn_off, fading=1):
-        if self.ledsettings.adjacent_mode == "RGB" and color != 0 and led_turn_off is not True:
-            color = Color(int(self.ledsettings.adjacent_red * fading), int(self.ledsettings.adjacent_green * fading),
-                          int(self.ledsettings.adjacent_blue * fading))
+        if (
+            self.ledsettings.adjacent_mode == "RGB"
+            and color != 0
+            and led_turn_off is not True
+        ):
+            color = Color(
+                int(self.ledsettings.adjacent_red * fading),
+                int(self.ledsettings.adjacent_green * fading),
+                int(self.ledsettings.adjacent_blue * fading),
+            )
         if self.ledsettings.adjacent_mode != "Off":
 
             if 1 < note < (self.led_number - 2):

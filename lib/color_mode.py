@@ -5,6 +5,7 @@ import colorsys
 import mido
 import random
 
+
 class ColorMode(object):
     def __new__(cls, name, ledsettings):
         """Automagic factory for creating ColorMode
@@ -13,19 +14,19 @@ class ColorMode(object):
         and https://stackoverflow.com/questions/5953759/using-a-class-new-method-as-a-factory-init-gets-called-twice
         """
         if cls is ColorMode:
-            if name == 'Single':
+            if name == "Single":
                 new_cls = SingleColor
-            elif name == 'Multicolor':
+            elif name == "Multicolor":
                 new_cls = Multicolor
-            elif name == 'Rainbow':
+            elif name == "Rainbow":
                 new_cls = Rainbow
-            elif name == 'Speed':
+            elif name == "Speed":
                 new_cls = SpeedColor
-            elif name == 'Gradient':
+            elif name == "Gradient":
                 new_cls = Gradient
-            elif name == 'Scale':
+            elif name == "Scale":
                 new_cls = ScaleColoring
-            elif name == 'VelocityRainbow':
+            elif name == "VelocityRainbow":
                 new_cls = VelocityRainbow
             else:
                 new_cls = cls
@@ -54,7 +55,7 @@ class ColorMode(object):
 
         Called on every midi event, with direct ledstrip access.
         If using this function without NoteOn, then
-        ledstrip.strip.setPixelColor must be set manually, 
+        ledstrip.strip.setPixelColor must be set manually,
         as well set ledstrip.keylist_color for fade processing
         and call ledstrip.set_adjacent_colors.
         """
@@ -87,8 +88,8 @@ class Multicolor(ColorMode):
         self.multicolor_iteration = ledsettings.multicolor_iteration
 
     def NoteOn(self, midi_event: mido.Message, midi_time, midi_state, note_position):
-            chosen_color = self.get_random_multicolor_in_range(midi_event.note)
-            return chosen_color
+        chosen_color = self.get_random_multicolor_in_range(midi_event.note)
+        return chosen_color
 
     def get_random_multicolor_in_range(self, note):
         temporary_multicolor = []
@@ -122,18 +123,25 @@ class Multicolor(ColorMode):
                 left_to_right_distance = right - left
                 percent_value = (note - left) / left_to_right_distance
 
-                red = (percent_value * (color_on_the_right[right][0] -
-                                        color_on_the_left[left][0])) + color_on_the_left[left][0]
-                green = (percent_value * (color_on_the_right[right][1] -
-                                          color_on_the_left[left][1])) + color_on_the_left[left][1]
-                blue = (percent_value * (color_on_the_right[right][2] -
-                                         color_on_the_left[left][2])) + color_on_the_left[left][2]
+                red = (
+                    percent_value
+                    * (color_on_the_right[right][0] - color_on_the_left[left][0])
+                ) + color_on_the_left[left][0]
+                green = (
+                    percent_value
+                    * (color_on_the_right[right][1] - color_on_the_left[left][1])
+                ) + color_on_the_left[left][1]
+                blue = (
+                    percent_value
+                    * (color_on_the_right[right][2] - color_on_the_left[left][2])
+                ) + color_on_the_left[left][2]
 
                 chosen_color = [int(red), int(green), int(blue)]
             else:
                 chosen_color = [0, 0, 0]
 
         return chosen_color
+
 
 class Rainbow(ColorMode):
     def LoadSettings(self, ledsettings):
@@ -147,8 +155,10 @@ class Rainbow(ColorMode):
 
     def NoteOn(self, midi_event: mido.Message, midi_time, midi_state, note_position):
         shift = (time.time() - self.timeshift_start) * self.timeshift
-        rainbow_value = int((int(note_position) + self.offset + shift) * (
-                float(self.scale) / 100)) & 255
+        rainbow_value = (
+            int((int(note_position) + self.offset + shift) * (float(self.scale) / 100))
+            & 255
+        )
         return cmap.colormaps[self.colormap][rainbow_value]
 
     def ColorUpdate(self, time_delta, led_pos, old_color):
@@ -182,36 +192,62 @@ class SpeedColor(ColorMode):
             green = self.speed_fastest["green"]
             blue = self.speed_fastest["blue"]
         else:
-            red = ((self.speed_fastest["red"] - self.speed_slowest["red"]) *
-                   float(speed_percent)) + self.speed_slowest["red"]
-            green = ((self.speed_fastest["green"] - self.speed_slowest["green"]) *
-                     float(speed_percent)) + self.speed_slowest["green"]
-            blue = ((self.speed_fastest["blue"] - self.speed_slowest["blue"]) *
-                    float(speed_percent)) + self.speed_slowest["blue"]
+            red = (
+                (self.speed_fastest["red"] - self.speed_slowest["red"])
+                * float(speed_percent)
+            ) + self.speed_slowest["red"]
+            green = (
+                (self.speed_fastest["green"] - self.speed_slowest["green"])
+                * float(speed_percent)
+            ) + self.speed_slowest["green"]
+            blue = (
+                (self.speed_fastest["blue"] - self.speed_slowest["blue"])
+                * float(speed_percent)
+            ) + self.speed_slowest["blue"]
         return (round(red), round(green), round(blue))
 
 
 class Gradient(ColorMode):
     def LoadSettings(self, ledsettings):
         self.led_number = int(ledsettings.usersettings.get_setting_value("led_count"))
-        self.gradient_start = {"red": int(ledsettings.usersettings.get_setting_value("gradient_start_red")),
-                               "green": int(ledsettings.usersettings.get_setting_value("gradient_start_green")),
-                               "blue": int(ledsettings.usersettings.get_setting_value("gradient_start_blue"))}
+        self.gradient_start = {
+            "red": int(
+                ledsettings.usersettings.get_setting_value("gradient_start_red")
+            ),
+            "green": int(
+                ledsettings.usersettings.get_setting_value("gradient_start_green")
+            ),
+            "blue": int(
+                ledsettings.usersettings.get_setting_value("gradient_start_blue")
+            ),
+        }
 
-        self.gradient_end = {"red": int(ledsettings.usersettings.get_setting_value("gradient_end_red")),
-                             "green": int(ledsettings.usersettings.get_setting_value("gradient_end_green")),
-                             "blue": int(ledsettings.usersettings.get_setting_value("gradient_end_blue"))}
+        self.gradient_end = {
+            "red": int(ledsettings.usersettings.get_setting_value("gradient_end_red")),
+            "green": int(
+                ledsettings.usersettings.get_setting_value("gradient_end_green")
+            ),
+            "blue": int(
+                ledsettings.usersettings.get_setting_value("gradient_end_blue")
+            ),
+        }
 
     def NoteOn(self, midi_event: mido.Message, midi_time, midi_state, note_position):
         return self.gradient_get_colors(note_position)
 
     def gradient_get_colors(self, position):
-        red = ((position / self.led_number) *
-               (self.gradient_end["red"] - self.gradient_start["red"])) + self.gradient_start["red"]
-        green = ((position / self.led_number) *
-                 (self.gradient_end["green"] - self.gradient_start["green"])) + self.gradient_start["green"]
-        blue = ((position / self.led_number) *
-                (self.gradient_end["blue"] - self.gradient_start["blue"])) + self.gradient_start["blue"]
+        red = (
+            (position / self.led_number)
+            * (self.gradient_end["red"] - self.gradient_start["red"])
+        ) + self.gradient_start["red"]
+        green = (
+            (position / self.led_number)
+            * (self.gradient_end["green"] - self.gradient_start["green"])
+        ) + self.gradient_start["green"]
+        blue = (
+            (position / self.led_number)
+            * (self.gradient_end["blue"] - self.gradient_start["blue"])
+        ) + self.gradient_start["blue"]
 
         return (round(red), round(green), round(blue))
 
@@ -223,7 +259,9 @@ class ScaleColoring(ColorMode):
         self.key_not_in_scale = ledsettings.key_not_in_scale
 
     def NoteOn(self, midi_event: mido.Message, midi_time, midi_state, note_position):
-        scale_colors = get_scale_color(self.scale_key, midi_event.note, self.key_in_scale, self.key_not_in_scale)
+        scale_colors = get_scale_color(
+            self.scale_key, midi_event.note, self.key_in_scale, self.key_not_in_scale
+        )
         return scale_colors
 
 
@@ -238,6 +276,16 @@ class VelocityRainbow(ColorMode):
         if self.colormap not in cmap.colormaps:
             return None
 
-        x = int(((255 * powercurve(midi_event.velocity / 127, self.curve / 100)
-                    * (self.scale / 100) % 256) + self.offset) % 256)
+        x = int(
+            (
+                (
+                    255
+                    * powercurve(midi_event.velocity / 127, self.curve / 100)
+                    * (self.scale / 100)
+                    % 256
+                )
+                + self.offset
+            )
+            % 256
+        )
         return cmap.colormaps[self.colormap][x]

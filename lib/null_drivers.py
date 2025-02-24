@@ -1,6 +1,7 @@
 import time
 
-class GPIOnull():
+
+class GPIOnull:
     def __init__(self):
         pass
 
@@ -11,12 +12,13 @@ class GPIOnull():
         pass
 
     def input(self, pin):
-        if pin == 12: # SENSECOVER
+        if pin == 12:  # SENSECOVER
             return 1
         else:
             return None
 
-class SPInull():
+
+class SPInull:
     def __getattr__(self, name):
         return self.pass_func
 

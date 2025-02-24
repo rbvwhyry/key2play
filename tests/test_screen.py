@@ -25,22 +25,22 @@ def main():
     draw.rectangle([(18, 10), (110, 20)], fill="RED")
 
     print("***draw text")
-    draw.text((33, 22), 'WaveShare ', fill="BLUE")
-    draw.text((32, 36), 'Electronic ', fill="BLUE")
-    draw.text((28, 48), '1.44inch LCD ', fill="BLUE")
+    draw.text((33, 22), "WaveShare ", fill="BLUE")
+    draw.text((32, 36), "Electronic ", fill="BLUE")
+    draw.text((28, 48), "1.44inch LCD ", fill="BLUE")
 
     LCD.LCD_ShowImage(image, 0, 0)
     LCD_Config.Driver_Delay_ms(500)
 
-    image = Image.open('time.bmp')
+    image = Image.open("time.bmp")
     LCD.LCD_ShowImage(image, 0, 0)
 
 
 # while (True):
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 
 # except:
-#	print("except")
-#	GPIO.cleanup()
+# 	print("except")
+# 	GPIO.cleanup()

@@ -6,15 +6,16 @@ import json
 from lib.log_setup import logger
 
 
-UPLOAD_FOLDER = 'Songs/'
+UPLOAD_FOLDER = "Songs/"
 
-webinterface = Flask(__name__, template_folder='templates')
-webinterface.config['TEMPLATES_AUTO_RELOAD'] = True
-webinterface.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-webinterface.config['MAX_CONTENT_LENGTH'] = 32 * 1000 * 1000
+webinterface = Flask(__name__, template_folder="templates")
+webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
+webinterface.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+webinterface.config["MAX_CONTENT_LENGTH"] = 32 * 1000 * 1000
 webinterface.json.sort_keys = False
 
 webinterface.socket_input = []
+
 
 def start_server(loop):
     async def learning(websocket):
@@ -47,9 +48,16 @@ def start_server(loop):
 
     async def ledemu(websocket):
         try:
-            await websocket.send(json.dumps({"settings": 
-                {"gamma": webinterface.ledstrip.led_gamma,
-                 "reverse": webinterface.ledstrip.reverse}}))
+            await websocket.send(
+                json.dumps(
+                    {
+                        "settings": {
+                            "gamma": webinterface.ledstrip.led_gamma,
+                            "reverse": webinterface.ledstrip.reverse,
+                        }
+                    }
+                )
+            )
         except:
             pass
 
@@ -81,7 +89,7 @@ def start_server(loop):
             return
 
     async def main():
-        logger.info("WebSocket listening on: " + str(get_ip_address())+":8765")
+        logger.info("WebSocket listening on: " + str(get_ip_address()) + ":8765")
         async with websockets.serve(handler, "0.0.0.0", 8765):
             await asyncio.Future()
 

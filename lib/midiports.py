@@ -4,6 +4,7 @@ import time
 from collections import deque
 from lib.log_setup import logger
 
+
 class MidiPorts:
     def __init__(self, usersettings):
         self.usersettings = usersettings
@@ -24,7 +25,9 @@ class MidiPorts:
         try:
             mido.get_input_names()
         except Exception as e:
-            logger.warning("First access to mido failed.  Possibly from known issue: https://github.com/SpotlightKid/python-rtmidi/issues/138")
+            logger.warning(
+                "First access to mido failed.  Possibly from known issue: https://github.com/SpotlightKid/python-rtmidi/issues/138"
+            )
 
         # checking if the input port was previously set by the user
         port = self.usersettings.get_setting_value("input_port")
@@ -38,7 +41,12 @@ class MidiPorts:
             # if not, try to find the new midi port
             try:
                 for port in mido.get_input_names():
-                    if "Through" not in port and "RPi" not in port and "RtMidOut" not in port and "USB-USB" not in port:
+                    if (
+                        "Through" not in port
+                        and "RPi" not in port
+                        and "RtMidOut" not in port
+                        and "USB-USB" not in port
+                    ):
                         self.inport = mido.open_input(port, callback=self.msg_callback)
                         self.usersettings.change_setting_value("input_port", port)
                         logger.info("Inport set to " + port)
@@ -57,7 +65,12 @@ class MidiPorts:
             # if not, try to find the new midi port
             try:
                 for port in mido.get_output_names():
-                    if "Through" not in port and "RPi" not in port and "RtMidOut" not in port and "USB-USB" not in port:
+                    if (
+                        "Through" not in port
+                        and "RPi" not in port
+                        and "RtMidOut" not in port
+                        and "USB-USB" not in port
+                    ):
                         self.playport = mido.open_output(port)
                         self.usersettings.change_setting_value("play_port", port)
                         logger.info("Playport set to " + port)
