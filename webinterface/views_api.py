@@ -55,8 +55,8 @@ import random
 @webinterface.route("/api/get_current_song", methods=["GET"])
 def get_current_song():
     song_tracks = webinterface.learning.song_tracks
-    eprint(f'get_current_song -- song_tracks: {song_tracks}')
-    return jsonify(song_tracks, {"status": "success", "code": 200})
+    song_tracks = [msg.__dict__ for msg in song_tracks]
+    return jsonify(song_tracks)
 
 
 @webinterface.route("/api/load_local_midi", methods=["POST"])
