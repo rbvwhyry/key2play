@@ -52,6 +52,22 @@ from lib.rpi_drivers import Color
 import random
 
 
+@webinterface.route("/api/get_current_song", methods=["GET"])
+def get_current_song():
+    song_tracks = webinterface.learning.song_tracks
+    eprint(f'get_current_song -- song_tracks: {song_tracks}')
+    return jsonify(song_tracks, {"status": "success", "code": 200})
+
+
+@webinterface.route("/api/load_local_midi", methods=["POST"])
+def load_local_midi():
+    filename = request.values.get("filename", default=None)
+    if not filename:
+        return jsonify(success=False)
+    webinterface.learning.load_midi(filename)
+    return jsonify(success=True)
+
+
 @webinterface.route("/api/set_light/<light_num>")
 def set_light(light_num):
     light_num = int(light_num)
