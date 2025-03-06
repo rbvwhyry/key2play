@@ -7,7 +7,7 @@ import subprocess
 
 import os
 
-from lib.functions import clamp, fastColorWipe, find_between, get_note_position
+from lib.functions import clamp, fastColorWipe, get_note_position
 from lib.rpi_drivers import Color
 
 import numpy as np
@@ -318,12 +318,12 @@ class LearnMIDI:
 
         # loop through wrong_notes and light them up
         for msg in wrong_notes:
-            note = int(find_between(str(msg), "note=", " "))
+            note = msg.note
 
             if "note_off" in str(msg):
                 velocity = 0
             else:
-                velocity = int(find_between(str(msg), "velocity=", " "))
+                velocity = msg.velocity
 
             note_position = get_note_position(note, self.ledstrip, self.ledsettings)
             if velocity > 0:
@@ -421,14 +421,12 @@ class LearnMIDI:
                                     if msg_in.type not in ("note_on", "note_off"):
                                         continue
 
-                                    note = int(find_between(str(msg_in), "note=", " "))
+                                    note = msg_in.note
 
                                     if "note_off" in str(msg_in):
                                         velocity = 0
                                     else:
-                                        velocity = int(
-                                            find_between(str(msg_in), "velocity=", " ")
-                                        )
+                                        velocity = msg_in.velocity
 
                                     # check if note is in the list of notes to press
                                     if note not in notes_to_press:
