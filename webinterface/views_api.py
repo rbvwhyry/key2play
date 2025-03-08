@@ -2123,6 +2123,7 @@ def get_learning_status():
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
     songs_list = os.listdir("Songs/")
+    songs_list = list(filter(lambda s: s.endswith('.mid'), songs_list))
 
     return jsonify(songs_list)
 
