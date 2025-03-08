@@ -2122,69 +2122,9 @@ def get_learning_status():
 
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
-    page = request.args.get("page")
-    page = int(page) - 1
-    length = request.args.get("length")
-    sortby = request.args.get("sortby")
-    search = request.args.get("search")
+    songs_list = os.listdir("Songs/")
 
-    start = int(page) * int(length)
-
-    songs_list_dict = {}
-
-    path = "Songs/"
-    songs_list = os.listdir(path)
-    songs_list = [os.path.join(path, i) for i in songs_list]
-
-    songs_list = sorted(songs_list, key=os.path.getmtime)
-
-    if sortby == "dateAsc":
-        songs_list.reverse()
-
-    if sortby == "nameAsc":
-        songs_list.sort()
-
-    if sortby == "nameDesc":
-        songs_list.sort(reverse=True)
-
-    i = 0
-    total_songs = 0
-
-    for song in songs_list:
-        if "_#" in song or not song.endswith(".mid"):
-            continue
-        if search:
-            if search.lower() not in song.lower():
-                continue
-        total_songs += 1
-
-    max_page = int(math.ceil(total_songs / int(length)))
-
-    for song in songs_list:
-        song = song.replace("Songs/", "")
-        date = os.path.getmtime("Songs/" + song)
-        if "_#" in song or not song.endswith(".mid"):
-            continue
-
-        if search:
-            if search.lower() not in song.lower():
-                continue
-
-        i += 1
-        if i > int(start):
-            songs_list_dict[song] = date
-
-        if len(songs_list_dict) >= int(length):
-            break
-
-    return render_template(
-        "songs_list.html",
-        len=len(songs_list_dict),
-        songs_list_dict=songs_list_dict,
-        page=page,
-        max_page=max_page,
-        total_songs=total_songs,
-    )
+    return jsonify(songs_list)
 
 
 @webinterface.route("/api/get_ports", methods=["GET"])
