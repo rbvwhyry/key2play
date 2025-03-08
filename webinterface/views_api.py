@@ -51,6 +51,10 @@ from lib.rpi_drivers import Color
 
 import random
 
+@webinterface.route('/api/currently_pressed_keys', methods=['GET'])
+def currently_pressed_keys():
+    return jsonify(webinterface.midiports.currently_pressed_keys)
+
 
 @webinterface.route("/api/get_current_song", methods=["GET"])
 def get_current_song():
