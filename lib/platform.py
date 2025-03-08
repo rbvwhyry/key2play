@@ -273,7 +273,6 @@ rsn_pairwise=CCMP
         usersettings.change_setting_value("is_hotspot_active", 1)
 
     def get_wifi_networks(self):
-        return
         try:
             output = subprocess.check_output(
                 ["sudo", "iwlist", "wlan0", "scan"], stderr=subprocess.STDOUT
