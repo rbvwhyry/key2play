@@ -15,6 +15,7 @@ class MidiPorts:
         self.inport = None
         self.playport = None
         self.midipending = None
+        self.currently_pressed_keys = []
 
         # mido backend python-rtmidi has a bug on some (debian-based) systems
         # involving the library location of alsa plugins
@@ -129,4 +130,11 @@ class MidiPorts:
             logger.info("Can't reconnect play port: " + port)
 
     def msg_callback(self, msg):
+        if msg.type == "note_on":
+            if msg.velocity == 0:
+                self.currently_pressed_keys.remove(msg.note)
+            else:
+                self.currently_pressed_keys.append(msg.note)
+        if msg.type == "note_off":
+            self.currently_pressed_keys.remove(msg.note)
         self.midi_queue.append((msg, time.perf_counter()))
