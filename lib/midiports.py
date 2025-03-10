@@ -132,9 +132,9 @@ class MidiPorts:
     def msg_callback(self, msg):
         if msg.type == "note_on":
             if msg.velocity == 0:
-                self.currently_pressed_keys.remove(msg.note)
+                self.currently_pressed_keys.remove(msg)
             else:
-                self.currently_pressed_keys.append(msg.note)
+                self.currently_pressed_keys.append(msg)
         if msg.type == "note_off":
-            self.currently_pressed_keys.remove(msg.note)
+            self.currently_pressed_keys.remove(msg)
         self.midi_queue.append((msg, time.perf_counter()))
