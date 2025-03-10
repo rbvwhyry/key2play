@@ -53,9 +53,9 @@ import random
 
 
 
-@app.route('/listenWorker.js')
+@app.route('/static/js/listenWorker.js')
 def serve_worker():
-    return send_from_directory('.', 'listenWorker.js', mimetype='application/javascript')
+    return send_from_directory('static/js', 'listenWorker.js', mimetype='application/javascript')
 
 
 
