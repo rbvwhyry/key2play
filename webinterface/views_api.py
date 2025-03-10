@@ -52,15 +52,14 @@ from lib.rpi_drivers import Color
 import random
 
 
-
-@app.route('/static/js/listenWorker.js')
+@webinterface.route("/static/js/listenWorker.js")
 def serve_worker():
-    return send_from_directory('static/js', 'listenWorker.js', mimetype='application/javascript')
+    return send_from_directory(
+        "static/js", "listenWorker.js", mimetype="application/javascript"
+    )
 
 
-
-
-@webinterface.route('/api/currently_pressed_keys', methods=['GET'])
+@webinterface.route("/api/currently_pressed_keys", methods=["GET"])
 def currently_pressed_keys():
     return jsonify(webinterface.midiports.currently_pressed_keys)
 
@@ -2132,7 +2131,7 @@ def get_learning_status():
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
     songs_list = os.listdir("Songs/")
-    songs_list = list(filter(lambda s: s.endswith('.mid'), songs_list))
+    songs_list = list(filter(lambda s: s.endswith(".mid"), songs_list))
 
     return jsonify(songs_list)
 
