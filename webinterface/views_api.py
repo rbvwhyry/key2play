@@ -51,6 +51,15 @@ from lib.rpi_drivers import Color
 
 import random
 
+
+
+@app.route('/listenWorker.js')
+def serve_worker():
+    return send_from_directory('.', 'listenWorker.js', mimetype='application/javascript')
+
+
+
+
 @webinterface.route('/api/currently_pressed_keys', methods=['GET'])
 def currently_pressed_keys():
     return jsonify(webinterface.midiports.currently_pressed_keys)
