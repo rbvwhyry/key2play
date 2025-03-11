@@ -61,7 +61,11 @@ def serve_worker():
 
 @webinterface.route("/api/currently_pressed_keys", methods=["GET"])
 def currently_pressed_keys():
-    return jsonify(webinterface.midiports.currently_pressed_keys)
+    result = [
+        {"note": msg.note, "velocity": msg.velocity}
+        for msg in webinterface.midiports.currently_pressed_keys
+    ]
+    return jsonify(result)
 
 
 @webinterface.route("/api/get_current_song", methods=["GET"])
