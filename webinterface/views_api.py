@@ -1,5 +1,5 @@
 from webinterface import webinterface
-from flask import render_template, send_file, request, jsonify
+from flask import render_template, send_file, request, jsonify, send_from_directory
 from werkzeug.security import safe_join
 from lib.functions import (
     get_last_logs,
