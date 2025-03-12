@@ -96,6 +96,18 @@ def set_light(light_num):
     strip.show()
     return jsonify(success=True)
 
+@webinterface.route("/api/get_config/<key>", methods=["GET"])
+def get_config(key):
+    result = webinterface.appconfig.get_config(key)
+    return jsonify(result)
+
+@webinterface.route("/api/set_config/<key>", methods=["POST"])
+def set_config(key):
+    assert(key is True) # assert non-emptiness
+    value = str(request.args.get("value"))
+    webinterface.appconfig.set_config(key, value)
+    return jsonify(success=True)
+
 
 @webinterface.route("/api/button_mot", methods=["GET"])
 def button_mot():

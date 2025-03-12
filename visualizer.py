@@ -25,6 +25,7 @@ import webinterface as web_mod
 import asyncio
 import atexit
 from waitress import serve
+import config
 
 from lib.log_setup import logger
 
@@ -114,6 +115,8 @@ if not args.skipupdate:
 platform.install_midi2abc()
 
 logger.info(args)
+
+appconfig = config.Config()
 
 
 if args.rotatescreen != "true":
@@ -208,6 +211,7 @@ def start_webserver():
     webinterface.menu = menu
     webinterface.hotspot = hotspot
     webinterface.platform = platform
+    webinterface.appconfig = appconfig
     webinterface.jinja_env.auto_reload = True
     webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
     # webinterface.run(use_reloader=False, debug=False, port=80, host='0.0.0.0')
