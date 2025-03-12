@@ -103,7 +103,7 @@ def get_config(key):
 
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
-    assert(key is True) # assert non-emptiness
+    assert(key != None) # assert non-emptiness
     value = str(request.args.get("value"))
     webinterface.appconfig.set_config(key, value)
     return jsonify(success=True)
