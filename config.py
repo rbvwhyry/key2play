@@ -26,7 +26,7 @@ class SimpleConfigKV(Base):
 
 
 class Config:
-    def get_config(key: str) -> str:
+    def get_config(self, key: str) -> str:
         engine = create_engine(f"sqlite:///{DB_FILENAME}")
         with Session(engine) as session:
             stmt = select(SimpleConfigKV).where(SimpleConfigKV.key == key)
@@ -34,7 +34,7 @@ class Config:
             return value[0]
 
 
-    def set_config(key: str, value: str):
+    def set_config(self, key: str, value: str):
         engine = create_engine(f"sqlite:///{DB_FILENAME}")
         with Session(engine) as session:
             stmt = (
@@ -42,11 +42,8 @@ class Config:
                 .values(key=key, value=value)
                 .on_conflict_do_update(index_elements=["key"], set_=dict(value=value))
             )
-            print(stmt)
             session.execute(stmt)
             session.commit()
 
-
 Base.metadata.create_all(create_engine(f"sqlite:///{DB_FILENAME}"))
-Config.set_config("test", "this is a test")
-print(Config.get_config("test"))
+appconfig = Config()
