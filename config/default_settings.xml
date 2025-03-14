@@ -25,7 +25,7 @@
 
 	<multicolor>[[255, 255, 255], [0, 0, 255], [0, 255, 0]]</multicolor>
 	<multicolor_range>[[20, 54], [54, 108], [35, 75]]</multicolor_range>
-    <multicolor_iteration>0</multicolor_iteration>
+    	<multicolor_iteration>0</multicolor_iteration>
 	
 	<sequence_active>False</sequence_active>
 
@@ -91,8 +91,8 @@
     <led_animation_brightness_percent>50</led_animation_brightness_percent>
     <disable_backlight_on_idle>1</disable_backlight_on_idle>
 
-	<led_count>176</led_count>
-	<leds_per_meter>144</leds_per_meter>
+	<led_count>320</led_count>
+	<leds_per_meter>160</leds_per_meter>
 	<shift>0</shift>
 	<reverse>0</reverse>
 
