@@ -45,5 +45,11 @@ class Config:
             session.execute(stmt)
             session.commit()
 
+    def num_leds_on_strip(self) -> int:
+        return get_config("num_leds_on_strip")
+
+    def set_num_leds_on_strip(self, num: int):
+        set_config("num_leds_on_strip", num)
+
 Base.metadata.create_all(create_engine(f"sqlite:///{DB_FILENAME}"))
 appconfig = Config()
