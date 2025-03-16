@@ -206,32 +206,6 @@ class SpeedColor(ColorMode):
             ) + self.speed_slowest["blue"]
         return (round(red), round(green), round(blue))
 
-
-class Gradient(ColorMode):
-    def LoadSettings(self, ledsettings):
-        self.led_number = int(ledsettings.usersettings.get_setting_value("led_count"))
-        self.gradient_start = {
-            "red": int(
-                ledsettings.usersettings.get_setting_value("gradient_start_red")
-            ),
-            "green": int(
-                ledsettings.usersettings.get_setting_value("gradient_start_green")
-            ),
-            "blue": int(
-                ledsettings.usersettings.get_setting_value("gradient_start_blue")
-            ),
-        }
-
-        self.gradient_end = {
-            "red": int(ledsettings.usersettings.get_setting_value("gradient_end_red")),
-            "green": int(
-                ledsettings.usersettings.get_setting_value("gradient_end_green")
-            ),
-            "blue": int(
-                ledsettings.usersettings.get_setting_value("gradient_end_blue")
-            ),
-        }
-
     def NoteOn(self, midi_event: mido.Message, midi_time, midi_state, note_position):
         return self.gradient_get_colors(note_position)
 

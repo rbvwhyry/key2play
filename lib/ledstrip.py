@@ -14,7 +14,6 @@ class LedStrip:
         self.brightness_percent = int(
             self.usersettings.get_setting_value("brightness_percent")
         )
-        self.led_number = int(self.usersettings.get_setting_value("led_count"))
         self.leds_per_meter = int(self.usersettings.get_setting_value("leds_per_meter"))
         self.shift = int(self.usersettings.get_setting_value("shift"))
         self.reverse = int(self.usersettings.get_setting_value("reverse"))
@@ -30,7 +29,6 @@ class LedStrip:
         self.current_fps = 0
 
         # LED strip configuration:
-        # self.LED_COUNT = int(self.led_number)  # Number of LED pixels.
         self.LED_PIN = 18  # GPIO pin connected to the pixels (18 uses PWM!).
         # LED_PIN        = 10      # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
         self.LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
@@ -107,17 +105,6 @@ class LedStrip:
         )
 
         self.strip.setBrightness(int(self.brightness))
-
-    def change_led_count(self, value, fixed_number=False):
-        if fixed_number:
-            self.led_number = value
-        else:
-            self.led_number += value
-        self.led_number = max(1, self.led_number)
-
-        self.usersettings.change_setting_value("led_count", self.led_number)
-
-        self.init_strip()
 
     def change_shift(self, value, fixed_number=False):
         if fixed_number:
