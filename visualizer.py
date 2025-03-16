@@ -148,9 +148,9 @@ GPIO.setup(KEY3, GPIO.IN, GPIO.PUD_UP)
 GPIO.setup(JPRESS, GPIO.IN, GPIO.PUD_UP)
 
 usersettings = UserSettings()
-midiports = MidiPorts(usersettings)
-ledsettings = LedSettings(usersettings)
-ledstrip = LedStrip(usersettings, ledsettings, args.leddriver)
+midiports = MidiPorts(appconfig, usersettings)
+ledsettings = LedSettings(appconfig, usersettings)
+ledstrip = LedStrip(appconfig, usersettings, ledsettings, args.leddriver)
 
 cmap.gradients.update(cmap.load_colormaps())
 cmap.generate_colormaps(cmap.gradients, ledstrip.led_gamma)

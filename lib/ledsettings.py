@@ -4,10 +4,11 @@ from xml.dom import minidom
 
 from lib.functions import fastColorWipe, find_between, clamp
 from lib.rpi_drivers import Color
+from lib.usersettings import UserSettings
 
 
 class LedSettings:
-    def __init__(self, usersettings):
+    def __init__(self, config, usersettings: UserSettings):
         self.step_number = None
         self.sequence_active_name = None
         self.count_steps = None
@@ -16,7 +17,8 @@ class LedSettings:
         self.sequences_tree = None
         self.ledstrip = None
         self.menu = None
-        self.usersettings = usersettings
+        self.usersettings: UserSettings = usersettings
+        self.config = config
 
         self.red = int(usersettings.get_setting_value("red"))
         self.green = int(usersettings.get_setting_value("green"))

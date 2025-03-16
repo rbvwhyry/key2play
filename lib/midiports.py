@@ -6,7 +6,8 @@ from lib.log_setup import logger
 
 
 class MidiPorts:
-    def __init__(self, usersettings):
+    def __init__(self, config, usersettings):
+        self.config = config
         self.usersettings = usersettings
         # midi queues will contain a tuple (midi_msg, timestamp)
         self.midifile_queue = deque()
@@ -132,9 +133,13 @@ class MidiPorts:
     def msg_callback(self, msg):
         if msg.type == "note_on":
             if msg.velocity == 0:
-                self.currently_pressed_keys = [x for x in self.currently_pressed_keys if msg.note != x.note]
+                self.currently_pressed_keys = [
+                    x for x in self.currently_pressed_keys if msg.note != x.note
+                ]
             else:
                 self.currently_pressed_keys.append(msg)
         if msg.type == "note_off":
-            self.currently_pressed_keys = [x for x in self.currently_pressed_keys if msg.note != x.note]
+            self.currently_pressed_keys = [
+                x for x in self.currently_pressed_keys if msg.note != x.note
+            ]
         self.midi_queue.append((msg, time.perf_counter()))

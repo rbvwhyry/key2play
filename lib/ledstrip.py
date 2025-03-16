@@ -6,10 +6,11 @@ from lib.log_setup import logger
 
 
 class LedStrip:
-    def __init__(self, usersettings, ledsettings, driver="rpi_ws281x"):
+    def __init__(self, config, usersettings, ledsettings, driver="rpi_ws281x"):
         self.usersettings = usersettings
         self.ledsettings = ledsettings
         self.driver = driver
+        self.config = config
 
         self.brightness_percent = int(
             self.usersettings.get_setting_value("brightness_percent")
@@ -44,15 +45,15 @@ class LedStrip:
         self.init_strip()
 
     def init_strip(self):
-        self.keylist = [0] * self.led_number
-        self.keylist_status = [0] * self.led_number
-        self.keylist_color = [0] * self.led_number
+        self.keylist = [0] * self.config.num_leds_on_strip()
+        self.keylist_status = [0] * self.config.num_leds_on_strip()
+        self.keylist_color = [0] * self.config.num_leds_on_strip()
 
         if self.driver == "rpi_ws281x":
             try:
                 # Create NeoPixel object with appropriate configuration.
                 self.strip = PixelStrip(
-                    int(self.led_number),
+                    int(self.config.num_leds_on_strip()),
                     self.LED_PIN,
                     self.LED_FREQ_HZ,
                     self.LED_DMA,
@@ -77,10 +78,10 @@ class LedStrip:
                     self.strip._leds = None
 
                 logger.info("Failed to load LED strip.  Using emu driver.")
-                self.strip = PixelStrip_Emu(int(self.led_number))
+                self.strip = PixelStrip_Emu(int(self.config.num_leds_on_strip()))
                 self.driver = "emu"
         elif self.driver == "emu":
-            self.strip = PixelStrip_Emu(int(self.led_number))
+            self.strip = PixelStrip_Emu(int(self.config.num_leds_on_strip()))
 
     def change_gamma(self, value):
         self.led_gamma = float(value)
@@ -134,7 +135,7 @@ class LedStrip:
             )
         if self.ledsettings.adjacent_mode != "Off":
 
-            if 1 < note < (self.led_number - 2):
+            if 1 < note < (self.config.num_leds_on_strip() - 2):
                 if self.keylist_status[int(note) + 2] == 0:
                     self.strip.setPixelColor(int(note) + 1, color)
 
