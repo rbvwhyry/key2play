@@ -4,7 +4,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.dialects.sqlite import insert
 from typing import List
 from typing import Optional
@@ -44,6 +44,19 @@ class Config:
             stmt = (
                 insert(SimpleConfigKV)
                 .values(key=key, value=value)
+                .on_conflict_do_update(index_elements=["key"], set_=dict(value=value))
+            )
+            session.execute(stmt)
+            session.commit()
+
+    def delete_config(key: str):
+        engine = create_engine(f"sqlite:///{DB_FILENAME}")
+        with Session(engine) as session:
+            stmt = (
+                delete(SimpleConfigKV)
+                .values(
+                    key=key,
+                )
                 .on_conflict_do_update(index_elements=["key"], set_=dict(value=value))
             )
             session.execute(stmt)
