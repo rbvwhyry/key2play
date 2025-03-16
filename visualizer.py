@@ -112,8 +112,6 @@ else:
 if not args.skipupdate:
     platform.copy_connectall_script()
 
-platform.install_midi2abc()
-
 logger.info(args)
 
 appconfig = config.Config()

@@ -12,7 +12,6 @@ class Hotspot:
         self.hotspot_script_time = 0
         self.time_without_wifi = 0
         self.last_wifi_check_time = 0
-        self.is_hostapd_installed = platform.is_package_installed("hostapd")
 
 
 class Platform_null:
@@ -93,8 +92,6 @@ class PlatformRasp:
 
     def manage_hotspot(self, hotspot, usersettings, midiports, first_run=False):
         return
-        if not hotspot.is_hostapd_installed:
-            return
 
         # Visualizer is starting, check if hotspot is active and run enable_ap.sh
         if first_run:

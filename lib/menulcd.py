@@ -4,9 +4,6 @@ from subprocess import call
 from xml.dom import minidom
 
 import webcolors as wc
-from PIL import ImageFont, Image, ImageDraw
-
-from lib import LCD_Config, LCD_1in44, LCD_1in3
 
 from lib.functions import *
 from lib.rpi_drivers import GPIO
@@ -43,17 +40,6 @@ class MenuLCD:
         self.hotspot = hotspot
         self.platform = platform
         self.args = args
-        font_dir = "/usr/share/fonts/truetype/freefont"
-        if args.fontdir is not None:
-            font_dir = args.fontdir
-        self.lcd_ttf = font_dir + "/FreeSansBold.ttf"
-        if not os.path.exists(self.lcd_ttf):
-            raise RuntimeError("Cannot locate font file: %s" % self.lcd_ttf)
-
-        self.LCD = None
-
-        self.DOMTree = minidom.parse(xml_file_name)
-        self.current_location = "menu"
         self.scroll_hold = 0
         self.cut_count = 0
         self.pointer_position = 0
