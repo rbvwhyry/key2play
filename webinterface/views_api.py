@@ -100,15 +100,15 @@ def set_light(light_num):
 
 @webinterface.route("/api/set_many_lights", methods=["POST"])
 def set_many_lights():
-    light_nums = request.values.get("light_nums")
-    light_nums = json.loads(light_nums)
-    assert len(light_nums) > 0
-    red = int(request.values.get("red", default=128))
-    blue = int(request.values.get("blue", default=128))
-    green = int(request.values.get("green", default=128))
-    color = Color(red, green, blue)
+    lights = request.values.get("lights")
+    lights = json.loads(lights)
+    assert len(lights) > 0
     strip = webinterface.ledstrip.strip
-    for light_num in light_nums:
+    for (light_num, color) in lights:
+        red = int(color[0])
+        blue = int(color[1])
+        green = int(color[2])
+        color = Color(red, green, blue)
         strip.setPixelColor(light_num, color)
     strip.setBrightness(128)
     strip.show()
