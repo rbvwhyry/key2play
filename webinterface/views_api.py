@@ -97,6 +97,7 @@ def set_light(light_num):
     strip.show()
     return jsonify(success=True)
 
+
 @webinterface.route("/api/set_many_lights", methods=["POST"])
 def set_many_lights():
     light_nums = request.values.get("light_nums")
@@ -109,8 +110,10 @@ def set_many_lights():
     strip = webinterface.ledstrip.strip
     for light_num in light_nums:
         strip.setPixelColor(light_num, color)
+    strip.setBrightness(128)
     strip.show()
     return jsonify(success=True)
+
 
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
