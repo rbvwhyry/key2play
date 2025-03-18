@@ -1,4 +1,5 @@
 from webinterface import webinterface
+import json
 from flask import render_template, send_file, request, jsonify, send_from_directory
 from werkzeug.security import safe_join
 from lib.functions import (
@@ -96,6 +97,21 @@ def set_light(light_num):
     strip.show()
     return jsonify(success=True)
 
+@webinterface.route("/api/set_many_lights", methods=["POST"])
+def set_many_lights():
+    import pdb;pdb.set_trace()
+    light_nums = request.values.get("light_nums")
+    light_nums = json.loads(light_nums)
+    assert len(light_nums) > 0
+    red = int(request.args.get("red", default=255))
+    blue = int(request.args.get("blue", default=255))
+    green = int(request.args.get("green", default=255))
+    color = Color(red, green, blue)
+    strip = webinterface.ledstrip.strip
+    for light_num in light_nums:
+        strip.setPixelColor(light_num, color)
+    strip.show()
+    return jsonify(success=True)
 
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
