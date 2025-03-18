@@ -79,10 +79,10 @@ class LedStrip:
                     self.strip._leds = None
 
                 logger.info("Failed to load LED strip.  Using emu driver.")
-                self.strip = PixelStrip_Emu(int(self.config.num_leds_on_strip()))
+                self.strip = PixelStrip_Emu(num_leds_on_strip)
                 self.driver = "emu"
         elif self.driver == "emu":
-            self.strip = PixelStrip_Emu(int(self.config.num_leds_on_strip()))
+            self.strip = PixelStrip_Emu(num_leds_on_strip)
 
     def change_gamma(self, value):
         self.led_gamma = float(value)
