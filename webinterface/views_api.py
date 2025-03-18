@@ -96,16 +96,25 @@ def set_light(light_num):
     strip.show()
     return jsonify(success=True)
 
+
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
     result = webinterface.appconfig.get_config(key)
     return jsonify(result)
 
+
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
-    assert(key != None) # assert non-emptiness
+    assert key != None  # assert non-emptiness
     value = str(request.values.get("value"))
     webinterface.appconfig.set_config(key, value)
+    return jsonify(success=True)
+
+
+@webinterface.route("/api/delete_config/<key>", methods=["DELETE"])
+def delete_config(key):
+    assert key != None
+    webinterface.appconfig.delete_config(key)
     return jsonify(success=True)
 
 

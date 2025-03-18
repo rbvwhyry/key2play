@@ -364,7 +364,7 @@ def get_note_position(note, ledstrip, ledsettings):
 
     note_pos_raw = int(density * (note - 20) - note_offset)
     if ledstrip.reverse:
-        return max(0, ledstrip.led_number - note_pos_raw)
+        return max(0, ledstrip.num_leds_on_strip() - note_pos_raw)
     else:
         return max(0, note_pos_raw)
 
@@ -432,7 +432,7 @@ def check_if_led_can_be_overwrite(i, ledstrip, ledsettings):
                 return True
         return False
     else:
-        if 1 < i < (ledstrip.led_number - 1):
+        if 1 < i < (ledstrip.num_leds_on_strip() - 1):
             if (
                 ledstrip.keylist[i + 1]
                 == ledstrip.keylist[i - 1]

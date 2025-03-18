@@ -460,7 +460,7 @@ while True:
             velocity = 0
             # changing offset to adjust the distance between the LEDs to the key spacing
             note_position = get_note_position(msg.note, ledstrip, ledsettings)
-            if note_position >= ledstrip.led_number or note_position < 0:
+            if note_position >= appconfig.num_leds_on_strip() or note_position < 0:
                 continue
 
             ledstrip.keylist_status[note_position] = 0
@@ -513,7 +513,7 @@ while True:
         ):
             velocity = msg.velocity
             note_position = get_note_position(msg.note, ledstrip, ledsettings)
-            if note_position >= ledstrip.led_number or note_position < 0:
+            if note_position >= appconfig.num_leds_on_strip() or note_position < 0:
                 continue
 
             color = color_mode.NoteOn(msg, msg_timestamp, None, note_position)

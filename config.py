@@ -11,7 +11,7 @@ from typing import Optional
 
 DB_FILENAME = "key2play.sqlite"
 
-DEFAULT_NUM_LEDS_ON_STRIP = 300
+DEFAULT_NUM_LEDS_ON_STRIP: int = 300
 
 
 class Base(DeclarativeBase):
@@ -49,24 +49,18 @@ class Config:
             session.execute(stmt)
             session.commit()
 
-    def delete_config(key: str):
+    def delete_config(self, key: str):
         engine = create_engine(f"sqlite:///{DB_FILENAME}")
         with Session(engine) as session:
-            stmt = (
-                delete(SimpleConfigKV)
-                .values(
-                    key=key,
-                )
-                .on_conflict_do_update(index_elements=["key"], set_=dict(value=value))
-            )
+            stmt = delete(SimpleConfigKV).where(SimpleConfigKV.key == key)
             session.execute(stmt)
             session.commit()
 
     def num_leds_on_strip(self) -> int:
         num_leds_on_strip = self.get_config("num_leds_on_strip")
         if num_leds_on_strip is None:
-            return DEFAULT_NUM_LEDS_ON_STRIP
-        return num_leds_on_strip
+            return int(DEFAULT_NUM_LEDS_ON_STRIP)
+        return int(num_leds_on_strip)
 
     def set_num_leds_on_strip(self, num: int):
         self.set_config("num_leds_on_strip", num)

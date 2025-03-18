@@ -45,15 +45,16 @@ class LedStrip:
         self.init_strip()
 
     def init_strip(self):
-        self.keylist = [0] * self.config.num_leds_on_strip()
-        self.keylist_status = [0] * self.config.num_leds_on_strip()
-        self.keylist_color = [0] * self.config.num_leds_on_strip()
+        num_leds_on_strip = int(self.config.num_leds_on_strip())
+        self.keylist = [0] * num_leds_on_strip
+        self.keylist_status = [0] * num_leds_on_strip
+        self.keylist_color = [0] * num_leds_on_strip
 
         if self.driver == "rpi_ws281x":
             try:
                 # Create NeoPixel object with appropriate configuration.
                 self.strip = PixelStrip(
-                    int(self.config.num_leds_on_strip()),
+                    num_leds_on_strip,
                     self.LED_PIN,
                     self.LED_FREQ_HZ,
                     self.LED_DMA,
@@ -141,3 +142,6 @@ class LedStrip:
 
                 if self.keylist_status[int(note) - 2] == 0:
                     self.strip.setPixelColor(int(note) - 1, color)
+
+    def num_leds_on_strip(self):
+        return self.config.num_leds_on_strip()

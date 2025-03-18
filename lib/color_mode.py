@@ -7,7 +7,7 @@ import random
 
 
 class ColorMode(object):
-    def __new__(cls, name, ledsettings):
+    def __new__(cls, name, config, ledsettings):
         """Automagic factory for creating ColorMode
 
         Adapted from https://stackoverflow.com/questions/3076537/virtual-classes-doing-it-right
@@ -35,7 +35,8 @@ class ColorMode(object):
 
         return super(ColorMode, cls).__new__(new_cls)
 
-    def __init__(self, name, ledsettings):
+    def __init__(self, name, config, ledsettings):
+        self.config = config
         self.LoadSettings(ledsettings)
 
     def LoadSettings(self, ledsettings):
@@ -210,20 +211,7 @@ class SpeedColor(ColorMode):
         return self.gradient_get_colors(note_position)
 
     def gradient_get_colors(self, position):
-        red = (
-            (position / self.led_number)
-            * (self.gradient_end["red"] - self.gradient_start["red"])
-        ) + self.gradient_start["red"]
-        green = (
-            (position / self.led_number)
-            * (self.gradient_end["green"] - self.gradient_start["green"])
-        ) + self.gradient_start["green"]
-        blue = (
-            (position / self.led_number)
-            * (self.gradient_end["blue"] - self.gradient_start["blue"])
-        ) + self.gradient_start["blue"]
-
-        return (round(red), round(green), round(blue))
+        raise Exception("need to replumb config.num_leds_on_strip() to this function")
 
 
 class ScaleColoring(ColorMode):
