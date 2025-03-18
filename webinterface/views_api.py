@@ -99,7 +99,6 @@ def set_light(light_num):
 
 @webinterface.route("/api/set_many_lights", methods=["POST"])
 def set_many_lights():
-    import pdb;pdb.set_trace()
     light_nums = request.values.get("light_nums")
     light_nums = json.loads(light_nums)
     assert len(light_nums) > 0
