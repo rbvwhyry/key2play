@@ -103,9 +103,9 @@ def set_many_lights():
     light_nums = request.values.get("light_nums")
     light_nums = json.loads(light_nums)
     assert len(light_nums) > 0
-    red = int(request.args.get("red", default=255))
-    blue = int(request.args.get("blue", default=255))
-    green = int(request.args.get("green", default=255))
+    red = int(request.values.get("red", default=128))
+    blue = int(request.values.get("blue", default=128))
+    green = int(request.values.get("green", default=128))
     color = Color(red, green, blue)
     strip = webinterface.ledstrip.strip
     for light_num in light_nums:
