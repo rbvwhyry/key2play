@@ -104,7 +104,7 @@ def set_many_lights():
     lights = json.loads(lights)
     assert len(lights) > 0
     strip = webinterface.ledstrip.strip
-    for (light_num, color) in lights:
+    for light_num, color in lights:
         red = int(color[0])
         blue = int(color[1])
         green = int(color[2])

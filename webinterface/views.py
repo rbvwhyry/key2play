@@ -43,4 +43,3 @@ def upload_file():
         filename = filename.replace("'", "")
         file.save(os.path.join(webinterface.config["UPLOAD_FOLDER"], filename))
         return jsonify(success=True, reload_songs=True, song_name=filename)
-
