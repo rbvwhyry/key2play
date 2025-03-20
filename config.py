@@ -10,7 +10,7 @@ from typing import List
 from typing import Optional
 
 DB_FILENAME = "key2play.sqlite"
-
+CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
 DEFAULT_NUM_LEDS_ON_STRIP: int = 300
 
 
@@ -28,8 +28,15 @@ class SimpleConfigKV(Base):
 
 
 class Config:
+    def __init__(self):
+        self.create_schema()
+
+    def create_schema(self):
+        engine = create_engine(CONNECTION_STRING)
+        Base.metadata.create_all(engine)
+
     def get_config(self, key: str) -> str:
-        engine = create_engine(f"sqlite:///{DB_FILENAME}")
+        engine = create_engine(CONNECTION_STRING)
         with Session(engine) as session:
             stmt = select(SimpleConfigKV).where(SimpleConfigKV.key == key)
             value = [kv.value for kv in session.scalars(stmt)]
@@ -39,7 +46,7 @@ class Config:
                 return None
 
     def set_config(self, key: str, value: str):
-        engine = create_engine(f"sqlite:///{DB_FILENAME}")
+        engine = create_engine(CONNECTION_STRING)
         with Session(engine) as session:
             stmt = (
                 insert(SimpleConfigKV)
@@ -50,7 +57,7 @@ class Config:
             session.commit()
 
     def delete_config(self, key: str):
-        engine = create_engine(f"sqlite:///{DB_FILENAME}")
+        engine = create_engine(CONNECTION_STRING)
         with Session(engine) as session:
             stmt = delete(SimpleConfigKV).where(SimpleConfigKV.key == key)
             session.execute(stmt)
@@ -64,7 +71,3 @@ class Config:
 
     def set_num_leds_on_strip(self, num: int):
         self.set_config("num_leds_on_strip", num)
-
-
-Base.metadata.create_all(create_engine(f"sqlite:///{DB_FILENAME}"))
-appconfig = Config()
