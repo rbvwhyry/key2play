@@ -250,39 +250,6 @@ for i in range(0, numPixels):
 strip.show()
 
 while True:
-    # screensaver
-    if int(menu.screensaver_delay) > 0:
-        if (time.time() - midiports.last_activity) > (int(menu.screensaver_delay) * 60):
-            screensaver(menu, midiports, saving, ledstrip, ledsettings)
-    try:
-        elapsed_time = time.perf_counter() - saving.start_time
-    except Exception as e:
-        # Handle any other unexpected exceptions here
-        logger.warning(f"Unexpected exception occurred: {e}")
-        elapsed_time = 0
-
-    # IDLE animation
-    manage_idle_animation(ledstrip, ledsettings, menu, midiports)
-
-    # Check for activity
-    if (time.time() - midiports.last_activity) > 120:
-        if backlight_cleared == False:
-            ledsettings.backlight_stopped = True
-            fastColorWipe(ledstrip.strip, True, ledsettings)
-            backlight_cleared = True
-    else:
-        if backlight_cleared == True:
-            ledsettings.backlight_stopped = False
-            fastColorWipe(ledstrip.strip, True, ledsettings)
-            backlight_cleared = False
-
-    # Show menulcd
-    if display_cycle >= 3:
-        display_cycle = 0
-
-        if elapsed_time > screen_hold_time:
-            menu.show()
-    display_cycle += 1
 
     # Create ColorMode if first-run or changed
     if ledsettings.color_mode != color_mode_name or ledsettings.incoming_setting_change:
