@@ -126,7 +126,7 @@ def set_all_lights():
     cntLed = webinterface.appconfig.num_leds_on_strip()
     for i in range(cntLed):
         strip.setPixelColor(i, color)
-    strip.setBrightness(224)
+    strip.setBrightness(208)
     strip.show()
     return jsonify(success=True)
 
