@@ -1,5 +1,5 @@
 from webinterface import webinterface
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, send_from_directory, url_for
 import os
 
 import time
@@ -24,6 +24,15 @@ def before_request():
 @webinterface.route("/")
 def index():
     return render_template("index.html")
+
+
+@webinterface.route("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        os.path.join(webinterface.root_path, "static"),
+        "favicon.ico",
+        mimetype="image/vnd.microsoft.icon",
+    )
 
 
 @webinterface.route("/upload", methods=["POST"])
