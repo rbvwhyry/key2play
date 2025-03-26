@@ -118,14 +118,13 @@ def set_many_lights():
 def set_all_lights():
     color = request.values.get("color")
     color = json.loads(color)
-    assert len(color) > 0
+    red = int(color["r"])
+    blue = int(color["b"])
+    green = int(color["g"])
+    color = Color(red, green, blue)
     strip = webinterface.ledstrip.strip
-    cntLed = webinterface.appconfig.get_config("num_leds_on_strip")
-    for i in cntLed:
-        red = int(color["r"])
-        blue = int(color["b"])
-        green = int(color["g"])
-        color = Color(red, green, blue)
+    cntLed = webinterface.appconfig.num_leds_on_strip()
+    for i in range(cntLed):
         strip.setPixelColor(i, color)
     strip.setBrightness(128)
     strip.show()
