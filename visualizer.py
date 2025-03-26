@@ -246,7 +246,7 @@ strip = ledstrip.strip
 numPixels = strip.numPixels()
 strip.setBrightness(128)
 for i in range(0, numPixels):
-    strip.setPixelColor(i, Color(255, 255, 255))
+    strip.setPixelColor(i, Color(0, 0, 0))
 strip.show()
 
 while True:
