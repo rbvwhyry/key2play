@@ -126,7 +126,7 @@ def set_all_lights():
     cntLed = webinterface.appconfig.num_leds_on_strip()
     for i in range(cntLed):
         strip.setPixelColor(i, color)
-    strip.setBrightness(223) #223 seems to be the brightest for 200 LEDs
+    strip.setBrightness(222) #224 definitely doesn't work; 223 seems to be the brightest for 200 LEDs (sometimes?); 222 is probably safest
     strip.show()
     return jsonify(success=True)
 
