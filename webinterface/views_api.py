@@ -122,9 +122,9 @@ def set_all_lights():
     strip = webinterface.ledstrip.strip
     cntLed = webinterface.appconfig.get_config("num_leds_on_strip")
     for i in cntLed:
-        red = int(color[0])
-        blue = int(color[1])
-        green = int(color[2])
+        red = int(color["r"])
+        blue = int(color["b"])
+        green = int(color["g"])
         color = Color(red, green, blue)
         strip.setPixelColor(i, color)
     strip.setBrightness(128)
