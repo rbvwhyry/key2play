@@ -1,13 +1,10 @@
 from sqlalchemy import create_engine
-from sqlalchemy import text
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy import select, delete
 from sqlalchemy.dialects.sqlite import insert
-from typing import List
-from typing import Optional
 
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"

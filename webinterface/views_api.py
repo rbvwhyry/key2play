@@ -1,15 +1,8 @@
-from webinterface import webinterface
+import random
 import json
-from flask import render_template, send_file, request, jsonify, send_from_directory
+import sys
+from flask import  send_file, request, jsonify, send_from_directory
 from werkzeug.security import safe_join
-from lib.functions import (
-    get_last_logs,
-    find_between,
-    fastColorWipe,
-    play_midi,
-    clamp,
-)
-import lib.colormaps as cmap
 import psutil
 import threading
 import webcolors as wc
@@ -19,13 +12,21 @@ from subprocess import call
 import subprocess
 import datetime
 import os
-import math
 from zipfile import ZipFile
-import json
 import ast
+
+from lib.functions import (
+    get_last_logs,
+    find_between,
+    fastColorWipe,
+    play_midi,
+    clamp,
+)
+import lib.colormaps as cmap
 from lib.rpi_drivers import GPIO
 from lib.log_setup import logger
-import sys
+from lib.rpi_drivers import Color
+from webinterface import webinterface
 
 
 def eprint(*args, **kwargs):
@@ -37,10 +38,6 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(SENSECOVER, GPIO.IN, GPIO.PUD_UP)
 
 pid = psutil.Process(os.getpid())
-
-from lib.rpi_drivers import Color
-
-import random
 
 
 @webinterface.route("/static/js/listenWorker.js")
