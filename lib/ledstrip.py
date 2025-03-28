@@ -1,8 +1,8 @@
-from lib.functions import *
 import lib.colormaps as cmap
-from lib.rpi_drivers import PixelStrip, ws
+from lib.functions import *
 from lib.LED_drivers import PixelStrip_Emu
 from lib.log_setup import logger
+from lib.rpi_drivers import PixelStrip, ws
 
 
 class LedStrip:

@@ -1,6 +1,6 @@
 import logging
-from logging.handlers import RotatingFileHandler
 import sys
+from logging.handlers import RotatingFileHandler
 
 # Create a custom logger
 logger = logging.getLogger("key2play")

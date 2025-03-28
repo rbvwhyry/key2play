@@ -1,5 +1,4 @@
 import mido
-from mido import MidiFile, Message, tempo2bpm, MidiTrack, MetaMessage
 
 ports = mido.get_input_names()
 ports_list = []

@@ -1,18 +1,16 @@
 import ast
+import os
+import pickle
+import subprocess
 import threading
 import time
 
 import mido
-import subprocess
-
-import os
+import numpy as np
 
 from lib.functions import clamp, fastColorWipe, get_note_position
-from lib.rpi_drivers import Color
-
-import numpy as np
-import pickle
 from lib.log_setup import logger
+from lib.rpi_drivers import Color
 
 
 def find_nearest(array, target):

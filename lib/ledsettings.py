@@ -1,8 +1,7 @@
 import ast
-import time
 from xml.dom import minidom
 
-from lib.functions import fastColorWipe, find_between, clamp
+from lib.functions import clamp, fastColorWipe, find_between
 from lib.rpi_drivers import Color
 from lib.usersettings import UserSettings
 

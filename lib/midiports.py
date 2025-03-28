@@ -1,7 +1,9 @@
-import mido
-from lib import connectall
 import time
 from collections import deque
+
+import mido
+
+from lib import connectall
 from lib.log_setup import logger
 
 
@@ -26,7 +28,7 @@ class MidiPorts:
         # Access once to trigger bug if exists, so open port later will succeed on attempt:
         try:
             mido.get_input_names()
-        except Exception as e:
+        except Exception:
             logger.warning(
                 "First access to mido failed.  Possibly from known issue: https://github.com/SpotlightKid/python-rtmidi/issues/138"
             )

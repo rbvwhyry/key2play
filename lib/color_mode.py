@@ -1,9 +1,9 @@
-from lib.functions import *
-import lib.colormaps as cmap
-from lib.rpi_drivers import Color
-import colorsys
-import mido
 import random
+
+import mido
+
+import lib.colormaps as cmap
+from lib.functions import *
 
 
 class ColorMode(object):

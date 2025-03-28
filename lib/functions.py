@@ -1,17 +1,16 @@
-import threading
-from lib.rpi_drivers import Color
-import lib.colormaps as cmap
-import mido
 import datetime
-import psutil
-import time
-import socket
-from lib.rpi_drivers import GPIO
 import math
-import subprocess
-import random
-from lib.log_setup import logger
 import os
+import socket
+import subprocess
+import threading
+import time
+
+import mido
+import psutil
+
+from lib.log_setup import logger
+from lib.rpi_drivers import GPIO, Color
 
 SENSECOVER = 12
 GPIO.setmode(GPIO.BCM)

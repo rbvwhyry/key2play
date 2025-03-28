@@ -5,9 +5,10 @@
 # Direct port of the Arduino NeoPixel library strandtest example.  Showcases
 # various animations on a strip of NeoPixels.
 
-import time
-from rpi_ws281x import PixelStrip, Color
 import argparse
+import time
+
+from rpi_ws281x import Color, PixelStrip
 
 # LED strip configuration:
 LED_COUNT = 16  # Number of LED pixels.

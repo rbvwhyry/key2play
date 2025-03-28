@@ -1,10 +1,6 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy import select, delete
+from sqlalchemy import create_engine, delete, select
 from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"

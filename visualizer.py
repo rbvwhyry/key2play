@@ -1,36 +1,36 @@
 #!/usr/bin/env python3
 
-import sys
-import os
-import time
-import fcntl
 import argparse
-import threading
-import webinterface as web_mod
 import asyncio
 import atexit
-from waitress import serve
-import config
+import fcntl
+import os
+import sys
+import threading
+import time
 
+from waitress import serve
+
+import config
+import lib.colormaps as cmap
+import webinterface as web_mod
+from lib.color_mode import ColorMode
+from lib.functions import (
+    fastColorWipe,
+    find_between,
+    get_note_position,
+    startup_animation,
+)
 from lib.learnmidi import LearnMIDI
 from lib.ledsettings import LedSettings
 from lib.ledstrip import LedStrip
+from lib.log_setup import logger
 from lib.menulcd import MenuLCD
 from lib.midiports import MidiPorts
+from lib.platform import Hotspot, Platform_null, PlatformRasp
+from lib.rpi_drivers import GPIO, Color, RPiException
 from lib.usersettings import UserSettings
-from lib.color_mode import ColorMode
-import lib.colormaps as cmap
-from lib.functions import (
-    startup_animation,
-    fastColorWipe,
-    get_note_position,
-    find_between,
-)
-from lib.platform import Hotspot, PlatformRasp, Platform_null
-from lib.rpi_drivers import GPIO, RPiException, Color
 from webinterface import webinterface
-from lib.log_setup import logger
-
 
 os.chdir(sys.path[0])
 

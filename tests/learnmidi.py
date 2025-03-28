@@ -10,8 +10,9 @@
 #
 ##########################################################################
 
-import mido
 import time
+
+import mido
 
 
 # Get midi song tempo

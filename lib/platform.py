@@ -1,9 +1,10 @@
-import time
-import subprocess
-from subprocess import call
-import os
 import filecmp
+import os
+import subprocess
+import time
 from shutil import copyfile
+from subprocess import call
+
 from lib.log_setup import logger
 
 

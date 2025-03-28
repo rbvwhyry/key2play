@@ -1,17 +1,19 @@
-from flask import send_file, request, jsonify
-import webcolors as wc
-import threading
-import os
-from werkzeug.security import safe_join
-from xml.dom import minidom
 import datetime
 import json
+import os
+import threading
+from subprocess import call
+from xml.dom import minidom
 from zipfile import ZipFile
 
+import webcolors as wc
+from flask import jsonify, request, send_file
+from werkzeug.security import safe_join
+
 import lib.colormaps as cmap
-from lib.functions import fastColorWipe, play_midi, clamp
-from webinterface import webinterface
+from lib.functions import clamp, fastColorWipe, play_midi
 from lib.log_setup import logger
+from webinterface import webinterface
 
 
 def pretty_print(dom):

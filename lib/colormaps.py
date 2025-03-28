@@ -1,6 +1,8 @@
-import numpy as np
-import os
 import glob
+import os
+
+import numpy as np
+
 from lib.log_setup import logger
 
 colormaps = {}

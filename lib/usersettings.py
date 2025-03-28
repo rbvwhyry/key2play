@@ -1,6 +1,7 @@
-from xml.etree import ElementTree as ET
 import time
 from functools import reduce
+from xml.etree import ElementTree as ET
+
 from lib.log_setup import logger
 
 

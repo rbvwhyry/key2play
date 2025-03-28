@@ -1,10 +1,7 @@
-import mido
-from mido import MidiFile, Message, tempo2bpm, MidiTrack, MetaMessage
-
-from rpi_ws281x import *
 import argparse
 
-import RPi.GPIO as GPIO
+import mido
+from rpi_ws281x import *
 
 
 def find_between(s, start, end):

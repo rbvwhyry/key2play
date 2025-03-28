@@ -1,21 +1,21 @@
-import random
-import json
-import sys
-from flask import request, jsonify, send_from_directory
-import psutil
-import mido
-import subprocess
-import os
 import ast
+import json
+import os
+import random
+import subprocess
+import sys
 
-from lib.functions import (
-    get_last_logs,
-    find_between,
-    fastColorWipe,
-)
+import mido
+import psutil
+from flask import jsonify, request, send_from_directory
+
 import lib.colormaps as cmap
-from lib.rpi_drivers import GPIO
-from lib.rpi_drivers import Color
+from lib.functions import (
+    fastColorWipe,
+    find_between,
+    get_last_logs,
+)
+from lib.rpi_drivers import GPIO, Color
 from webinterface import webinterface
 
 

@@ -1,8 +1,9 @@
-from webinterface import webinterface
-from flask import render_template, request, jsonify, send_from_directory
 import os
-
 import time
+
+from flask import jsonify, render_template, request, send_from_directory
+
+from webinterface import webinterface
 
 ALLOWED_EXTENSIONS = {"mid", "musicxml", "mxl", "xml", "abc"}
 

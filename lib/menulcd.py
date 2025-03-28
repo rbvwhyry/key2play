@@ -1,15 +1,7 @@
-import os
 
-from subprocess import call
-from xml.dom import minidom
 
-import webcolors as wc
 
 from lib.functions import *
-from lib.rpi_drivers import GPIO
-
-import lib.colormaps as cmap
-from lib.log_setup import logger
 
 
 class MenuLCD:
