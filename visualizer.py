@@ -86,12 +86,6 @@ parser.add_argument(
     "-w", "--webinterface", help="disable webinterface: 'true' (default) | 'false'"
 )
 parser.add_argument(
-    "-r",
-    "--rotatescreen",
-    default="false",
-    help="rotate screen: 'false' (default) | 'true'",
-)
-parser.add_argument(
     "-a",
     "--appmode",
     default=appmode_default,
@@ -119,21 +113,12 @@ logger.info(args)
 appconfig = config.Config()
 
 
-if args.rotatescreen != "true":
-    KEYRIGHT = 26
-    KEYLEFT = 5
-    KEYUP = 6
-    KEYDOWN = 19
-    KEY1 = 21
-    KEY3 = 16
-else:
-    KEYRIGHT = 5
-    KEYLEFT = 26
-    KEYUP = 19
-    KEYDOWN = 6
-    KEY1 = 16
-    KEY3 = 21
-
+KEYRIGHT = 26
+KEYLEFT = 5
+KEYUP = 6
+KEYDOWN = 19
+KEY1 = 21
+KEY3 = 16
 KEY2 = 20
 JPRESS = 13
 BACKLIGHT = 24
