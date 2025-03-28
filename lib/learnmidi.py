@@ -350,7 +350,7 @@ class LearnMIDI:
             self.is_started_midi = False  # Allow restarting the Thread
             return
 
-        self.t = threading.currentThread()
+        self.t = threading.current_thread()
 
         keep_looping = True
         while keep_looping:

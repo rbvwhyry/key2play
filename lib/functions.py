@@ -1,13 +1,10 @@
-import datetime
 import math
 import os
 import socket
 import subprocess
 import threading
 import time
-
 import mido
-import psutil
 
 from lib.log_setup import logger
 from lib.rpi_drivers import GPIO, Color
@@ -161,150 +158,6 @@ def manage_idle_animation(ledstrip, ledsettings, menu, midiports):
         time.sleep(1)
 
 
-def screensaver(menu, midiports, saving, ledstrip, ledsettings):
-    last_cpu_average = 0
-
-    KEY2 = 20
-    GPIO.setup(KEY2, GPIO.IN, GPIO.PUD_UP)
-
-    delay = 0.1
-    interval = 3 / float(delay)
-    i = 0
-    cpu_history = [None] * int(interval)
-    cpu_chart = [0] * 28
-    cpu_average = 0
-
-    upload = 0
-    download = 0
-    upload_start = 0
-    download_start = 0
-    local_ip = 0
-
-    if menu.screensaver_settings["local_ip"] == "1":
-        local_ip = get_ip_address()
-
-    try:
-        midiports.inport.poll()
-    except Exception as e:
-        menu.render_message("Error while getting ports", "", 2000)
-        logger.warning("Error while getting ports " + str(e))
-
-    while True:
-        manage_idle_animation(ledstrip, ledsettings, menu, midiports)
-
-        if (
-            (time.perf_counter() - saving.start_time) > 3600
-            and delay < 0.5
-            and menu.screensaver_is_running is False
-        ):
-            delay = 0.9
-            interval = 5 / float(delay)
-            cpu_history = [None] * int(interval)
-            cpu_average = 0
-            i = 0
-
-        if int(menu.screen_off_delay) > 0 and (
-            (time.perf_counter() - saving.start_time)
-            > (int(menu.screen_off_delay) * 60)
-        ):
-            menu.screen_status = 0
-            GPIO.output(24, 0)
-
-        menu.screensaver_is_running = True
-
-        hour = datetime.datetime.now().strftime("%H:%M:%S")
-        date = datetime.datetime.now().strftime("%d-%m-%Y")
-        cpu_usage = psutil.cpu_percent()
-        cpu_history[i] = cpu_usage
-        cpu_chart.append(cpu_chart.pop(0))
-        cpu_chart[27] = cpu_usage
-
-        if i >= (int(interval) - 1):
-            i = 0
-            try:
-                cpu_average = sum(cpu_history) / (float(len(cpu_history) + 1))
-                last_cpu_average = cpu_average
-            except Exception:
-                cpu_average = last_cpu_average
-
-        if menu.screensaver_settings["ram"] == "1":
-            ram_usage = psutil.virtual_memory()[2]
-        else:
-            ram_usage = 0
-
-        if menu.screensaver_settings["temp"] == "1":
-            try:
-                temp = find_between(
-                    str(psutil.sensors_temperatures()["cpu_thermal"]), "current=", ","
-                )
-            except Exception:
-                temp = 0
-            temp = round(float(temp), 1)
-        else:
-            temp = 0
-
-        if menu.screensaver_settings["network_usage"] == "1":
-            upload_end = psutil.net_io_counters().bytes_sent
-            download_end = psutil.net_io_counters().bytes_recv
-
-            if upload_start:
-                upload = upload_end - upload_start
-                upload = upload * (1 / delay)
-                upload = upload / 1000000
-                upload = round(upload, 2)
-
-            if download_start:
-                download = download_end - download_start
-                download = download * (1 / delay)
-                download = download / 1000000
-                download = round(download, 2)
-
-            upload_start = upload_end
-            download_start = download_end
-        else:
-            upload = 0
-            download = 0
-        if menu.screensaver_settings["sd_card_space"] == "1":
-            card_space = psutil.disk_usage("/")
-        else:
-            card_space = 0
-
-        menu.render_screensaver(
-            hour,
-            date,
-            cpu_usage,
-            round(cpu_average, 1),
-            ram_usage,
-            temp,
-            cpu_chart,
-            upload,
-            download,
-            card_space,
-            local_ip,
-        )
-        time.sleep(delay)
-        i += 1
-        try:
-            if len(midiports.midi_queue) != 0:
-                menu.screensaver_is_running = False
-                saving.start_time = time.perf_counter()
-                menu.screen_status = 1
-                GPIO.output(24, 1)
-                midiports.reconnect_ports()
-                midiports.last_activity = time.time()
-                menu.show()
-                break
-        except Exception:
-            pass
-        if GPIO.input(KEY2) == 0:
-            menu.screensaver_is_running = False
-            saving.start_time = time.perf_counter()
-            menu.screen_status = 1
-            GPIO.output(24, 1)
-            midiports.reconnect_ports()
-            menu.show()
-            break
-
 
 # Get note position on the strip
 def get_note_position(note, ledstrip, ledsettings):
@@ -449,46 +302,6 @@ def wheel(pos, ledsettings):
     else:
         pos -= 170
         return Color(0, int((pos * 3) * brightness), int((255 - pos * 3) * brightness))
-
-
-def rainbow(ledstrip, ledsettings, menu, speed="Medium"):
-    stop_animations(menu)
-
-    speed_map = {
-        "Slow": 50,
-        "Fast": 2,
-    }
-
-    wait_ms = speed_map.get(speed, 20)
-
-    """Draw rainbow that fades across all pixels at once."""
-    strip = ledstrip.strip
-
-    fastColorWipe(strip, True, ledsettings)
-    menu.t = threading.currentThread()
-    j = 0
-
-    while menu.is_idle_animation_running or menu.is_animation_running:
-        last_state = 1
-        cover_opened = GPIO.input(SENSECOVER)
-        while not cover_opened:
-            if last_state != cover_opened:
-                # clear if changed
-                fastColorWipe(strip, True, ledsettings)
-            time.sleep(0.1)
-            last_state = cover_opened
-            cover_opened = GPIO.input(SENSECOVER)
-
-        for i in range(strip.numPixels()):
-            if check_if_led_can_be_overwrite(i, ledstrip, ledsettings):
-                strip.setPixelColor(i, wheel(j & 255, ledsettings))
-        j += 1
-        if j >= 256:
-            j = 0
-        strip.show()
-        time.sleep(wait_ms / 1000.0)
-    menu.is_idle_animation_running = False
-    fastColorWipe(strip, True, ledsettings)
 
 
 def startup_animation(
