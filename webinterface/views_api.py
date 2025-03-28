@@ -1,7 +1,7 @@
 import random
 import json
 import sys
-from flask import  send_file, request, jsonify, send_from_directory
+from flask import send_file, request, jsonify, send_from_directory
 from werkzeug.security import safe_join
 import psutil
 import threading
@@ -2093,7 +2093,6 @@ def get_sequences():
     response["sequence_number"] = webinterface.ledsettings.sequence_number
 
     return jsonify(response)
-
 
 
 @webinterface.route("/api/set_step_properties", methods=["GET"])
