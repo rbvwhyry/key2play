@@ -131,7 +131,7 @@ def get_config(key):
 
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
-    assert key != None  # assert non-emptiness
+    assert key is not None  # assert non-emptiness
     value = str(request.values.get("value"))
     webinterface.appconfig.set_config(key, value)
     return jsonify(success=True)
@@ -139,7 +139,7 @@ def set_config(key):
 
 @webinterface.route("/api/delete_config/<key>", methods=["DELETE"])
 def delete_config(key):
-    assert key != None
+    assert key is not None
     webinterface.appconfig.delete_config(key)
     return jsonify(success=True)
 
