@@ -57,6 +57,14 @@ def currently_pressed_keys():
     return jsonify(result)
 
 
+@webinterface.route("/api/get_songs", methods=["GET"])
+def get_songs():
+    songs_list = os.listdir("Songs/")
+    songs_list = list(filter(lambda s: s.endswith(".mid"), songs_list))
+
+    return jsonify(songs_list)
+
+
 @webinterface.route("/api/get_current_song", methods=["GET"])
 def get_current_song():
     song_tracks = webinterface.learning.song_tracks
@@ -161,35 +169,6 @@ def button_mot():
     return jsonify(success=True)
 
 
-# @webinterface.route('/api/button_one', methods=['GET'])
-# def button_one():
-#     indexLight = request.args.get("indexLight", type=int)
-#     color_str = request.args.get("color")  # Expecting "255,255,255"
-
-#     if indexLight is None or color_str is None:
-#         return jsonify(success=False, error="Missing parameters"), 400
-
-#     # Convert color string "255,255,255" to (255, 255, 255)
-#     r, g, b = map(int, color_str.split(","))
-
-#     # Apply color to the specified LED
-#     strip.setPixelColor(indexLight, color_str)
-#     strip.show()
-
-#     return jsonify(success=True)
-
-# @webinterface.route('/api/button_two', methods=['GET'])
-# def button_two():
-#     strip = webinterface.ledstrip.strip
-#     strip.clear()
-#     numPixels = strip.numPixels()
-#     strip.setBrightness(25)
-#     for i in range(0, numPixels):
-#         strip.setPixelColor(i, Color(0,255,0))
-#     strip.show()
-#     return jsonify(success=True)
-
-
 @webinterface.route("/api/button_two", methods=["GET"])
 def button_two():
     print("🍫Hello, two!")
@@ -283,14 +262,6 @@ def get_learning_status():
     }
 
     return jsonify(response)
-
-
-@webinterface.route("/api/get_songs", methods=["GET"])
-def get_songs():
-    songs_list = os.listdir("Songs/")
-    songs_list = list(filter(lambda s: s.endswith(".mid"), songs_list))
-
-    return jsonify(songs_list)
 
 
 @webinterface.route("/api/get_ports", methods=["GET"])

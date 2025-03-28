@@ -4,6 +4,7 @@ import pickle
 import subprocess
 import threading
 import time
+
 import mido
 import numpy as np
 

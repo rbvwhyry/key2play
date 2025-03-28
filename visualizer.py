@@ -14,13 +14,7 @@ from waitress import serve
 import config
 import lib.colormaps as cmap
 import webinterface as web_mod
-from lib.color_mode import ColorMode
-from lib.functions import (
-    fastColorWipe,
-    find_between,
-    get_note_position,
-    startup_animation,
-)
+from lib.functions import startup_animation
 from lib.learnmidi import LearnMIDI
 from lib.ledsettings import LedSettings
 from lib.ledstrip import LedStrip
@@ -141,6 +135,7 @@ last_sustain = 0
 pedal_deadzone = 10
 ledshow_timestamp = time.time()
 color_mode_name = ""
+
 
 def start_webserver():
     if not args.port:

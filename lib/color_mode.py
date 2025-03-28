@@ -205,7 +205,7 @@ class SpeedColor(ColorMode):
                 * float(speed_percent)
             ) + self.speed_slowest["blue"]
         return (round(red), round(green), round(blue))
-    
+
     def gradient_get_colors(self, position):
         raise Exception("need to replumb config.num_leds_on_strip() to this function")
 

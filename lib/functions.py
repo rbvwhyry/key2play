@@ -4,6 +4,7 @@ import socket
 import subprocess
 import threading
 import time
+
 import mido
 
 from lib.log_setup import logger
@@ -156,7 +157,6 @@ def manage_idle_animation(ledstrip, ledsettings, menu, midiports):
         menu.is_idle_animation_running = True
 
         time.sleep(1)
-
 
 
 # Get note position on the strip
