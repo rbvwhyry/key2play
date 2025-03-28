@@ -11,7 +11,6 @@ from lib.ledsettings import LedSettings
 from lib.ledstrip import LedStrip
 from lib.menulcd import MenuLCD
 from lib.midiports import MidiPorts
-from lib.savemidi import SaveMIDI
 from lib.usersettings import UserSettings
 from lib.color_mode import *
 import lib.colormaps as cmap
@@ -161,7 +160,6 @@ t.start()
 
 learning = LearnMIDI(usersettings, ledsettings, midiports, ledstrip)
 hotspot = Hotspot(platform)
-saving = SaveMIDI()
 menu = MenuLCD(
     "config/menu.xml",
     args,
@@ -169,7 +167,6 @@ menu = MenuLCD(
     ledsettings,
     ledstrip,
     learning,
-    saving,
     midiports,
     hotspot,
     platform,
@@ -177,7 +174,6 @@ menu = MenuLCD(
 
 midiports.add_instance(menu)
 ledsettings.add_instance(menu, ledstrip)
-saving.add_instance(menu)
 learning.add_instance(menu)
 
 menu.show()
@@ -204,7 +200,6 @@ def start_webserver():
     webinterface.ledsettings = ledsettings
     webinterface.ledstrip = ledstrip
     webinterface.learning = learning
-    webinterface.saving = saving
     webinterface.midiports = midiports
     webinterface.menu = menu
     webinterface.hotspot = hotspot
@@ -272,7 +267,6 @@ while True:
                 ledsettings,
                 ledstrip,
                 learning,
-                saving,
                 midiports,
                 hotspot,
                 platform,
@@ -399,7 +393,7 @@ while True:
             )
 
     # Prep midi event queue
-    if len(saving.is_playing_midi) == 0 and learning.is_started_midi is False:
+    if learning.is_started_midi is False:
         midiports.midipending = midiports.midi_queue
     else:
         midiports.midipending = midiports.midifile_queue
@@ -467,9 +461,6 @@ while True:
                     ledstrip.strip.setPixelColor(note_position, Color(0, 0, 0))
                     ledstrip.set_adjacent_colors(note_position, Color(0, 0, 0), False)
 
-            if saving.is_recording:
-                saving.add_track("note_off", msg.note, velocity, msg_timestamp)
-
         # when a note is pressed
         elif (
             msg.type == "note_on"
@@ -528,19 +519,6 @@ while True:
                     ledstrip.strip.setPixelColor(note_position, s_color)
                     ledstrip.set_adjacent_colors(note_position, s_color, False)
 
-            # Saving
-            if saving.is_recording:
-                if ledsettings.color_mode == "Multicolor":
-                    saving.add_track(
-                        "note_on",
-                        msg.note,
-                        velocity,
-                        msg_timestamp,
-                        wc.rgb_to_hex((red, green, blue)),
-                    )
-                else:
-                    saving.add_track("note_on", msg.note, velocity, msg_timestamp)
-
         # Midi control change event
         elif msg.type == "control_change":
             control = msg.control
@@ -569,15 +547,7 @@ while True:
                 except Exception as e:
                     logger.warning(f"Unexpected exception occurred: {e}")
 
-            if saving.is_recording:
-                saving.add_control_change(
-                    "control_change", 0, control, value, msg_timestamp
-                )
-
         color_mode.MidiEvent(msg, None, ledstrip)
-
-        # Save event-loop update
-        saving.restart_time()
 
     # Update ledstrip
     ledstrip.strip.show()

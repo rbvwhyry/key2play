@@ -21,7 +21,6 @@ class MenuLCD:
         ledsettings,
         ledstrip,
         learning,
-        saving,
         midiports,
         hotspot,
         platform,
@@ -35,7 +34,6 @@ class MenuLCD:
         self.ledsettings = ledsettings
         self.ledstrip = ledstrip
         self.learning = learning
-        self.saving = saving
         self.midiports = midiports
         self.hotspot = hotspot
         self.platform = platform
