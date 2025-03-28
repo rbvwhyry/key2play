@@ -1,5 +1,5 @@
 from webinterface import webinterface
-from flask import render_template, request, jsonify, send_from_directory, url_for
+from flask import render_template, request, jsonify, send_from_directory
 import os
 
 import time

@@ -20,7 +20,7 @@ from lib.midiports import MidiPorts
 from lib.usersettings import UserSettings
 from lib.color_mode import ColorMode
 import lib.colormaps as cmap
-from lib.functions import startup_animation, fastColorWipe
+from lib.functions import startup_animation, fastColorWipe, get_note_position, find_between
 from lib.platform import Hotspot, PlatformRasp, Platform_null
 from lib.rpi_drivers import GPIO, RPiException, Color
 from webinterface import webinterface
@@ -521,7 +521,7 @@ while True:
                             and control == ledsettings.control_number
                         ):
                             ledsettings.set_sequence(0, 1)
-                except TypeError as e:
+                except TypeError:
                     pass
                 except Exception as e:
                     logger.warning(f"Unexpected exception occurred: {e}")
