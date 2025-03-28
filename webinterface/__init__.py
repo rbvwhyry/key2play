@@ -1,8 +1,9 @@
 from flask import Flask
 import asyncio
-import websockets
-from lib.functions import get_ip_address
 import json
+import websockets
+
+from lib.functions import get_ip_address
 from lib.log_setup import logger
 
 
@@ -106,5 +107,4 @@ def stop_server(loop):
     loop.stop()
 
 
-from webinterface import views
-from webinterface import views_api
+from webinterface import views, views_api, views_settings
