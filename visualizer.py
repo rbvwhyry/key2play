@@ -83,9 +83,6 @@ parser.add_argument(
     help="Do not try to update /usr/local/bin/connectall.py",
 )
 parser.add_argument(
-    "-w", "--webinterface", help="disable webinterface: 'true' (default) | 'false'"
-)
-parser.add_argument(
     "-a",
     "--appmode",
     default=appmode_default,
@@ -177,9 +174,6 @@ pedal_deadzone = 10
 ledshow_timestamp = time.time()
 color_mode_name = ""
 
-fastColorWipe(ledstrip.strip, True, ledsettings)
-
-
 def start_webserver():
     if not args.port:
         args.port = 80
@@ -201,19 +195,18 @@ def start_webserver():
 
 websocket_loop = asyncio.new_event_loop()
 
-if args.webinterface != "false":
-    logger.info("Starting webinterface")
-    processThread = threading.Thread(target=start_webserver, daemon=True)
-    processThread.start()
+logger.info("Starting webinterface")
+processThread = threading.Thread(target=start_webserver, daemon=True)
+processThread.start()
 
-    # Start websocket server
-    processThread = threading.Thread(
-        target=web_mod.start_server, args=(websocket_loop,), daemon=True
-    )
-    processThread.start()
+# Start websocket server
+processThread = threading.Thread(
+    target=web_mod.start_server, args=(websocket_loop,), daemon=True
+)
+processThread.start()
 
-    # Register the shutdown handler
-    atexit.register(web_mod.stop_server, websocket_loop)
+# Register the shutdown handler
+atexit.register(web_mod.stop_server, websocket_loop)
 
 
 platform.manage_hotspot(hotspot, usersettings, midiports, True)
