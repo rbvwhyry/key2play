@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
-import webcolors as wc
 import sys
 import os
-
+import time
 import fcntl
+import argparse
+import threading
+import webinterface as web_mod
+import asyncio
+import atexit
+from waitress import serve
+import config
 
 from lib.learnmidi import LearnMIDI
 from lib.ledsettings import LedSettings
@@ -12,20 +18,12 @@ from lib.ledstrip import LedStrip
 from lib.menulcd import MenuLCD
 from lib.midiports import MidiPorts
 from lib.usersettings import UserSettings
-from lib.color_mode import *
+from lib.color_mode import ColorMode
 import lib.colormaps as cmap
+from lib.functions import startup_animation, fastColorWipe
 from lib.platform import Hotspot, PlatformRasp, Platform_null
-from lib.rpi_drivers import GPIO, RPiException
-
-import argparse
-import threading
+from lib.rpi_drivers import GPIO, RPiException, Color
 from webinterface import webinterface
-import webinterface as web_mod
-import asyncio
-import atexit
-from waitress import serve
-import config
-
 from lib.log_setup import logger
 
 
