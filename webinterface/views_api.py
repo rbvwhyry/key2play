@@ -2095,31 +2095,6 @@ def get_sequences():
     return jsonify(response)
 
 
-@webinterface.route("/api/get_steps_list", methods=["GET"])
-def get_steps_list():
-    response = {}
-    sequence = request.args.get("sequence")
-    sequences_tree = minidom.parse("config/sequences.xml")
-    steps_list = []
-    i = 0
-
-    for step in sequences_tree.getElementsByTagName("sequence_" + str(sequence))[
-        0
-    ].childNodes:
-        if step.nodeType == 1:
-            if step.nodeName == "settings":
-                response["control_number"] = step.getElementsByTagName(
-                    "control_number"
-                )[0].firstChild.nodeValue
-                response["next_step"] = step.getElementsByTagName("next_step")[
-                    0
-                ].firstChild.nodeValue
-            else:
-                steps_list.append(step.nodeName)
-
-    response["steps_list"] = steps_list
-    return jsonify(response)
-
 
 @webinterface.route("/api/set_step_properties", methods=["GET"])
 def set_step_properties():
