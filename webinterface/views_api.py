@@ -540,10 +540,6 @@ def change_setting():
         webinterface.ledsettings.update_note_offset(int(value) + 1, second_value)
         return jsonify(success=True, reload=True)
 
-    if setting_name == "leds_per_meter":
-        webinterface.usersettings.change_setting_value("leds_per_meter", int(value))
-        webinterface.ledstrip.leds_per_meter = int(value)
-
     if setting_name == "shift":
         webinterface.usersettings.change_setting_value("shift", int(value))
         webinterface.ledstrip.change_shift(int(value), True)
@@ -2007,9 +2003,6 @@ def get_settings():
     )
     response["note_offsets"] = webinterface.usersettings.get_setting_value(
         "note_offsets"
-    )
-    response["leds_per_meter"] = webinterface.usersettings.get_setting_value(
-        "leds_per_meter"
     )
     response["led_shift"] = webinterface.usersettings.get_setting_value("shift")
     response["led_reverse"] = webinterface.usersettings.get_setting_value("reverse")

@@ -91,7 +91,6 @@
     <led_animation_brightness_percent>50</led_animation_brightness_percent>
     <disable_backlight_on_idle>1</disable_backlight_on_idle>
 
-	<leds_per_meter>160</leds_per_meter>
 	<shift>0</shift>
 	<reverse>0</reverse>
 

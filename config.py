@@ -12,6 +12,7 @@ from typing import Optional
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
 DEFAULT_NUM_LEDS_ON_STRIP: int = 300
+DEFAULT_NUM_LEDS_PER_METER: int = 160
 
 
 class Base(DeclarativeBase):
@@ -71,3 +72,12 @@ class Config:
 
     def set_num_leds_on_strip(self, num: int):
         self.set_config("num_leds_on_strip", num)
+
+    def num_leds_per_meter(self) -> int:
+        num_leds_per_meter = self.get_config("num_leds_per_meter")
+        if num_leds_per_meter is None:
+            return int(DEFAULT_NUM_LEDS_PER_METER)
+        return int(num_leds_per_meter)
+
+    def set_num_leds_per_meter(self, num: int):
+        self.set_config("num_leds_per_meter", num)
