@@ -4,7 +4,6 @@ import pickle
 import subprocess
 import threading
 import time
-
 import mido
 import numpy as np
 
@@ -184,7 +183,7 @@ class LearnMIDI:
         self.is_loaded_midi[song_path] = True
         self.loading = 1  # 1 = Load..
         self.is_started_midi = False  # Stop current learning song
-        self.t = threading.currentThread()
+        self.t = threading.current_thread()
 
         # Load song from cache
         if self.load_song_from_cache(song_path):
