@@ -26,7 +26,7 @@ def start_server(loop):
                 for msg in webinterface.learning.socket_send[:]:
                     await websocket.send(str(msg))
                     webinterface.learning.socket_send.remove(msg)
-        except:
+        except Exception:
             # Handle the connection closed error
             # You can log the error or perform any necessary cleanup tasks
             pass
@@ -59,7 +59,7 @@ def start_server(loop):
                     }
                 )
             )
-        except:
+        except Exception:
             pass
 
         while True:
@@ -76,7 +76,7 @@ def start_server(loop):
                 pass
             except websockets.exceptions.WebSocketException:
                 pass
-            except:
+            except Exception as e:
                 logger.warning(e)
                 return
 

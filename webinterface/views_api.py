@@ -1,18 +1,11 @@
 import random
 import json
 import sys
-from flask import send_file, request, jsonify, send_from_directory
-from werkzeug.security import safe_join
+from flask import request, jsonify, send_from_directory
 import psutil
-import threading
-import webcolors as wc
 import mido
-from xml.dom import minidom
-from subprocess import call
 import subprocess
-import datetime
 import os
-from zipfile import ZipFile
 import ast
 
 from lib.functions import (
@@ -22,13 +15,23 @@ from lib.functions import (
 )
 import lib.colormaps as cmap
 from lib.rpi_drivers import GPIO
-from lib.log_setup import logger
 from lib.rpi_drivers import Color
 from webinterface import webinterface
 
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+
+def pretty_print(dom):
+    return "\n".join(
+        [line for line in dom.toprettyxml(indent=" " * 4).split("\n") if line.strip()]
+    )
+
+
+def pretty_save(file_path, sequences_tree):
+    with open(file_path, "w", encoding="utf8") as outfile:
+        outfile.write(pretty_print(sequences_tree))
 
 
 SENSECOVER = 12
@@ -214,7 +217,7 @@ def get_homepage_data():
         temp = find_between(
             str(psutil.sensors_temperatures()["cpu_thermal"]), "current=", ","
         )
-    except:
+    except Exception:
         temp = 0
 
     temp = round(float(temp), 1)
@@ -345,14 +348,3 @@ def get_logs():
 @webinterface.route("/api/get_colormap_gradients", methods=["GET"])
 def get_colormap_gradients():
     return jsonify(cmap.colormaps_preview)
-
-
-def pretty_print(dom):
-    return "\n".join(
-        [line for line in dom.toprettyxml(indent=" " * 4).split("\n") if line.strip()]
-    )
-
-
-def pretty_save(file_path, sequences_tree):
-    with open(file_path, "w", encoding="utf8") as outfile:
-        outfile.write(pretty_print(sequences_tree))

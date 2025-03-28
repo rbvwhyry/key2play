@@ -1,3 +1,29 @@
+from flask import send_file, request, jsonify
+import webcolors as wc
+import threading
+import os
+from werkzeug.security import safe_join
+from xml.dom import minidom
+import datetime
+import json
+from zipfile import ZipFile
+
+import lib.colormaps as cmap
+from lib.functions import fastColorWipe, play_midi, clamp
+from webinterface import webinterface
+from lib.log_setup import logger
+
+
+def pretty_print(dom):
+    return "\n".join(
+        [line for line in dom.toprettyxml(indent=" " * 4).split("\n") if line.strip()]
+    )
+
+
+def pretty_save(file_path, sequences_tree):
+    with open(file_path, "w", encoding="utf8") as outfile:
+        outfile.write(pretty_print(sequences_tree))
+
 
 @webinterface.route("/api/change_setting", methods=["GET"])
 def change_setting():
@@ -995,7 +1021,7 @@ def change_setting():
                     0
                 ].getElementsByTagName("step_" + str(second_value + 1))[0],
             )
-        except:
+        except Exception:
             sequences_tree.getElementsByTagName("sequence_" + str(value))[
                 0
             ].appendChild(step)
@@ -1108,12 +1134,12 @@ def change_setting():
             for file_type in file_types:
                 try:
                     os.remove("Songs/" + value.replace(".mid", file_type))
-                except:
+                except Exception:
                     pass
 
             try:
                 os.remove("Songs/cache/" + value + ".p")
-            except:
+            except Exception:
                 logger.info("No cache file for " + value)
 
         return jsonify(success=True, reload_songs=True)
@@ -1163,7 +1189,7 @@ def change_setting():
                     download_name=new_name,
                     as_attachment=True,
                 )
-            except:
+            except Exception:
                 i += 1
         webinterface.learning.convert_midi_to_abc(value)
         try:
@@ -1173,7 +1199,7 @@ def change_setting():
                 download_name=value.replace(".mid", ".abc"),
                 as_attachment=True,
             )
-        except:
+        except Exception:
             logger.warning("Converting failed")
 
     if setting_name == "start_midi_play":
@@ -1402,7 +1428,7 @@ def change_setting():
             response = webinterface.platform.connect_to_wifi(
                 value, second_value, webinterface.hotspot, webinterface.usersettings
             )
-        except:
+        except Exception:
             response = False
 
         return jsonify(success=response)
@@ -1412,7 +1438,7 @@ def change_setting():
             webinterface.platform.disconnect_from_wifi(
                 webinterface.hotspot, webinterface.usersettings
             )
-        except:
+        except Exception:
             return jsonify(success=False)
 
     if setting_name == "animation_delay":
