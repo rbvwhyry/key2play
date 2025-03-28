@@ -27,8 +27,6 @@ class LedStrip:
         self.keylist_status = None
         self.keylist_color = None
 
-        self.current_fps = 0
-
         # LED strip configuration:
         self.LED_PIN = 18  # GPIO pin connected to the pixels (18 uses PWM!).
         # LED_PIN        = 10      # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).

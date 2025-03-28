@@ -551,21 +551,3 @@ while True:
 
     # Update ledstrip
     ledstrip.strip.show()
-
-    # Frame time calculations
-
-    # time taken for the last iteration of the main event loop
-    event_loop_time = time.perf_counter() - event_loop_stamp
-    event_loop_stamp = time.perf_counter()
-
-    frame_count += 1
-    frame_seconds = time.perf_counter() - frame_avg_stamp
-
-    # calculate fps average over 2 seconds
-    if frame_seconds >= 2:
-        fps = frame_count / frame_seconds
-        ledstrip.current_fps = fps
-
-        # reset counters
-        frame_avg_stamp = time.perf_counter()
-        frame_count = 0
