@@ -5,7 +5,6 @@ class MenuLCD:
     def __init__(
         self,
         xml_file_name,
-        args,
         usersettings,
         ledsettings,
         ledstrip,
@@ -26,7 +25,6 @@ class MenuLCD:
         self.midiports = midiports
         self.hotspot = hotspot
         self.platform = platform
-        self.args = args
         self.scroll_hold = 0
         self.cut_count = 0
         self.pointer_position = 0

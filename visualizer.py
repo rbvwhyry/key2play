@@ -62,18 +62,6 @@ if isinstance(RPiException, RuntimeError):
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-c", "--clear", action="store_true", help="clear the display on exit"
-)
-parser.add_argument(
-    "-d",
-    "--display",
-    type=str,
-    help="choose type of display: '1in44' (default) | '1in3'",
-)
-parser.add_argument(
-    "-f", "--fontdir", type=str, help="Use an alternate directory for fonts"
-)
-parser.add_argument(
     "-p", "--port", type=int, help="set port for webinterface (80 is default)"
 )
 parser.add_argument(
@@ -147,7 +135,6 @@ learning = LearnMIDI(usersettings, ledsettings, midiports, ledstrip)
 hotspot = Hotspot(platform)
 menu = MenuLCD(
     "config/menu.xml",
-    args,
     usersettings,
     ledsettings,
     ledstrip,
@@ -243,7 +230,6 @@ while True:
             ledstrip = LedStrip(usersettings, ledsettings)
             menu = MenuLCD(
                 "config/menu.xml",
-                args,
                 usersettings,
                 ledsettings,
                 ledstrip,
