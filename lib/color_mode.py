@@ -1,9 +1,10 @@
 import random
+import time
 
 import mido
 
 import lib.colormaps as cmap
-from lib.functions import *
+from lib.functions import get_scale_color, powercurve
 
 
 class ColorMode(object):
@@ -22,8 +23,6 @@ class ColorMode(object):
                 new_cls = Rainbow
             elif name == "Speed":
                 new_cls = SpeedColor
-            elif name == "Gradient":
-                new_cls = Gradient
             elif name == "Scale":
                 new_cls = ScaleColoring
             elif name == "VelocityRainbow":
@@ -206,10 +205,7 @@ class SpeedColor(ColorMode):
                 * float(speed_percent)
             ) + self.speed_slowest["blue"]
         return (round(red), round(green), round(blue))
-
-    def NoteOn(self, midi_event: mido.Message, midi_time, midi_state, note_position):
-        return self.gradient_get_colors(note_position)
-
+    
     def gradient_get_colors(self, position):
         raise Exception("need to replumb config.num_leds_on_strip() to this function")
 

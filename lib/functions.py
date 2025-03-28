@@ -224,7 +224,7 @@ def screensaver(menu, midiports, saving, ledstrip, ledsettings):
             try:
                 cpu_average = sum(cpu_history) / (float(len(cpu_history) + 1))
                 last_cpu_average = cpu_average
-            except:
+            except Exception:
                 cpu_average = last_cpu_average
 
         if menu.screensaver_settings["ram"] == "1":
@@ -237,7 +237,7 @@ def screensaver(menu, midiports, saving, ledstrip, ledsettings):
                 temp = find_between(
                     str(psutil.sensors_temperatures()["cpu_thermal"]), "current=", ","
                 )
-            except:
+            except Exception:
                 temp = 0
             temp = round(float(temp), 1)
         else:
@@ -294,7 +294,7 @@ def screensaver(menu, midiports, saving, ledstrip, ledsettings):
                 midiports.last_activity = time.time()
                 menu.show()
                 break
-        except:
+        except Exception:
             pass
         if GPIO.input(KEY2) == 0:
             menu.screensaver_is_running = False

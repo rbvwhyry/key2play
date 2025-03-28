@@ -335,7 +335,6 @@ class LearnMIDI:
         self.ledstrip.strip.show()
 
     def learn_midi(self):
-        loops_count = 0
         # Preliminary checks
         if self.is_started_midi:
             return

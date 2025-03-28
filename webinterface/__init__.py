@@ -107,4 +107,4 @@ def stop_server(loop):
     loop.stop()
 
 
-from webinterface import views, views_api, views_settings
+from webinterface import views, views_api, views_settings  # noqa: F401 E402

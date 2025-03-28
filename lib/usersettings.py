@@ -20,7 +20,7 @@ class UserSettings:
             self.tree = ET.parse(self.CONFIG_FILE)
             self.root = self.tree.getroot()
             self.xml_to_dict(self.cache, self.root)
-        except:
+        except Exception:
             logger.warning("Can't load settings file, restoring defaults")
             self.reset_to_default()
 
@@ -42,7 +42,7 @@ class UserSettings:
     def get(self, key):
         try:
             return self.__getitem__(key)
-        except:
+        except Exception:
             return None
 
     def get_setting_value(self, name):

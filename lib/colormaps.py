@@ -177,7 +177,6 @@ def load_colormaps():
 
 def multicolor_to_gradient(multicolor_range, multicolor):
     m = zip(multicolor_range, multicolor)
-    pos_next = None
     output = []
     for x in m:
         # range is 20 - 108

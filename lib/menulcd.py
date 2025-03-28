@@ -1,7 +1,4 @@
-
-
-
-from lib.functions import *
+import time
 
 
 class MenuLCD:

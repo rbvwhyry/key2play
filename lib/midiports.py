@@ -39,7 +39,7 @@ class MidiPorts:
             try:
                 self.inport = mido.open_input(port, callback=self.msg_callback)
                 logger.info("Inport loaded and set to " + port)
-            except:
+            except Exception:
                 logger.info("Can't load input port: " + port)
         else:
             # if not, try to find the new midi port
@@ -55,7 +55,7 @@ class MidiPorts:
                         self.usersettings.change_setting_value("input_port", port)
                         logger.info("Inport set to " + port)
                         break
-            except:
+            except Exception:
                 logger.info("no input port")
         # checking if the play port was previously set by the user
         port = self.usersettings.get_setting_value("play_port")
@@ -63,7 +63,7 @@ class MidiPorts:
             try:
                 self.playport = mido.open_output(port)
                 logger.info("Playport loaded and set to " + port)
-            except:
+            except Exception:
                 logger.info("Can't load input port: " + port)
         else:
             # if not, try to find the new midi port
@@ -79,7 +79,7 @@ class MidiPorts:
                         self.usersettings.change_setting_value("play_port", port)
                         logger.info("Playport set to " + port)
                         break
-            except:
+            except Exception:
                 logger.info("no play port")
 
         self.portname = "inport"
@@ -108,7 +108,7 @@ class MidiPorts:
             if destroy_old is not None:
                 destory_old.close()
             self.menu.show()
-        except:
+        except Exception:
             self.menu.render_message("Can't change " + port + " to:", portname, 1500)
             self.menu.show()
 
@@ -120,7 +120,7 @@ class MidiPorts:
             if destroy_old is not None:
                 time.sleep(0.002)
                 destroy_old.close()
-        except:
+        except Exception:
             logger.info("Can't reconnect input port: " + port)
         try:
             destroy_old = self.playport
@@ -129,7 +129,7 @@ class MidiPorts:
             if destroy_old is not None:
                 time.sleep(0.002)
                 destroy_old.close()
-        except:
+        except Exception:
             logger.info("Can't reconnect play port: " + port)
 
     def msg_callback(self, msg):

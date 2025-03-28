@@ -6,6 +6,7 @@ sys.path.append("./")
 sys.path.append("../")
 import os
 import unittest
+
 from lib.usersettings import UserSettings
 
 
