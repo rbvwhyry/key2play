@@ -273,7 +273,6 @@ class LedSettings:
 
         color_counter = 0
         for i in self.multicolor:
-
             start = self.multicolor_range[int(color_counter)][0]
             end = self.multicolor_range[int(color_counter)][1]
 

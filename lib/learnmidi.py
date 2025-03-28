@@ -246,7 +246,6 @@ class LearnMIDI:
 
     # predict future notes in MIDI messages
     def predict_future_notes(self, starting_note, ending_note, notes_to_press):
-
         if self.show_future_notes != 1:
             return
 
@@ -312,7 +311,6 @@ class LearnMIDI:
                     self.ledstrip.strip.show()
 
     def handle_wrong_notes(self, wrong_notes):
-
         if self.show_wrong_notes != 1:
             return
 

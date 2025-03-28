@@ -250,7 +250,6 @@ for i in range(0, numPixels):
 strip.show()
 
 while True:
-
     # Create ColorMode if first-run or changed
     if ledsettings.color_mode != color_mode_name or ledsettings.incoming_setting_change:
         ledsettings.incoming_setting_change = False
@@ -337,7 +336,6 @@ while True:
 
     # Fade processing
     for n, strength in enumerate(ledstrip.keylist):
-
         # Only apply fade processing to activated leds
         if strength <= 0:
             continue

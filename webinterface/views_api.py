@@ -114,6 +114,7 @@ def set_many_lights():
     strip.show()
     return jsonify(success=True)
 
+
 @webinterface.route("/api/set_all_lights", methods=["POST"])
 def set_all_lights():
     color = request.values.get("color")
@@ -1005,7 +1006,6 @@ def change_setting():
 
     # remove node list with a tag name "step_" + str(value), and change tag names to maintain order
     if setting_name == "remove_step":
-
         second_value = int(second_value)
         second_value += 1
 
@@ -1038,7 +1038,6 @@ def change_setting():
 
     # saving current led settings as sequence step
     if setting_name == "save_led_settings_to_step" and second_value != "":
-
         # remove node and child under "sequence_" + str(value) and "step_" + str(second_value)
         sequences_tree = minidom.parse("config/sequences.xml")
 

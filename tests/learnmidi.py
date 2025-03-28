@@ -92,7 +92,6 @@ led_R = []
 led_L = []
 notes_to_press = []
 for msg in learning.song_tracks:
-
     # Get time delay
     tDelay = mido.tick2second(
         msg.time,

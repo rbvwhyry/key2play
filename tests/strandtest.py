@@ -110,7 +110,6 @@ if __name__ == "__main__":
         print('Use "-c" argument to clear LEDs on exit')
 
     try:
-
         while True:
             print("Color wipe animations.")
             colorWipe(strip, Color(255, 0, 0))  # Red wipe
