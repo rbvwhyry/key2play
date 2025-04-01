@@ -40,13 +40,16 @@ GPIO.setup(SENSECOVER, GPIO.IN, GPIO.PUD_UP)
 
 pid = psutil.Process(os.getpid())
 
+# 224 definitely doesn't work;
+# 223 seems to be the brightest for 200 LEDs (sometimes?);
+# 222 is probably safest
+brightest = 222
 
 @webinterface.route("/static/js/listenWorker.js")
 def serve_worker():
     return send_from_directory(
         "static/js", "listenWorker.js", mimetype="application/javascript"
     )
-
 
 @webinterface.route("/api/currently_pressed_keys", methods=["GET"])
 def currently_pressed_keys():
@@ -56,7 +59,6 @@ def currently_pressed_keys():
     ]
     return jsonify(result)
 
-
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
     songs_list = os.listdir("Songs/")
@@ -64,13 +66,11 @@ def get_songs():
 
     return jsonify(songs_list)
 
-
 @webinterface.route("/api/get_current_song", methods=["GET"])
 def get_current_song():
     song_tracks = webinterface.learning.song_tracks
     song_tracks = [msg.__dict__ for msg in song_tracks]
     return jsonify(song_tracks)
-
 
 @webinterface.route("/api/load_local_midi", methods=["POST"])
 def load_local_midi():
@@ -79,7 +79,6 @@ def load_local_midi():
         return jsonify(success=False)
     webinterface.learning.load_midi(filename)
     return jsonify(success=True)
-
 
 @webinterface.route("/api/set_light/<light_num>")
 def set_light(light_num):
@@ -93,13 +92,14 @@ def set_light(light_num):
     strip.show()
     return jsonify(success=True)
 
-
 @webinterface.route("/api/set_many_lights", methods=["POST"])
 def set_many_lights():
     lights = request.values.get("lights")
     lights = json.loads(lights)
     assert len(lights) > 0
+    
     strip = webinterface.ledstrip.strip
+    
     for light_num, color in lights:
         # red = int(color[0])
         # blue = int(color[1])
@@ -109,37 +109,35 @@ def set_many_lights():
         green = int(color["g"])
         color = Color(red, green, blue)        
         strip.setPixelColor(light_num, color)
-    strip.setBrightness(128)
+        
+    strip.setBrightness(brightest)
     strip.show()
     return jsonify(success=True)
-
 
 @webinterface.route("/api/set_all_lights", methods=["POST"])
 def set_all_lights():
     color = request.values.get("color")
     color = json.loads(color)
+
+    strip = webinterface.ledstrip.strip
+    
     red = int(color["r"])
     blue = int(color["b"])
     green = int(color["g"])
     color = Color(red, green, blue)
-    strip = webinterface.ledstrip.strip
+    
     cntLed = webinterface.appconfig.num_leds_on_strip()
     for i in range(cntLed):
         strip.setPixelColor(i, color)
-
-    # 224 definitely doesn't work;
-    # 223 seems to be the brightest for 200 LEDs (sometimes?);
-    # 222 is probably safest
-    strip.setBrightness(222)
+        
+    strip.setBrightness(brightest)
     strip.show()
     return jsonify(success=True)
-
 
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
     result = webinterface.appconfig.get_config(key)
     return jsonify(result)
-
 
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
@@ -148,48 +146,14 @@ def set_config(key):
     webinterface.appconfig.set_config(key, value)
     return jsonify(success=True)
 
-
 @webinterface.route("/api/delete_config/<key>", methods=["DELETE"])
 def delete_config(key):
     assert key is not None
     webinterface.appconfig.delete_config(key)
     return jsonify(success=True)
 
-
-@webinterface.route("/api/button_mot", methods=["GET"])
-def button_mot():
-    print("🍭Hello, mot!")
-    print("button_mot stdout")
-    eprint("button_mot - does this show up in journalctl?")
-    strip = webinterface.ledstrip.strip
-    # strip.clear()
-    # numPixels = strip.numPixels()
-    strip.setBrightness(111)
-    # for i in range(0, numPixels):
-    #     strip.setPixelColor(i, Color(255,255,255))
-    strip.setPixelColor(10, Color(212, 44, 67))
-    strip.show()
-    return jsonify(success=True)
-
-
-@webinterface.route("/api/button_two", methods=["GET"])
-def button_two():
-    print("🍫Hello, two!")
-    print("button_two stdout")
-    eprint("button_two - does this show up?")
-    strip = webinterface.ledstrip.strip
-    strip.setBrightness(111)
-    strip.setPixelColor(
-        13,
-        Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
-    )
-    strip.show()
-    return jsonify(success=True)
-
-
 def get_random_color():
     return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-
 
 @webinterface.route("/api/get_homepage_data")
 def get_homepage_data():
