@@ -136,8 +136,8 @@ def set_all_lights():
 
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
-    result = webinterface.appconfig.get_config(key)
-    return jsonify(result)
+    value = webinterface.appconfig.get_config(key)
+    return jsonify(success=True, value=value)
 
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
