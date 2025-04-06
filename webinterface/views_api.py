@@ -124,7 +124,7 @@ def off_many_lights():
     
     for index in indices:
         black = Color(0, 0, 0)        
-        strip.setPixelColor(light_num, black)
+        strip.setPixelColor(index, black)
         
     strip.setBrightness(brightest)
     strip.show()
