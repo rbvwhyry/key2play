@@ -114,6 +114,22 @@ def set_many_lights():
     strip.show()
     return jsonify(success=True)
 
+@webinterface.route("/api/off_many_lights", methods=["POST"])
+def off_many_lights():
+    indices = request.values.get("indices")
+    indices = json.loads(indices)
+    assert len(indices) > 0
+    
+    strip = webinterface.ledstrip.strip
+    
+    for index in indices:
+        black = Color(0, 0, 0)        
+        strip.setPixelColor(light_num, black)
+        
+    strip.setBrightness(brightest)
+    strip.show()
+    return jsonify(success=True)
+
 @webinterface.route("/api/set_all_lights", methods=["POST"])
 def set_all_lights():
     color = request.values.get("color")
