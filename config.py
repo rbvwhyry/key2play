@@ -4,7 +4,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
-DEFAULT_NUM_LEDS_ON_STRIP: int = 300
+DEFAULT_NUM_LEDS_ON_STRIP: int = 200 #200 is good for 88 keys
 DEFAULT_NUM_LEDS_PER_METER: int = 160
 
 
