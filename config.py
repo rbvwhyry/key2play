@@ -4,9 +4,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
-DEFAULT_NUM_LEDS_ON_STRIP: int = 200 #200 is good for 88 keys
-DEFAULT_NUM_LEDS_PER_METER: int = 160
-
+defaults = {"num_leds_on_strip": 200, "num_leds_per_meter": 160}
 
 class Base(DeclarativeBase):
     pass
@@ -36,6 +34,8 @@ class Config:
             value = [kv.value for kv in session.scalars(stmt)]
             if value is not None and len(value) > 0:
                 return value[0]
+            elif key in defaults:
+                return defaults[key]
             else:
                 return None
 
@@ -58,19 +58,13 @@ class Config:
             session.commit()
 
     def num_leds_on_strip(self) -> int:
-        num_leds_on_strip = self.get_config("num_leds_on_strip")
-        if num_leds_on_strip is None:
-            return int(DEFAULT_NUM_LEDS_ON_STRIP)
-        return int(num_leds_on_strip)
+        return int(self.get_config("num_leds_on_strip"))
 
     def set_num_leds_on_strip(self, num: int):
         self.set_config("num_leds_on_strip", num)
 
     def num_leds_per_meter(self) -> int:
-        num_leds_per_meter = self.get_config("num_leds_per_meter")
-        if num_leds_per_meter is None:
-            return int(DEFAULT_NUM_LEDS_PER_METER)
-        return int(num_leds_per_meter)
+        return int(self.get_config("num_leds_per_meter"))
 
     def set_num_leds_per_meter(self, num: int):
         self.set_config("num_leds_per_meter", num)
