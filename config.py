@@ -4,7 +4,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
-defaults = {"num_leds_on_strip": 200, "num_leds_per_meter": 160}
+defaults = {
+    "num_leds_on_strip": 200,
+    "num_leds_per_meter": 160,
+    "keys_calibrated": False,
+}
+
 
 class Base(DeclarativeBase):
     pass
@@ -68,3 +73,9 @@ class Config:
 
     def set_num_leds_per_meter(self, num: int):
         self.set_config("num_leds_per_meter", num)
+
+    def keys_calibrated(self) -> bool:
+        return bool(self.get_config("keys_calibrated"))
+
+    def set_keys_calibrated(self, val: bool):
+        self.set_config("keys_calibrated", val)
