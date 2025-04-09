@@ -32,7 +32,7 @@ class MidiLedMap(Base):
           f")"
         )
 
-class Config:
+class MidiToLedMapping:
     def __init__(self):
         self.create_schema()
 
@@ -40,62 +40,57 @@ class Config:
         engine = create_engine(CONNECTION_STRING)
         Base.metadata.create_all(engine)
 
-    from sqlalchemy import create_engine, delete, select
-from sqlalchemy.dialects.sqlite import insert
-from sqlalchemy.orm import Session
-
-DB_FILENAME = "key2play.sqlite"
-CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
-
-# Insert or update a mapping
-def set_midi_led_map(midi_note: int, led_index: int, r: int, g: int, b: int, time_on: str, time_off: str):
-    engine = create_engine(CONNECTION_STRING)
-    with Session(engine) as session:
-        stmt = (
-            insert(MidiLedMap)
-            .values(
-                midi_note=midi_note,
-                led_index=led_index,
-                r=r,
-                g=g,
-                b=b,
-                time_on=time_on,
-                time_off=time_off
+    # Insert or update a mapping
+    def set_midi_led_map(self, midi_note: int, led_index: int, r: int, g: int, b: int, time_on: str, time_off: str):
+        engine = create_engine(CONNECTION_STRING)
+        with Session(engine) as session:
+            stmt = (
+                insert(MidiLedMap)
+                .values(
+                    midi_note=midi_note,
+                    led_index=led_index,
+                    r=r,
+                    g=g,
+                    b=b,
+                    time_on=time_on,
+                    time_off=time_off
+                )
+                .on_conflict_do_update(
+                    index_elements=["midi_note"],
+                    set_={
+                        "led_index": led_index,
+                        "r": r,
+                        "g": g,
+                        "b": b,
+                        "time_on": time_on,
+                        "time_off": time_off
+                    }
+                )
             )
-            .on_conflict_do_update(
-                index_elements=["midi_note"],
-                set_={
-                    "led_index": led_index,
-                    "r": r,
-                    "g": g,
-                    "b": b,
-                    "time_on": time_on,
-                    "time_off": time_off
-                }
-            )
-        )
-        session.execute(stmt)
-        session.commit()
+            session.execute(stmt)
+            session.commit()
 
-# Get a mapping by midi_note
-def get_midi_led_map(midi_note: int) -> MidiLedMap | None:
-    engine = create_engine(CONNECTION_STRING)
-    with Session(engine) as session:
-        stmt = select(MidiLedMap).where(MidiLedMap.midi_note == midi_note)
-        result = session.scalar(stmt)
-        return result
+    # Get a mapping by midi_note
+    def get_midi_led_map(self, midi_note: int) -> MidiLedMap | None:
+        engine = create_engine(CONNECTION_STRING)
+        with Session(engine) as session:
+            stmt = select(MidiLedMap).where(MidiLedMap.midi_note == midi_note)
+            result = session.scalar(stmt)
+            return result
 
-# Delete a mapping by midi_note
-def delete_midi_led_map(midi_note: int):
-    engine = create_engine(CONNECTION_STRING)
-    with Session(engine) as session:
-        stmt = delete(MidiLedMap).where(MidiLedMap.midi_note == midi_note)
-        session.execute(stmt)
-        session.commit()
+    # Delete a mapping by midi_note
+    def delete_midi_led_map(self, midi_note: int):
+        engine = create_engine(CONNECTION_STRING)
+        with Session(engine) as session:
+            stmt = delete(MidiLedMap).where(MidiLedMap.midi_note == midi_note)
+            session.execute(stmt)
+            session.commit()
 
-# Optional: get all mappings
-def get_all_midi_led_mappings() -> list[MidiLedMap]:
-    engine = create_engine(CONNECTION_STRING)
-    with Session(engine) as session:
-        stmt = select(MidiLedMap)
-        return list(session.scalars(stmt))
+    # Optional: get all mappings
+    def get_all_midi_led_mappings(self) -> list[MidiLedMap]:
+        engine = create_engine(CONNECTION_STRING)
+        with Session(engine) as session:
+            stmt = select(MidiLedMap)
+            return list(session.scalars(stmt))
+
+MidiToLedMapping()
