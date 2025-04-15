@@ -45,11 +45,13 @@ pid = psutil.Process(os.getpid())
 # 222 is probably safest
 brightest = 222
 
+
 @webinterface.route("/static/js/listenWorker.js")
 def serve_worker():
     return send_from_directory(
         "static/js", "listenWorker.js", mimetype="application/javascript"
     )
+
 
 @webinterface.route("/api/currently_pressed_keys", methods=["GET"])
 def currently_pressed_keys():
@@ -59,6 +61,7 @@ def currently_pressed_keys():
     ]
     return jsonify(result)
 
+
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
     songs_list = os.listdir("Songs/")
@@ -66,11 +69,13 @@ def get_songs():
 
     return jsonify(songs_list)
 
+
 @webinterface.route("/api/get_current_song", methods=["GET"])
 def get_current_song():
     song_tracks = webinterface.learning.song_tracks
     song_tracks = [msg.__dict__ for msg in song_tracks]
     return jsonify(song_tracks)
+
 
 @webinterface.route("/api/load_local_midi", methods=["POST"])
 def load_local_midi():
@@ -79,6 +84,7 @@ def load_local_midi():
         return jsonify(success=False)
     webinterface.learning.load_midi(filename)
     return jsonify(success=True)
+
 
 @webinterface.route("/api/set_light/<light_num>")
 def set_light(light_num):
@@ -92,14 +98,15 @@ def set_light(light_num):
     strip.show()
     return jsonify(success=True)
 
+
 @webinterface.route("/api/set_many_lights", methods=["POST"])
 def set_many_lights():
     lights = request.values.get("lights")
     lights = json.loads(lights)
     assert len(lights) > 0
-    
+
     strip = webinterface.ledstrip.strip
-    
+
     for light_num, color in lights:
         # red = int(color[0])
         # blue = int(color[1])
@@ -107,28 +114,30 @@ def set_many_lights():
         red = int(color["r"])
         blue = int(color["b"])
         green = int(color["g"])
-        color = Color(red, green, blue)        
+        color = Color(red, green, blue)
         strip.setPixelColor(light_num, color)
-        
+
     strip.setBrightness(brightest)
     strip.show()
     return jsonify(success=True)
+
 
 @webinterface.route("/api/off_many_lights", methods=["POST"])
 def off_many_lights():
     indices = request.values.get("indices")
     indices = json.loads(indices)
     assert len(indices) > 0
-    
+
     strip = webinterface.ledstrip.strip
-    
+
     for index in indices:
-        black = Color(0, 0, 0)        
+        black = Color(0, 0, 0)
         strip.setPixelColor(index, black)
-        
+
     strip.setBrightness(brightest)
     strip.show()
     return jsonify(success=True)
+
 
 @webinterface.route("/api/set_all_lights", methods=["POST"])
 def set_all_lights():
@@ -136,21 +145,19 @@ def set_all_lights():
     color = json.loads(color)
 
     strip = webinterface.ledstrip.strip
-    
+
     red = int(color["r"])
     blue = int(color["b"])
     green = int(color["g"])
     color = Color(red, green, blue)
-    
+
     cntLed = webinterface.appconfig.num_leds_on_strip()
     for i in range(cntLed):
         strip.setPixelColor(i, color)
-        
+
     strip.setBrightness(brightest)
     strip.show()
     return jsonify(success=True)
-
-
 
 
 ### database: settings table ###
@@ -159,6 +166,7 @@ def get_config(key):
     value = webinterface.appconfig.get_config(key)
     return jsonify(success=True, value=value)
 
+
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
     assert key is not None  # assert non-emptiness
@@ -166,11 +174,14 @@ def set_config(key):
     webinterface.appconfig.set_config(key, value)
     return jsonify(success=True)
 
+
 @webinterface.route("/api/delete_config/<key>", methods=["DELETE"])
 def delete_config(key):
     assert key is not None
     webinterface.appconfig.delete_config(key)
     return jsonify(success=True)
+
+
 ### ---------------------------- ###
 
 
@@ -180,34 +191,34 @@ def get_map(key):
     value = webinterface.appmap.get_midi_led_map(key)
     return jsonify(success=True, value=value)
 
+
 @webinterface.route("/api/set_map/<key>", methods=["POST"])
 def set_map(key):
-    assert key is not None  #assert non-emptiness
- 
+    assert key is not None  # assert non-emptiness
+
     led_index = int(request.values.get("led_index"))
     r = int(request.values.get("r"))
     g = int(request.values.get("g"))
     b = int(request.values.get("b"))
     time_on = int(request.values.get("time_on"))
     time_off = int(request.values.get("time_off"))
-    
+
     webinterface.appmap.set_midi_led_map(key, led_index, r, g, b, time_on, time_off)
     return jsonify(success=True)
+
 
 @webinterface.route("/api/delete_map/<key>", methods=["DELETE"])
 def delete_map(key):
     assert key is not None
     webinterface.appmap.delete_midi_led_map(key)
     return jsonify(success=True)
+
+
 ### ---------------------------- ###
 
 
 def get_random_color():
     return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-
-
-
-
 
 
 @webinterface.route("/api/get_homepage_data")

@@ -11,8 +11,8 @@ import time
 
 from waitress import serve
 
-import config #database
-import map #midi led map
+import config  # database
+import map  # midi led map
 
 import lib.colormaps as cmap
 import webinterface as web_mod
@@ -152,10 +152,10 @@ def start_webserver():
     webinterface.menu = menu
     webinterface.hotspot = hotspot
     webinterface.platform = platform
-    
+
     webinterface.appconfig = appconfig
     webinterface.appmap = appmap
-    
+
     webinterface.jinja_env.auto_reload = True
     webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
     # webinterface.run(use_reloader=False, debug=False, port=80, host='0.0.0.0')

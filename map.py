@@ -6,8 +6,10 @@ DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
 # defaults = {"num_leds_on_strip": 200, "num_leds_per_meter": 160}
 
+
 class Base(DeclarativeBase):
     pass
+
 
 class MidiLedMap(Base):
     __tablename__ = "midi_led_map"
@@ -21,16 +23,17 @@ class MidiLedMap(Base):
 
     def __repr__(self) -> str:
         return (
-          f"MidiLedMap("
-          f"midi_note={self.midi_note}, "
-          f"led_index={self.led_index}, "
-          f"r={self.r}, "
-          f"g={self.g}, "
-          f"b={self.b}, "
-          f"time_on='{self.time_on}', "
-          f"time_off='{self.time_off}'"
-          f")"
+            f"MidiLedMap("
+            f"midi_note={self.midi_note}, "
+            f"led_index={self.led_index}, "
+            f"r={self.r}, "
+            f"g={self.g}, "
+            f"b={self.b}, "
+            f"time_on='{self.time_on}', "
+            f"time_off='{self.time_off}'"
+            f")"
         )
+
 
 class MidiToLedMapping:
     def __init__(self):
@@ -41,7 +44,16 @@ class MidiToLedMapping:
         Base.metadata.create_all(engine)
 
     # Insert or update a mapping
-    def set_midi_led_map(self, midi_note: int, led_index: int, r: int, g: int, b: int, time_on: int, time_off: int):
+    def set_midi_led_map(
+        self,
+        midi_note: int,
+        led_index: int,
+        r: int,
+        g: int,
+        b: int,
+        time_on: int,
+        time_off: int,
+    ):
         engine = create_engine(CONNECTION_STRING)
         with Session(engine) as session:
             stmt = (
@@ -53,7 +65,7 @@ class MidiToLedMapping:
                     g=g,
                     b=b,
                     time_on=time_on,
-                    time_off=time_off
+                    time_off=time_off,
                 )
                 .on_conflict_do_update(
                     index_elements=["midi_note"],
@@ -63,8 +75,8 @@ class MidiToLedMapping:
                         "g": g,
                         "b": b,
                         "time_on": time_on,
-                        "time_off": time_off
-                    }
+                        "time_off": time_off,
+                    },
                 )
             )
             session.execute(stmt)
