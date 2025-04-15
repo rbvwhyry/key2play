@@ -11,7 +11,9 @@ import time
 
 from waitress import serve
 
-import config
+import config #database
+import map #midi led map
+
 import lib.colormaps as cmap
 import webinterface as web_mod
 from lib.functions import startup_animation
@@ -90,6 +92,7 @@ if not args.skipupdate:
 logger.info(args)
 
 appconfig = config.Config()
+appmap = map.MidiToLedMapping()
 
 # pins are interpreted as BCM pins.
 GPIO.setmode(GPIO.BCM)
@@ -149,7 +152,10 @@ def start_webserver():
     webinterface.menu = menu
     webinterface.hotspot = hotspot
     webinterface.platform = platform
+    
     webinterface.appconfig = appconfig
+    webinterface.appmap = appmap
+    
     webinterface.jinja_env.auto_reload = True
     webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
     # webinterface.run(use_reloader=False, debug=False, port=80, host='0.0.0.0')
