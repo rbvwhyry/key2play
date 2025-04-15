@@ -16,8 +16,8 @@ class MidiLedMap(Base):
     r: Mapped[int] = mapped_column()
     g: Mapped[int] = mapped_column()
     b: Mapped[int] = mapped_column()
-    time_on: Mapped[str] = mapped_column()
-    time_off: Mapped[str] = mapped_column()
+    time_on: Mapped[int] = mapped_column()
+    time_off: Mapped[int] = mapped_column()
 
     def __repr__(self) -> str:
         return (
