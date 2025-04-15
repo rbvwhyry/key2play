@@ -150,6 +150,10 @@ def set_all_lights():
     strip.show()
     return jsonify(success=True)
 
+
+
+
+### database: settings table ###
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
     value = webinterface.appconfig.get_config(key)
@@ -167,9 +171,44 @@ def delete_config(key):
     assert key is not None
     webinterface.appconfig.delete_config(key)
     return jsonify(success=True)
+### ---------------------------- ###
+
+
+### database: map table ###
+@webinterface.route("/api/get_map/<key>", methods=["GET"])
+def get_map(key):
+    value = webinterface.appmap.get_midi_led_map(key)
+    return jsonify(success=True, value=value)
+
+@webinterface.route("/api/set_map/<key>", methods=["POST"])
+def set_map(key):
+    assert key is not None  #assert non-emptiness
+ 
+    led_index = int(request.values.get("led_index"))
+    r = int(request.values.get("r"))
+    g = int(request.values.get("g"))
+    b = int(request.values.get("b"))
+    time_on = int(request.values.get("time_on"))
+    time_off = int(request.values.get("time_off"))
+    
+    webinterface.appmap.set_midi_led_map(key, led_index, r, g, b, time_on, time_off)
+    return jsonify(success=True)
+
+@webinterface.route("/api/delete_map/<key>", methods=["DELETE"])
+def delete_map(key):
+    assert key is not None
+    webinterface.appmap.delete_midi_led_map(key)
+    return jsonify(success=True)
+### ---------------------------- ###
+
 
 def get_random_color():
     return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+
+
+
+
 
 @webinterface.route("/api/get_homepage_data")
 def get_homepage_data():
