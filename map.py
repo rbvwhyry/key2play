@@ -41,7 +41,7 @@ class MidiToLedMapping:
         Base.metadata.create_all(engine)
 
     # Insert or update a mapping
-    def set_midi_led_map(self, midi_note: int, led_index: int, r: int, g: int, b: int, time_on: str, time_off: str):
+    def set_midi_led_map(self, midi_note: int, led_index: int, r: int, g: int, b: int, time_on: int, time_off: int):
         engine = create_engine(CONNECTION_STRING)
         with Session(engine) as session:
             stmt = (
