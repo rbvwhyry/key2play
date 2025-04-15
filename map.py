@@ -104,5 +104,3 @@ class MidiToLedMapping:
         with Session(engine) as session:
             stmt = select(MidiLedMap)
             return list(session.scalars(stmt))
-
-MidiToLedMapping()
