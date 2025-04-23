@@ -80,21 +80,21 @@ class MidiToLedMapping:
             session.commit()
 
     # Get a mapping by midi_note
-    def get_midi_led_map(self, midi_note: int) -> MidiLedMap | None:
+    def get_midi_led_row(self, midi_note: int) -> MidiLedMap | None:
         with Session(engine) as session:
             stmt = select(MidiLedMap).where(MidiLedMap.midi_note == midi_note)
             result = session.scalar(stmt)
             return result
 
     # Delete a mapping by midi_note
-    def delete_midi_led_map(self, midi_note: int):
+    def delete_midi_led_row(self, midi_note: int):
         with Session(engine) as session:
             stmt = delete(MidiLedMap).where(MidiLedMap.midi_note == midi_note)
             session.execute(stmt)
             session.commit()
 
     #get the entire map
-    def get_all_midi_led_mappings(self) -> list[MidiLedMap]:
+    def get_midi_led_map(self) -> list[MidiLedMap]:
         with Session(engine) as session:
             stmt = select(MidiLedMap)
             return list(session.scalars(stmt))
