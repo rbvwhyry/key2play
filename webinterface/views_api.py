@@ -154,13 +154,13 @@ def delete_config(key):
 ### ------------------------------------------------------------------------------------ ###
 
 ### ---------------------------- database: map table ---------------------------- ###
-@webinterface.route("/api/get_map/<key>", methods=["GET"])
-def get_map(key):
-    value = webinterface.appmap.get_midi_led_map(key)
+@webinterface.route("/api/get_row/<key>", methods=["GET"])
+def get_row(key):
+    value = webinterface.appmap.get_midi_led_row(key)
     return jsonify(success=True, value=value)
 
-@webinterface.route("/api/set_map/<key>", methods=["POST"])
-def set_map(key):
+@webinterface.route("/api/set_row/<key>", methods=["POST"])
+def set_row(key):
     assert key is not None  # assert non-emptiness
     led_index = int(request.values.get("led_index"))
     r = int(request.values.get("r"))
@@ -168,18 +168,18 @@ def set_map(key):
     b = int(request.values.get("b"))
     time_on = int(request.values.get("time_on"))
     time_off = int(request.values.get("time_off"))
-    webinterface.appmap.set_midi_led_map(key, led_index, r, g, b, time_on, time_off)
+    webinterface.appmap.set_midi_led_row(key, led_index, r, g, b, time_on, time_off)
     return jsonify(success=True)
 
-@webinterface.route("/api/delete_map/<key>", methods=["DELETE"])
-def delete_map(key):
+@webinterface.route("/api/delete_row/<key>", methods=["DELETE"])
+def delete_row(key):
     assert key is not None
-    webinterface.appmap.delete_midi_led_map(key)
+    webinterface.appmap.delete_midi_led_row(key)
     return jsonify(success=True)
 
-@webinterface.route("/api/get_all_mappings", methods=["GET"])
-def get_all_mappings():
-    mappings = webinterface.appmap.get_all_midi_led_mappings() #call existing method to get all mappings from the database
+@webinterface.route("/api/get_map", methods=["GET"])
+def get_map():
+    mappings = webinterface.appmap.get_midi_led_map() #call existing method to get all mappings from the database
     result = []
     for mapping in mappings: #convert SQLAlchemy objects to a serializable format
         result.append({
