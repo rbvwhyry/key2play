@@ -170,6 +170,7 @@ Wants=network-online.target
 WantedBy=multi-user.target
 
 [Service]
+WorkingDirectory=/home/key2play/
 ExecStart=sudo /home/key2play/venv/bin/python3 -u /home/key2play/visualizer.py
 Restart=always
 Type=simple
