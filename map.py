@@ -42,7 +42,7 @@ class MidiToLedMapping:
         Base.metadata.create_all(engine)
 
     # Insert or update a mapping
-    def set_midi_led_map(
+    def set_midi_led_row(
         self,
         midi_note: int,
         led_index: int,
