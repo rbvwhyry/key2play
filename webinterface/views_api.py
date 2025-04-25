@@ -196,6 +196,13 @@ def get_map():
     return jsonify(success=True, mappings=result)
 ### ------------------------------------------------------------------------------------ ###
 
+
+@webinterface.route("/api/delete_all_maps", methods=["POST"])
+def delete_all_maps():
+    webinterface.appmap.delete_all_maps()
+    return jsonify(success=True)
+
+
 def get_random_color():
     return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 

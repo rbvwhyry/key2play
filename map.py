@@ -98,3 +98,9 @@ class MidiToLedMapping:
         with Session(engine) as session:
             stmt = select(MidiLedMap)
             return list(session.scalars(stmt))
+
+    def delete_all_maps(self):
+        with Session(engine) as session:
+            stmt = delete(MidiLedMap)
+            session.execute(stmt)
+            session.commit()
