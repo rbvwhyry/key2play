@@ -5,10 +5,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
 # defaults = {"num_leds_on_strip": 200, "num_leds_per_meter": 160}
-engine = create_engine(CONNECTION_STRING) #do it once to be more efficient
+engine = create_engine(CONNECTION_STRING)  # do it once to be more efficient
+
 
 class Base(DeclarativeBase):
     pass
+
 
 class MidiLedMap(Base):
     __tablename__ = "midi_led_map"
@@ -93,7 +95,7 @@ class MidiToLedMapping:
             session.execute(stmt)
             session.commit()
 
-    #get the entire map
+    # get the entire map
     def get_midi_led_map(self) -> list[MidiLedMap]:
         with Session(engine) as session:
             stmt = select(MidiLedMap)
