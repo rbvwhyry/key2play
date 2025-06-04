@@ -12,3 +12,4 @@ waitress~=3.0.1
 websockets~=11.0.3
 Werkzeug~=3.0.6
 sqlalchemy~=2.0.39
+requests>=2.32.3
