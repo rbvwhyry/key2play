@@ -4,7 +4,7 @@ set -exo pipefail
 
 shopt -s nullglob
 
-FILELIST=(./*.py ./**/*.py ./crazy-sky-250204/*.* ./crazy-sky-250204/src/*.* ./crazy-sky-250204/src/static/**/*.*)
+FILELIST=(./*.py ./*.sh ./**/*.py ./crazy-sky-250204/*.* ./crazy-sky-250204/src/*.* ./crazy-sky-250204/src/static/**/*.*)
 
 echo "${FILELIST[@]}"
 
