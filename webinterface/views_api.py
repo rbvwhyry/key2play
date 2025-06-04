@@ -74,6 +74,24 @@ def get_current_song():
     return jsonify(song_tracks)
 
 
+@webinterface.route("/api/update_to_release", methods=["POST"])
+def update_to_release():
+    release = request.values.get("release", default=None)
+    if not release:
+        return jsonify(success=False)
+    print(f"updating to release {release}")
+    import requests
+    req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}")
+    with open(release, "wb") as fd:
+        for chunk in req.iter_content(chunk_size=128):
+            fd.write(chunk)
+    print(f"downloaded release to {release}")
+    releasedir = release.removesuffix(".zip")
+    subprocess.run(["unzip", release, "-d", releasedir])
+    subprocess.run(["cp", "-R", f"{releasedir}/", "."])
+    return jsonify(success=True)
+
+
 @webinterface.route("/api/load_local_midi", methods=["POST"])
 def load_local_midi():
     filename = request.values.get("filename", default=None)
