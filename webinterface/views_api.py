@@ -86,7 +86,9 @@ def update_to_release():
         for chunk in req.iter_content(chunk_size=128):
             fd.write(chunk)
     print(f"downloaded release to {release}")
-
+    releasedir = release.removesuffix(".zip")
+    subprocess.run(["unzip", release, "-d", releasedir])
+    subprocess.run(["cp", "-R", f"{releasedir}/", "."])
     return jsonify(success=True)
 
 
