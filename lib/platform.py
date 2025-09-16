@@ -223,16 +223,15 @@ rsn_pairwise=CCMP
                 logger.info(f"Already connected to Wi-Fi {ssid}")
                 return True
 
-        wpa_conf = """
-        country=GB
-        ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-        update_config=1
-        network={
-            scan_ssid=1
-            ssid="%s"
-            %s
-        }
-        """
+        wpa_conf = """country=GB
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+network={
+    scan_ssid=1
+    ssid="%s"
+    %s
+}
+"""
 
         pwd = 'psk="' + password + '"'
         if password == "":
