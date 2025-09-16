@@ -8,8 +8,9 @@ defaults = {
     "num_leds_on_strip": 200,
     "num_leds_per_meter": 160,
     "keys_calibrated": False,
+    "reinitialize_network_on_boot": True,
+    "is_hotspot_active": False,
 }
-
 
 class Base(DeclarativeBase):
     pass
@@ -44,7 +45,7 @@ class Config:
             else:
                 return None
 
-    def set_config(self, key: str, value: str):
+    def set_config(self, key: str, value):
         engine = create_engine(CONNECTION_STRING)
         with Session(engine) as session:
             stmt = (
@@ -79,3 +80,15 @@ class Config:
 
     def set_keys_calibrated(self, val: bool):
         self.set_config("keys_calibrated", val)
+
+    def reinitialize_network_on_boot(self) -> bool:
+        return bool(self.get_config("reinitialize_network_on_boot"))
+
+    def set_reinitialize_network_on_boot(self, val: bool):
+        self.set_config("reinitialize_network_on_boot", val)
+
+    def is_hotspot_active(self) -> bool:
+        return bool(self.get_config("is_hotspot_active"))
+
+    def set_is_hotspot_active(self, val: bool):
+        self.set_config("is_hotspot_active", val)

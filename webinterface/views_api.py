@@ -164,6 +164,15 @@ def set_all_lights():
     strip.show()
     return jsonify(success=True)
 
+@webinterface.route("/api/connect_to_wifi", methods=["POST"])
+def connect_to_wifi():
+    ssid = request.values.get("ssid")
+    psk = request.values.get("psk")
+    webinterface.platform.connect_to_wifi(ssid, psk, webinterface.hotspot, webinterface.usersettings)
+
+@webinterface.route("/api/disconnect_from_wifi", methods=["POST"])
+def disconnect_from_wifi():
+    webinterface.platform.disconnect_from_wifi(webinterface.hotspot, webinterface.usersettings)
 
 ### ---------------------------- database: settings table ---------------------------- ###
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
@@ -284,9 +293,7 @@ def get_homepage_data():
         "card_space_percent": card_space.percent,
         "cover_state": "Opened" if cover_opened else "Closed",
         "screen_on": webinterface.menu.screen_on,
-        "reinitialize_network_on_boot": int(
-            webinterface.usersettings.get_setting_value("reinitialize_network_on_boot")
-        ),
+        "reinitialize_network_on_boot": webinterface.appconfig.reinitialize_network_on_boot(),
     }
     return jsonify(homepage_data)
 

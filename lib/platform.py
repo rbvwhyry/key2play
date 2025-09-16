@@ -107,9 +107,7 @@ class PlatformRasp:
             if int(usersettings.get("is_hotspot_active")):
                 self.disconnect_from_wifi(hotspot, usersettings)
                 return
-            elif (
-                int(usersettings.get_setting_value("reinitialize_network_on_boot")) == 1
-            ):
+            elif self.config.reinitialize_network_on_boot():
                 try:
                     logger.info("Running disable_ap.sh")
                     subprocess.Popen(
