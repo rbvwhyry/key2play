@@ -215,12 +215,12 @@ rsn_pairwise=CCMP
 
     def connect_to_wifi(self, ssid, password, hotspot, usersettings):
         hotspot.hotspot_script_time = time.time()
-        logger.info("connect_to_wifi :: connecting to wifi SSID=", ssid)
+        logger.info(f"connect_to_wifi :: connecting to wifi SSID={ssid}")
         success, wifi_ssid, address = self.get_current_connections()
 
         if success:
             if wifi_ssid == ssid:
-                logger.info("Already connected to Wi-Fi:", ssid)
+                logger.info(f"Already connected to Wi-Fi {ssid}")
                 return True
 
         wpa_conf = """
