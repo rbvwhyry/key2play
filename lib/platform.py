@@ -27,6 +27,9 @@ class Platform_null:
 
 
 class PlatformRasp:
+    def __init__(self, config):
+        self.config = config
+
     def copy_connectall_script(self):
         # make sure connectall.py file exists and is updated
         if (

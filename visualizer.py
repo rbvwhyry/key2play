@@ -81,8 +81,10 @@ parser.add_argument(
 args = parser.parse_args()
 
 
+appconfig = config.Config()
+
 if args.appmode == "platform":
-    platform = PlatformRasp()
+    platform = PlatformRasp(appconfig)
 else:
     platform = Platform_null()
 
@@ -91,7 +93,6 @@ if not args.skipupdate:
 
 logger.info(args)
 
-appconfig = config.Config()
 appmap = map.MidiToLedMapping()
 
 # pins are interpreted as BCM pins.
