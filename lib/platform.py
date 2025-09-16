@@ -252,7 +252,7 @@ network={
             logger.warning(
                 "An exception occurred while shutting down a hotspot:", error
             )
-        usersettings.change_setting_value("is_hotspot_active", 0)
+        appconfig.set_is_hotspot_active(False)
 
     def disconnect_from_wifi(self, hotspot, usersettings):
         hotspot.hotspot_script_time = time.time()
