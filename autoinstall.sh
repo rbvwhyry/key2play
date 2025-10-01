@@ -125,7 +125,7 @@ EOF
 # Function to enable SPI interface
 enable_spi_interface() {
   # Edit config.txt file to enable SPI interface
-  execute_command "sudo sed -i '$ a\dtparam=spi=on' /boot/config.txt"
+  execute_command "sudo sed -i '$ a\dtparam=spi=on' /boot/firmware/config.txt"
 }
 
 # Function to install required packages
@@ -173,7 +173,7 @@ install_packages() {
 # Function to disable audio output
 disable_audio_output() {
   echo 'blacklist snd_bcm2835' | sudo tee -a /etc/modprobe.d/snd-blacklist.conf > /dev/null
-  sudo sed -i 's/dtparam=audio=on/#dtparam=audio=on/' /boot/config.txt
+  sudo sed -i 's/dtparam=audio=on/#dtparam=audio=on/' /boot/firmware/config.txt
 }
 
 # Function to install RTP-midi server
