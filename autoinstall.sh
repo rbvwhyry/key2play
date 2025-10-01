@@ -14,7 +14,9 @@ display_error() {
 
 # Function to execute a command and handle errors, with optional internet connectivity check
 execute_command() {
+  set +u # allow this unset variable to not error out
   local check_internet="$2"  # Check for internet if this argument is provided
+  set -u # treat unset variables as an error
 
   echo "Executing: $1"
 
