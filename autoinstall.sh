@@ -73,9 +73,7 @@ update_os() {
 # Function to create and configure the autoconnect script
 configure_autoconnect_script() {
   # Create connectall.py file
-  cat <<EOF | sudo tee /usr/local/bin/connectall.py > /dev/null
-
-  
+  sudo tee /usr/local/bin/connectall.py >/dev/null <<EOF
 #!/usr/bin/python3
 import subprocess
 
@@ -107,7 +105,7 @@ EOF
   execute_command "sudo service udev restart"
 
   # Create midi.service file
-  cat <<EOF | sudo tee /lib/systemd/system/midi.service > /dev/null
+  sudo tee /lib/systemd/system/midi.service > /dev/null <<EOF
 [Unit]
 Description=Initial USB MIDI connect
 
