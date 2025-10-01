@@ -224,6 +224,15 @@ EOF
   execute_command "sudo chmod a+rwxX -R /home/key2play/"
 }
 
+put_swap_on_tmpfs() {
+    if ! grep '/tmp' /etc/fstab; then
+        sudo tee -a /etc/fstab > /dev/null << 'EOF'
+tmpfs  /tmp         tmpfs  defaults,noatime,nosuid,nodev   0  0
+tmpfs  /var/tmp     tmpfs  defaults,noatime,nosuid,nodev   0  0
+EOF
+    fi
+}
+
 finish_installation() {
   echo "------------------"
   echo ""
@@ -247,4 +256,5 @@ install_packages
 disable_audio_output
 install_rtpmidi_server
 install_key2play
+put_swap_on_tmpfs
 finish_installation
