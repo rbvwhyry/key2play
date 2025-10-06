@@ -219,8 +219,8 @@ finish_installation() {
 add_sources
 update_os
 configure_autoconnect_script
-enable_spi_interface
 install_packages
+enable_spi_interface
 disable_audio_output
 install_rtpmidi_server
 install_key2play
