@@ -194,6 +194,8 @@ install_key2play() {
   execute_command "sudo git clone https://github.com/rbvwhyry/key2play" "check_internet"
   execute_command "sudo chown -R $USER:$USER /home/key2play"
   execute_command "sudo chmod -R a+rwx /home/key2play"
+  execute_command "git submodule init"
+  execute_command "git submodule update"
   execute_command "cd key2play"
   execute_command "virtualenv venv"
   execute_command "venv/bin/pip3 install -r requirements.txt" "check_internet"
