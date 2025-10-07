@@ -95,8 +95,6 @@ class PlatformRasp:
             return False
 
     def manage_hotspot(self, hotspot, usersettings, midiports, first_run=False):
-        return
-
         # Visualizer is starting, check if hotspot is active and run enable_ap.sh
         if first_run:
             subprocess.call(["sudo", "chmod", "+x", "./disable_ap.sh"])
