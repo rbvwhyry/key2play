@@ -1851,7 +1851,6 @@ def get_learning_status():
                 "is_led_activeL": ast.literal_eval(app_state.usersettings.get_setting_value("is_led_activeL")),
                 "is_led_activeR": ast.literal_eval(app_state.usersettings.get_setting_value("is_led_activeR"))}
 
->>>>>>> upstream/master
     return jsonify(response)
 
 @webinterface.route('/api/get_song_list_setting', methods=['GET'])
