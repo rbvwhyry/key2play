@@ -164,4 +164,4 @@ def stop_server(loop):
 
 
 # Import views after app is defined to avoid circular imports
-from webinterface import views, views_api
+from webinterface import views, views_api, views_settings

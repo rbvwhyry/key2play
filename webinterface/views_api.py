@@ -1,38 +1,3 @@
-<<<<<<< HEAD
-import ast
-import json
-import os
-import random
-import subprocess
-import sys
-import mido
-import psutil
-from flask import jsonify, request, send_from_directory
-import lib.colormaps as cmap
-from lib.functions import (
-    fastColorWipe,
-    find_between,
-    get_last_logs,
-)
-from lib.rpi_drivers import GPIO, Color
-from webinterface import webinterface
-
-
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-
-def pretty_print(dom):
-    return "\n".join(
-        [line for line in dom.toprettyxml(indent=" " * 4).split("\n") if line.strip()]
-    )
-
-
-def pretty_save(file_path, sequences_tree):
-    with open(file_path, "w", encoding="utf8") as outfile:
-        outfile.write(pretty_print(sequences_tree))
-
-=======
 from webinterface import webinterface, app_state
 from flask import render_template, send_file, request, jsonify
 from werkzeug.security import safe_join
@@ -55,7 +20,18 @@ import ast
 import re
 from lib.rpi_drivers import GPIO
 from lib.log_setup import logger
->>>>>>> upstream/master
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+def pretty_print(dom):
+    return "\n".join(
+        [line for line in dom.toprettyxml(indent=" " * 4).split("\n") if line.strip()]
+    )
+
+def pretty_save(file_path, sequences_tree):
+    with open(file_path, "w", encoding="utf8") as outfile:
+        outfile.write(pretty_print(sequences_tree))
 
 SENSECOVER = 12
 GPIO.setmode(GPIO.BCM)
