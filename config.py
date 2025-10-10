@@ -12,6 +12,7 @@ defaults = {
     "is_hotspot_active": False,
 }
 
+
 class Base(DeclarativeBase):
     pass
 

@@ -18,8 +18,6 @@ from lib.midi_event_processor import MIDIEventProcessor
 from lib.color_mode import ColorMode
 from lib.webinterface_manager import WebInterfaceManager
 
-from lib.log_setup import logger
-
 
 def restart_script():
     """Restart the current script."""

@@ -10,7 +10,19 @@ from webinterface import webinterface, app_state
 
 
 class WebInterfaceManager:
-    def __init__(self, args, usersettings, ledsettings, ledstrip, learning, saving, midiports, menu, hotspot, platform):
+    def __init__(
+        self,
+        args,
+        usersettings,
+        ledsettings,
+        ledstrip,
+        learning,
+        saving,
+        midiports,
+        menu,
+        hotspot,
+        platform,
+    ):
         self.args = args
         self.usersettings = usersettings
         self.ledsettings = ledsettings
@@ -26,7 +38,7 @@ class WebInterfaceManager:
 
     def setup_web_interface(self):
         if self.args.webinterface != "false":
-            logger.info('Starting webinterface')
+            logger.info("Starting webinterface")
 
             app_state.usersettings = self.usersettings
             app_state.ledsettings = self.ledsettings
@@ -39,7 +51,7 @@ class WebInterfaceManager:
             app_state.platform = self.platform
 
             webinterface.jinja_env.auto_reload = True
-            webinterface.config['TEMPLATES_AUTO_RELOAD'] = True
+            webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
 
             if not self.args.port:
                 self.args.port = 80
@@ -47,15 +59,13 @@ class WebInterfaceManager:
             processThread = threading.Thread(
                 target=serve,
                 args=(webinterface,),
-                kwargs={'host': '0.0.0.0', 'port': self.args.port, 'threads': 20},
-                daemon=True
+                kwargs={"host": "0.0.0.0", "port": self.args.port, "threads": 20},
+                daemon=True,
             )
             processThread.start()
 
             processThread = threading.Thread(
-                target=web_mod.start_server,
-                args=(self.websocket_loop,),
-                daemon=True
+                target=web_mod.start_server, args=(self.websocket_loop,), daemon=True
             )
             processThread.start()
 

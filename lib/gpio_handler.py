@@ -78,9 +78,13 @@ class GPIOHandler:
                 self.ledsettings.set_sequence(0, 1)
             else:
                 active_input = self.usersettings.get_setting_value("input_port")
-                secondary_input = self.usersettings.get_setting_value("secondary_input_port")
+                secondary_input = self.usersettings.get_setting_value(
+                    "secondary_input_port"
+                )
                 self.midiports.change_port("inport", secondary_input)
-                self.usersettings.change_setting_value("secondary_input_port", active_input)
+                self.usersettings.change_setting_value(
+                    "secondary_input_port", active_input
+                )
                 self.usersettings.change_setting_value("input_port", secondary_input)
                 fastColorWipe(self.ledstrip.strip, True, self.ledsettings)
             while GPIO.input(self.KEY3) == 0:

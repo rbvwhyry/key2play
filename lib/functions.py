@@ -163,15 +163,7 @@ def manage_idle_animation(ledstrip, ledsettings, menu, midiports):
 def get_note_position(note, ledstrip, ledsettings):
     note_offsets = ledsettings.note_offsets
     note_offset = 0
-<<<<<<< HEAD
-    for i in range(0, len(note_offsets)):
-        if note > note_offsets[i][0]:
-            note_offset = note_offsets[i][1]
-            # break
-=======
->>>>>>> upstream/master
-
-    for threshold, offset in note_offsets: # Iterate through ALL offsets
+    for threshold, offset in note_offsets:  # Iterate through ALL offsets
         if note > threshold:
             note_offset += offset  # Add the offset for each matching range
 

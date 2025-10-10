@@ -17,17 +17,32 @@ from lib.usersettings import UserSettings
 class ComponentInitializer:
     def __init__(self, args):
         self.args = args
-        self.platform = PlatformRasp() if self.args.appmode == "platform" else PlatformNull()
+        self.platform = (
+            PlatformRasp() if self.args.appmode == "platform" else PlatformNull()
+        )
         self.usersettings = UserSettings()
         self.midiports = MidiPorts(self.usersettings)
         self.ledsettings = LedSettings(self.usersettings)
-        self.ledstrip = LedStrip(self.usersettings, self.ledsettings, self.args.leddriver)
-        self.learning = LearnMIDI(self.usersettings, self.ledsettings, self.midiports, self.ledstrip)
+        self.ledstrip = LedStrip(
+            self.usersettings, self.ledsettings, self.args.leddriver
+        )
+        self.learning = LearnMIDI(
+            self.usersettings, self.ledsettings, self.midiports, self.ledstrip
+        )
         self.hotspot = Hotspot(self.platform)
         self.saving = SaveMIDI()
-        self.menu = MenuLCD("config/menu.xml", self.args, self.usersettings, self.ledsettings,
-                            self.ledstrip, self.learning, self.saving, self.midiports,
-                            self.hotspot, self.platform)
+        self.menu = MenuLCD(
+            "config/menu.xml",
+            self.args,
+            self.usersettings,
+            self.ledsettings,
+            self.ledstrip,
+            self.learning,
+            self.saving,
+            self.midiports,
+            self.hotspot,
+            self.platform,
+        )
         self.setup_components()
 
     def setup_components(self):
@@ -41,9 +56,13 @@ class ComponentInitializer:
 
         cmap.gradients.update(cmap.load_colormaps())
         cmap.generate_colormaps(cmap.gradients, self.ledstrip.led_gamma)
-        cmap.update_multicolor(self.ledsettings.multicolor_range, self.ledsettings.multicolor)
+        cmap.update_multicolor(
+            self.ledsettings.multicolor_range, self.ledsettings.multicolor
+        )
 
-        t = threading.Thread(target=startup_animation, args=(self.ledstrip, self.ledsettings))
+        t = threading.Thread(
+            target=startup_animation, args=(self.ledstrip, self.ledsettings)
+        )
         t.start()
 
         self.midiports.add_instance(self.menu)
