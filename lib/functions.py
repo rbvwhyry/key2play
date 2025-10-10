@@ -163,16 +163,23 @@ def manage_idle_animation(ledstrip, ledsettings, menu, midiports):
 def get_note_position(note, ledstrip, ledsettings):
     note_offsets = ledsettings.note_offsets
     note_offset = 0
+<<<<<<< HEAD
     for i in range(0, len(note_offsets)):
         if note > note_offsets[i][0]:
             note_offset = note_offsets[i][1]
             # break
+=======
+>>>>>>> upstream/master
 
-    note_offset -= ledstrip.shift
+    for threshold, offset in note_offsets: # Iterate through ALL offsets
+        if note > threshold:
+            note_offset += offset  # Add the offset for each matching range
+
+    note_offset -= ledstrip.shift  # Apply global shift
 
     density = ledstrip.leds_per_meter / 72
-
     note_pos_raw = int(density * (note - 20) - note_offset)
+
     if ledstrip.reverse:
         return max(0, ledstrip.num_leds_on_strip() - note_pos_raw)
     else:

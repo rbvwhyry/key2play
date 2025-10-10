@@ -27,7 +27,8 @@
                     this.classList.add('animate-pulse', 'pointer-events-none');
                     document.getElementById('save_recording_button').classList.remove('pointer-events-none', 'opacity-50');
                     document.getElementById('cancel_recording_button').classList.remove('pointer-events-none', 'opacity-50');
-                    document.getElementById('recording_status').innerHTML = '<p class=\'text-red-400\' data-translate=\'starting\'>starting</p>'"
+                    document.getElementById('recording_status').innerHTML = '<p class=\'text-red-400\' data-translate=\'starting\'>starting</p>';
+                    startRecordingTimer();"
                             class="w-auto px-10 h-10 outline-none mb-2
                             bg-gray-100 dark:bg-gray-600 font-bold py-2 rounded-2xl inline-flex items-center">
                         <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"
@@ -58,7 +59,8 @@
                     temporary_disable_button(this, 3000);
                     document.getElementById('save_recording_button').classList.add('pointer-events-none', 'opacity-50');
                     document.getElementById('cancel_recording_button').classList.add('pointer-events-none', 'opacity-50');
-                    document.getElementById('recording_status').innerHTML = '<p>saving</p>'"
+                    document.getElementById('recording_status').innerHTML = '<p>saving</p>';
+                    stopRecordingTimer();"
                             class="w-auto px-10 h-10 outline-none mb-2 bg-gray-100 dark:bg-gray-600 font-bold
                             py-2 rounded-2xl inline-flex items-center hidden">
                         <span class="w-full uppercase text-xs text-green-400" data-translate="confirm">Confirm</span>
@@ -85,13 +87,18 @@
                     temporary_disable_button(this, 3000);
                     document.getElementById('save_recording_button').classList.add('pointer-events-none', 'opacity-50');
                     document.getElementById('cancel_recording_button').classList.add('pointer-events-none', 'opacity-50');
-                    document.getElementById('recording_status').innerHTML = '<p data-translate=\'canceling\'>canceling</p>'"
+                    document.getElementById('recording_status').innerHTML = '<p data-translate=\'canceling\'>canceling</p>';
+                    hideRecordingTimer();"
                             class="w-full h-10 outline-none mb-2 bg-gray-100 dark:bg-gray-600 font-bold
                             py-2 px-2 rounded-2xl inline-flex items-center hidden">
                         <span class="w-full uppercase text-xs text-red-400" data-translate="confirm">Confirm</span>
                     </button>
                 </div>
             </div>
+        </div>
+
+        <div id="recording_timer" class="text-center hidden mb-4">
+            <span class="text-2xl font-mono">00:00:00</span>
         </div>
     </div>
 
@@ -363,7 +370,7 @@
                                 class="h-10 block appearance-none w-full bg-gray-100 dark:bg-gray-600
                 py-2 px-2 pr-8 rounded-2xl leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
                             <option value="0" data-translate="melody">Melody</option>
-                            <option value="1" data-translate="rhytm">Rhythm</option>
+                            <option value="1" data-translate="rhythm">Rhythm</option>
                             <option value="2" data-translate="listen">Listen</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-200">
@@ -565,6 +572,24 @@
                         </div>
 
                     </label>
+                        <svg onclick="document.getElementById('learning_start_point').stepDown();
+                        document.getElementById('learning_start_point').dispatchEvent(new Event('change'));
+                        document.getElementById('learning_start_point').dispatchEvent(new Event('input'));
+                    " xmlns="http://www.w3.org/2000/svg"
+                             class="m-auto w-full h-6 w-6 cursor-pointer" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <svg onclick="document.getElementById('learning_end_point').stepUp();
+                        document.getElementById('learning_end_point').dispatchEvent(new Event('change'));
+                        document.getElementById('learning_end_point').dispatchEvent(new Event('input'));
+                        " xmlns="http://www.w3.org/2000/svg"
+                             class="m-auto w-full h-6 w-6 cursor-pointer" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
                     <label class="w-1/2 float-right text-xs text-right block text-gray-600 dark:text-gray-400">
                         <div data-translate="end_point">End point</div>
                         (<b id="end_point">0</b>%)</b>
@@ -584,7 +609,6 @@
                         </div>
                     </label>
                 </div>
-
             </div>
 
             <div class="flex flex-wrap w-full md:w-1/2 m-auto">
@@ -608,6 +632,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
                     </div>
+                    <div class="justify-center flex">
+                        <label class="uppercase tracking-wide text-xs font-bold mt-2 text-gray-600 dark:text-gray-400">
+                            <input id="is_led_activeL" onchange="change_setting('change_left_led_active', this.checked)"
+                                class="w-4 h-4 mr-2 border border-gray-300 rounded"
+                                type="checkbox"/>
+                            <div class="inline" data-translate="active">Active</div>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="w-full md:w-1/2 px-3 m-auto">
@@ -629,6 +661,14 @@
                              class="h-6 w-6 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
+                    </div>
+                    <div class="justify-center flex">
+                        <label class="uppercase tracking-wide text-xs font-bold mt-2 text-gray-600 dark:text-gray-400">
+                            <input id="is_led_activeR" onchange="change_setting('change_right_led_active', this.checked)"
+                                class="w-4 h-4 mr-2 border border-gray-300 rounded"
+                                type="checkbox"/>
+                            <div class="inline" data-translate="active">Active</div>
+                        </label>
                     </div>
                 </div>
             </div>

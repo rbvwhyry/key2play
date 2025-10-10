@@ -1,9 +1,7 @@
+from webinterface import webinterface, app_state
+from flask import render_template, request, jsonify
 import os
 import time
-
-from flask import jsonify, render_template, request, send_from_directory
-
-from webinterface import webinterface
 
 ALLOWED_EXTENSIONS = {"mid", "musicxml", "mxl", "xml", "abc"}
 
@@ -18,8 +16,8 @@ def before_request():
 
     # Check if the current request path is in the excluded_routes list
     if request.path not in excluded_routes:
-        webinterface.menu.last_activity = time.time()
-        webinterface.menu.is_idle_animation_running = False
+        app_state.menu.last_activity = time.time()
+        app_state.menu.is_idle_animation_running = False
 
 
 @webinterface.route("/")

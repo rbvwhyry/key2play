@@ -127,12 +127,12 @@ EOF
 # Function to enable SPI interface
 enable_spi_interface() {
   # Edit config.txt file to enable SPI interface
-  execute_command "sudo sed -i '$ a\dtparam=spi=on' /boot/firmware/config.txt"
+  execute_command "sudo raspi-config nonint do_spi 0"
 }
 
 # Function to install required packages
 install_packages() {
-  execute_command "sudo apt-get install --fix-broken -y virtualenv sqlite3 ruby git python3-pip autotools-dev libtool autoconf libopenblas-dev libasound2-dev libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev python3:arm64 libatlas-base-dev libopenjp2-7 libtiff6 libjack0 libjack-dev libasound2-dev fonts-freefont-ttf gcc make build-essential git scons swig libavahi-client3 abcmidi dnsmasq hostapd dhcpcd wireless-tools raspi-config" "check_internet"
+  execute_command "sudo apt-get install -y virtualenv sqlite3 raspi-config ruby git python3-pip autotools-dev libtool autoconf libasound2 libavahi-client3 libavahi-common3 libc6 libfmt9 libgcc-s1 libstdc++6 python3 libopenblas-dev libavahi-client-dev libasound2-dev libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev libatlas-base-dev libopenjp2-7 libtiff6 libjack0 libjack-dev fonts-freefont-ttf gcc make build-essential scons swig abcmidi" "check_internet"
 }
 
 # Function to disable audio output
@@ -144,11 +144,12 @@ disable_audio_output() {
 # Function to install RTP-midi server
 install_rtpmidi_server() {
   execute_command "cd /home/"
-  execute_command "sudo wget https://github.com/davidmoreno/rtpmidid/releases/download/v23.12/rtpmidid_23.12_arm64.deb" "check_internet"
-  execute_command "sudo dpkg -i rtpmidid_23.12_arm64.deb"
-  execute_command "sudo apt install --fix-broken -y"
-  execute_command "sudo rm rtpmidid_23.12_arm64.deb"
+  execute_command "sudo wget https://github.com/davidmoreno/rtpmidid/releases/download/v24.12/rtpmidid_24.12.2_armhf.deb" "check_internet"
+  execute_command "sudo dpkg -i rtpmidid_24.12.2_armhf.deb"
+  execute_command "sudo apt -f install"
+  execute_command "rm rtpmidid_24.12.2_armhf.deb"
 }
+
 
 # Function to install key2play
 install_key2play() {
@@ -209,7 +210,7 @@ finish_installation() {
   echo "After reboot, wait for up to 10 minutes. The key2play server should start, and the Hotspot 'key2play' will become available."
 
   execute_command "sudo shutdown -r +1"
-  sleep 30
+  sleep 60
   # Reboot Raspberry Pi
   execute_command "sudo reboot"
 }
