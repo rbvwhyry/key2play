@@ -54,6 +54,10 @@ execute_command() {
   fi
 }
 
+install_uv() {
+    execute_command "curl -LsSf https://astral.sh/uv/install.sh | sh"
+}
+
 # Function to add debian bullseye sources
 add_sources() {
   cat <<EOF | sudo tee "/etc/apt/sources.list.d/debian-bullseye.list"
@@ -219,6 +223,7 @@ finish_installation() {
 add_sources
 update_os
 configure_autoconnect_script
+install_uv
 install_packages
 enable_spi_interface
 disable_audio_output
