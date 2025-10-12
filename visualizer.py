@@ -7,7 +7,6 @@ import time
 
 from lib.argument_parser import ArgumentParser
 from lib.component_initializer import ComponentInitializer
-from lib.functions import fastColorWipe, screensaver, manage_idle_animation
 from lib.gpio_handler import GPIOHandler
 from lib.led_effects_processor import LEDEffectsProcessor
 from lib.ledsettings import LedSettings

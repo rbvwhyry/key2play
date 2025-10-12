@@ -10,7 +10,6 @@ from lib.log_setup import logger
 from lib.menulcd import MenuLCD
 from lib.midiports import MidiPorts
 from lib.platform import PlatformRasp, PlatformNull, Hotspot
-from lib.savemidi import SaveMIDI
 from lib.usersettings import UserSettings
 
 
