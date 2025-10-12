@@ -104,14 +104,16 @@ EOF
   execute_command "sudo chmod +x /usr/local/bin/connectall.py"
 
   # Create udev rules file
-  echo 'ACTION=="add|remove", SUBSYSTEM=="usb", DRIVER=="usb", RUN+="/usr/local/bin/connectall.py"' | sudo tee -a /etc/udev/rules.d/33-midiusb.rules > /dev/null
+  sudo tee -a /etc/udev/rules.d/33-midiusb.rules > /dev/null << 'EOF'
+ACTION=="add|remove", SUBSYSTEM=="usb", DRIVER=="usb", RUN+="/usr/local/bin/connectall.py"
+EOF
 
   # Reload services
   execute_command "sudo udevadm control --reload"
   execute_command "sudo service udev restart"
 
   # Create midi.service file
-  sudo tee /lib/systemd/system/midi.service > /dev/null <<EOF
+  sudo tee /lib/systemd/system/midi.service > /dev/null << 'EOF'
 [Unit]
 Description=Initial USB MIDI connect
 
@@ -154,6 +156,16 @@ install_rtpmidi_server() {
   execute_command "sudo rm rtpmidid_23.12_arm64.deb"
 }
 
+create_user_account()
+{
+    execute_command "cd /home/"
+    execute_command "sudo rm -rf key2play"
+    execute_command "sudo adduser key2play"
+    sudo tee /etc/sudoers.d/key2play > /dev/null << 'EOF'
+key2play ALL=(ALL) NOPASSWD: ALL
+EOF
+}
+
 # Function to install key2play
 install_key2play() {
   execute_command "cd /home/"
@@ -167,9 +179,7 @@ install_key2play() {
   execute_command "virtualenv venv"
   execute_command "venv/bin/pip3 install -r requirements.txt" "check_internet"
   execute_command "sudo raspi-config nonint do_boot_behaviour B2"
-  execute_command "sudo adduser plv"
-  echo "plv ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/plv > /dev/null
-  cat <<EOF | sudo tee /lib/systemd/system/key2play.service > /dev/null
+  sudo tee /lib/systemd/system/key2play.service > /dev/null << 'EOF'
 [Unit]
 Description=key2play
 After=network-online.target
@@ -183,8 +193,8 @@ WorkingDirectory=/home/key2play/
 ExecStart=sudo /home/key2play/venv/bin/python3 -u /home/key2play/visualizer.py
 Restart=always
 Type=simple
-User=plv
-Group=plv
+User=key2play
+Group=key2play
 StandardError=journal
 StandardOutput=journal
 StandardInput=null
@@ -222,6 +232,7 @@ finish_installation() {
 # Main script execution
 add_sources
 update_os
+create_user_account
 configure_autoconnect_script
 install_uv
 install_packages
