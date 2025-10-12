@@ -3,10 +3,11 @@ import ast
 from lib.functions import clamp, fastColorWipe, find_between
 from lib.rpi_drivers import Color
 from lib.usersettings import UserSettings
+from lib.config import Config
 
 
 class LedSettings:
-    def __init__(self, config, usersettings: UserSettings):
+    def __init__(self, config: Config, usersettings: UserSettings):
         self.step_number = None
         self.sequence_active_name = None
         self.count_steps = None
@@ -16,7 +17,7 @@ class LedSettings:
         self.ledstrip = None
         self.menu = None
         self.usersettings: UserSettings = usersettings
-        self.config = config
+        self.config: Config = config
 
         self.red = int(usersettings.get_setting_value("red"))
         self.green = int(usersettings.get_setting_value("green"))

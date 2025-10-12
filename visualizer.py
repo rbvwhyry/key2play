@@ -61,7 +61,6 @@ class VisualizerApp:
             self.component_initializer.ledsettings,
             self.component_initializer.ledstrip,
             self.component_initializer.learning,
-            self.component_initializer.saving,
             self.component_initializer.midiports,
             self.component_initializer.menu,
             self.component_initializer.hotspot,
@@ -72,7 +71,6 @@ class VisualizerApp:
             self.component_initializer.ledstrip,
             self.component_initializer.ledsettings,
             self.component_initializer.usersettings,
-            self.component_initializer.saving,
             self.component_initializer.learning,
             self.component_initializer.menu,
             self.color_mode,
@@ -114,25 +112,8 @@ class VisualizerApp:
         )
 
         while True:
-            try:
-                elapsed_time = (
-                    time.perf_counter() - self.component_initializer.saving.start_time
-                )
-            except Exception as e:
-                logger.warning(
-                    f"[elapsed time calculation] Unexpected exception occurred: {e}"
-                )
-                elapsed_time = 0
-
             self.check_screensaver()
-            manage_idle_animation(
-                self.component_initializer.ledstrip,
-                self.component_initializer.ledsettings,
-                self.component_initializer.menu,
-                self.component_initializer.midiports,
-            )
             self.check_activity_backlight()
-            self.update_display(elapsed_time)
             self.check_color_mode()
             self.check_settings_changes()
             self.component_initializer.platform.manage_hotspot(
@@ -170,7 +151,6 @@ class VisualizerApp:
                 screensaver(
                     self.component_initializer.menu,
                     self.component_initializer.midiports,
-                    self.component_initializer.saving,
                     self.component_initializer.ledstrip,
                     self.component_initializer.ledsettings,
                 )
@@ -240,7 +220,6 @@ class VisualizerApp:
                     self.component_initializer.ledsettings,
                     self.component_initializer.ledstrip,
                     self.component_initializer.learning,
-                    self.component_initializer.saving,
                     self.component_initializer.midiports,
                     self.component_initializer.hotspot,
                     self.component_initializer.platform,

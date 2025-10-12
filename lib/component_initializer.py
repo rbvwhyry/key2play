@@ -11,6 +11,7 @@ from lib.menulcd import MenuLCD
 from lib.midiports import MidiPorts
 from lib.platform import PlatformRasp, PlatformNull, Hotspot
 from lib.usersettings import UserSettings
+from lib.config import Config
 
 
 class ComponentInitializer:
@@ -20,16 +21,16 @@ class ComponentInitializer:
             PlatformRasp() if self.args.appmode == "platform" else PlatformNull()
         )
         self.usersettings = UserSettings()
-        self.midiports = MidiPorts(self.usersettings)
-        self.ledsettings = LedSettings(self.usersettings)
+        self.config = Config()
+        self.midiports = MidiPorts(self.usersettings, self.config)
+        self.ledsettings = LedSettings(self.config, self.usersettings)
         self.ledstrip = LedStrip(
-            self.usersettings, self.ledsettings, self.args.leddriver
+            self.config, self.usersettings, self.ledsettings, self.args.leddriver
         )
         self.learning = LearnMIDI(
             self.usersettings, self.ledsettings, self.midiports, self.ledstrip
         )
         self.hotspot = Hotspot(self.platform)
-        self.saving = SaveMIDI()
         self.menu = MenuLCD(
             "config/menu.xml",
             self.args,
@@ -37,7 +38,6 @@ class ComponentInitializer:
             self.ledsettings,
             self.ledstrip,
             self.learning,
-            self.saving,
             self.midiports,
             self.hotspot,
             self.platform,
