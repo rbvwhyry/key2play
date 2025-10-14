@@ -81,6 +81,7 @@ def update_to_release():
         return jsonify(success=False)
     print(f"updating to release {release}")
     import requests
+
     req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}")
     with open(release, "wb") as fd:
         for chunk in req.iter_content(chunk_size=128):
@@ -164,17 +165,24 @@ def set_all_lights():
     strip.show()
     return jsonify(success=True)
 
+
 @webinterface.route("/api/connect_to_wifi", methods=["POST"])
 def connect_to_wifi():
     ssid = request.values.get("ssid")
     psk = request.values.get("psk")
-    webinterface.platform.connect_to_wifi(ssid, psk, webinterface.hotspot, webinterface.usersettings)
+    webinterface.platform.connect_to_wifi(
+        ssid, psk, webinterface.hotspot, webinterface.usersettings
+    )
     return jsonify(success=True)
+
 
 @webinterface.route("/api/disconnect_from_wifi", methods=["POST"])
 def disconnect_from_wifi():
-    webinterface.platform.disconnect_from_wifi(webinterface.hotspot, webinterface.usersettings)
+    webinterface.platform.disconnect_from_wifi(
+        webinterface.hotspot, webinterface.usersettings
+    )
     return jsonify(success=True)
+
 
 ### ---------------------------- database: settings table ---------------------------- ###
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
