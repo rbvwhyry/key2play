@@ -7,7 +7,6 @@ from lib.learnmidi import LearnMIDI
 from lib.ledsettings import LedSettings
 from lib.ledstrip import LedStrip
 from lib.log_setup import logger
-from lib.menulcd import MenuLCD
 from lib.midiports import MidiPorts
 from lib.platform import PlatformRasp, PlatformNull, Hotspot
 from lib.usersettings import UserSettings
@@ -22,7 +21,7 @@ class ComponentInitializer:
         )
         self.usersettings = UserSettings()
         self.config = Config()
-        self.midiports = MidiPorts(self.usersettings, self.config)
+        self.midiports = MidiPorts(self.config, self.usersettings)
         self.ledsettings = LedSettings(self.config, self.usersettings)
         self.ledstrip = LedStrip(
             self.config, self.usersettings, self.ledsettings, self.args.leddriver
@@ -31,20 +30,10 @@ class ComponentInitializer:
             self.usersettings, self.ledsettings, self.midiports, self.ledstrip
         )
         self.hotspot = Hotspot(self.platform)
-        self.menu = MenuLCD(
-            "config/menu.xml",
-            self.args,
-            self.usersettings,
-            self.ledsettings,
-            self.ledstrip,
-            self.learning,
-            self.midiports,
-            self.hotspot,
-            self.platform,
-        )
         self.setup_components()
 
     def setup_components(self):
+        return
         if not self.args.skipupdate:
             self.platform.copy_connectall_script()
             # Disable system MIDI scripts that use the old connectall behavior
@@ -64,12 +53,6 @@ class ComponentInitializer:
         )
         t.start()
 
-        self.midiports.add_instance(self.menu)
-        self.ledsettings.add_instance(self.menu, self.ledstrip)
-        self.saving.add_instance(self.menu)
-        self.learning.add_instance(self.menu)
-
-        self.menu.show()
         self.midiports.last_activity = time.time()
         self.hotspot.hotspot_script_time = time.time()
 

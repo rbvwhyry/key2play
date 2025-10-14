@@ -7,12 +7,14 @@ import mido
 
 from lib import connectall
 from lib.log_setup import logger
+from lib.config import Config
+from lib.usersettings import UserSettings
 
 
 class MidiPorts:
-    def __init__(self, config, usersettings):
-        self.config = config
-        self.usersettings = usersettings
+    def __init__(self, config: Config, usersettings: UserSettings):
+        self.config: Config = config
+        self.usersettings: UserSettings = usersettings
         # midi queues will contain a tuple (midi_msg, timestamp)
         self.midifile_queue = deque()
         self.midi_queue = deque()

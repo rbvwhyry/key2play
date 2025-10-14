@@ -14,11 +14,6 @@ def allowed_file(filename):
 def before_request():
     excluded_routes = ["/api/get_homepage_data"]
 
-    # Check if the current request path is in the excluded_routes list
-    if request.path not in excluded_routes:
-        app_state.menu.last_activity = time.time()
-        app_state.menu.is_idle_animation_running = False
-
 
 @webinterface.route("/")
 def index():

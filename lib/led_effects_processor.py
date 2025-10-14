@@ -1,13 +1,10 @@
-from rpi_ws281x import Color
+from lib.rpi_drivers import Color
 
 
 class LEDEffectsProcessor:
-    def __init__(
-        self, ledstrip, ledsettings, menu, color_mode, last_sustain, pedal_deadzone
-    ):
+    def __init__(self, ledstrip, ledsettings, color_mode, last_sustain, pedal_deadzone):
         self.ledstrip = ledstrip
         self.ledsettings = ledsettings
-        self.menu = menu
         self.color_mode = color_mode
         self.last_sustain = last_sustain
         self.pedal_deadzone = pedal_deadzone
@@ -75,10 +72,7 @@ class LEDEffectsProcessor:
                     red, green, blue = (0, 0, 0)
                     led_changed = True
 
-            if (
-                self.ledstrip.keylist[n] <= 0
-                and self.menu.screensaver_is_running is not True
-            ):
+            if self.ledstrip.keylist[n] <= 0:
                 backlight_level = (
                     float(self.ledsettings.backlight_brightness_percent) / 100
                 )

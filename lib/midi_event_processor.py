@@ -1,7 +1,5 @@
 import time
-
-from rpi_ws281x import Color
-
+from lib.rpi_drivers import Color
 from lib.functions import get_note_position, find_between
 from lib.log_setup import logger
 
@@ -17,18 +15,14 @@ class MIDIEventProcessor:
         ledstrip,
         ledsettings,
         usersettings,
-        saving,
         learning,
-        menu,
         color_mode,
     ):
         self.midiports = midiports
         self.ledstrip = ledstrip
         self.ledsettings = ledsettings
         self.usersettings = usersettings
-        self.saving = saving
         self.learning = learning
-        self.menu = menu
         self.color_mode = color_mode
         self.last_sustain = 0  # Track sustain pedal state
         # Time tracking for sequence advancement to prevent rapid triggering
@@ -41,10 +35,7 @@ class MIDIEventProcessor:
         Selects input source based on playback/learning state.
         """
         # Determine which MIDI queue to process based on playback state
-        if (
-            len(self.saving.is_playing_midi) == 0
-            and self.learning.is_started_midi is False
-        ):
+        if self.learning.is_started_midi is False:
             # Process live MIDI input
             self.midiports.midipending = self.midiports.midi_queue
         else:
@@ -141,10 +132,7 @@ class MIDIEventProcessor:
 
         # If LED is completely off, set appropriate color
         if self.ledstrip.keylist[note_position] <= 0:
-            if (
-                self.ledsettings.backlight_brightness > 0
-                and self.menu.screensaver_is_running is not True
-            ):
+            if self.ledsettings.backlight_brightness > 0:
                 # Apply backlight color if backlight is enabled
                 red_backlight = (
                     int(self.ledsettings.get_backlight_color("Red"))
@@ -298,10 +286,7 @@ class MIDIEventProcessor:
                             self.ledstrip.keylist[i] = 0  # Turn off immediately
 
                             # Apply appropriate LED color (backlight or off)
-                            if (
-                                self.ledsettings.backlight_brightness > 0
-                                and self.menu.screensaver_is_running is not True
-                            ):
+                            if self.ledsettings.backlight_brightness > 0:
                                 # Apply backlight color if backlight is enabled
                                 red_backlight = (
                                     int(self.ledsettings.get_backlight_color("Red"))

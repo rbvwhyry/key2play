@@ -70,17 +70,15 @@ def shift(lst, num_shifts):
     return lst[num_shifts:] + lst[:num_shifts]
 
 
-def play_midi(song_path, midiports, saving, menu, ledsettings, ledstrip):
+def play_midi(song_path, midiports, saving, ledsettings, ledstrip):
     midiports.midifile_queue.append((mido.Message("note_on"), time.perf_counter()))
 
     if song_path in saving.is_playing_midi.keys():
-        menu.render_message(song_path, "Already playing", 2000)
         return
 
     saving.is_playing_midi.clear()
 
     saving.is_playing_midi[song_path] = True
-    menu.render_message("Playing: ", song_path, 2000)
     saving.t = threading.currentThread()
 
     try:
@@ -127,36 +125,13 @@ def play_midi(song_path, midiports, saving, menu, ledsettings, ledstrip):
         )
         # print('play time: {:.2f} s (expected {:.2f})'.format(time.perf_counter() - t0, length))
         # saving.is_playing_midi = False
-    except FileNotFoundError:
-        menu.render_message(song_path, "File not found", 2000)
     except Exception as e:
-        menu.render_message(song_path, "Error while playing song " + str(e), 2000)
         logger.warning(e)
     saving.is_playing_midi.clear()
 
 
-def manage_idle_animation(ledstrip, ledsettings, menu, midiports):
-    animation_delay_minutes = int(menu.led_animation_delay)
-    if animation_delay_minutes == 0:
-        return
-
-    time_since_last_activity_minutes = (time.time() - menu.last_activity) / 60
-    time_since_last_ports_activity_minutes = (
-        time.time() - midiports.last_activity
-    ) / 60
-
-    if time_since_last_ports_activity_minutes < animation_delay_minutes:
-        menu.is_idle_animation_running = False
-
-    # Check conditions
-    if (
-        0 < animation_delay_minutes < time_since_last_activity_minutes
-        and not menu.is_idle_animation_running
-        and 0 < animation_delay_minutes < time_since_last_ports_activity_minutes
-    ):
-        menu.is_idle_animation_running = True
-
-        time.sleep(1)
+def manage_idle_animation(ledstrip, ledsettings, midiports):
+    return
 
 
 # Get note position on the strip
@@ -278,14 +253,8 @@ def calculate_brightness(ledsettings):
     return brightness
 
 
-def stop_animations(menu):
-    temp_is_idle_animation_running = menu.is_idle_animation_running
-    temp_is_animation_running = menu.is_animation_running
-    menu.is_idle_animation_running = False
-    menu.is_animation_running = False
-    time.sleep(0.3)
-    menu.is_idle_animation_running = temp_is_idle_animation_running
-    menu.is_animation_running = temp_is_animation_running
+def stop_animations():
+    return
 
 
 def wheel(pos, ledsettings):

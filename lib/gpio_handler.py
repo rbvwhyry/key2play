@@ -1,15 +1,12 @@
 import time
-
-from RPi import GPIO
-
+from lib.rpi_drivers import GPIO
 from lib.functions import fastColorWipe
 
 
 class GPIOHandler:
-    def __init__(self, args, midiports, menu, ledstrip, ledsettings, usersettings):
+    def __init__(self, args, midiports, ledstrip, ledsettings, usersettings):
         self.args = args
         self.midiports = midiports
-        self.menu = menu
         self.ledstrip = ledstrip
         self.ledsettings = ledsettings
         self.usersettings = usersettings
@@ -48,27 +45,21 @@ class GPIOHandler:
     def process_gpio_keys(self):
         if GPIO.input(self.KEYUP) == 0:
             self.midiports.last_activity = time.time()
-            self.menu.change_pointer(0)
             while GPIO.input(self.KEYUP) == 0:
                 time.sleep(0.001)
 
         if GPIO.input(self.KEYDOWN) == 0:
             self.midiports.last_activity = time.time()
-            self.menu.change_pointer(1)
             while GPIO.input(self.KEYDOWN) == 0:
                 time.sleep(0.001)
 
         if GPIO.input(self.KEY1) == 0:
             self.midiports.last_activity = time.time()
-            self.menu.enter_menu()
             while GPIO.input(self.KEY1) == 0:
                 time.sleep(0.001)
 
         if GPIO.input(self.KEY2) == 0:
             self.midiports.last_activity = time.time()
-            self.menu.go_back()
-            if not self.menu.screensaver_is_running:
-                fastColorWipe(self.ledstrip.strip, True, self.ledsettings)
             while GPIO.input(self.KEY2) == 0:
                 time.sleep(0.01)
 
@@ -92,16 +83,13 @@ class GPIOHandler:
 
         if GPIO.input(self.KEYLEFT) == 0:
             self.midiports.last_activity = time.time()
-            self.menu.change_value("LEFT")
             time.sleep(0.1)
 
         if GPIO.input(self.KEYRIGHT) == 0:
             self.midiports.last_activity = time.time()
-            self.menu.change_value("RIGHT")
             time.sleep(0.1)
 
         if GPIO.input(self.JPRESS) == 0:
             self.midiports.last_activity = time.time()
-            self.menu.speed_change()
             while GPIO.input(self.JPRESS) == 0:
                 time.sleep(0.01)
