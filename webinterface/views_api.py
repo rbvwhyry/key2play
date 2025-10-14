@@ -200,6 +200,18 @@ def delete_config(key):
     return jsonify(success=True)
 
 
+@webinterface.route("/api/get_config_dump", methods=["GET"])
+def get_config_dump():
+    dump = webinterface.appconfig.get_sqlite_dump()
+    return jsonify(success=True, dump=dump)
+
+
+@webinterface.route("/api/backup_config_file_and_reset_to_factory", methods=["POST"])
+def backup_config_file_and_reset_to_factory():
+    webinterface.appconfig.backup_config_file_and_reset_to_factory()
+    return jsonify(success=True)
+
+
 ### ------------------------------------------------------------------------------------ ###
 
 

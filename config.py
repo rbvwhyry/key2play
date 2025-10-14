@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine, delete, select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+import subprocess
+from datetime import datetime
 
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
@@ -11,6 +13,7 @@ defaults = {
     "reinitialize_network_on_boot": True,
     "is_hotspot_active": False,
 }
+
 
 class Base(DeclarativeBase):
     pass
@@ -29,9 +32,21 @@ class Config:
     def __init__(self):
         self.create_schema()
 
+    def backup_config_file_and_reset_to_factory(self):
+        now = datetime.now()
+        timestamp = now.strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"key2play.{timestamp}.sqlite"
+        _exitcode = subprocess.call(["mv", "key2play.sqlite", backup_filename])
+        self.create_schema()
+
     def create_schema(self):
         engine = create_engine(CONNECTION_STRING)
         Base.metadata.create_all(engine)
+
+    def get_sqlite_dump(self) -> str:
+        return subprocess.check_output(["sqlite3", DB_FILENAME, ".dump"]).decode(
+            "utf-8"
+        )
 
     def get_config(self, key: str) -> str:
         engine = create_engine(CONNECTION_STRING)
