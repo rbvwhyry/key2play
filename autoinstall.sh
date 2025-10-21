@@ -138,7 +138,46 @@ enable_spi_interface() {
 
 # Function to install required packages
 install_packages() {
-  execute_command "sudo apt-get install --fix-broken -y virtualenv sqlite3 ruby git python3-pip autotools-dev libtool autoconf libopenblas-dev libasound2-dev libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev python3:arm64 libatlas-base-dev libopenjp2-7 libtiff6 libjack0 libjack-dev libasound2-dev fonts-freefont-ttf gcc make build-essential git scons swig libavahi-client3 abcmidi dnsmasq hostapd dhcpcd wireless-tools raspi-config" "check_internet"
+  PACKAGES=(
+      abcmidi
+      autoconf
+      autotools-dev
+      build-essential
+      dhcpcd
+      dnsmasq
+      fonts-freefont-ttf
+      gcc
+      git
+      git
+      hostapd
+      libasound2-dev
+      libasound2-dev
+      libatlas-base-dev
+      libavahi-client3
+      libdbus-1-dev
+      libglib2.0-dev
+      libical-dev
+      libjack-dev
+      libjack0
+      libopenblas-dev
+      libopenjp2-7
+      libreadline-dev
+      libtiff6
+      libtool
+      libudev-dev
+      libusb-dev
+      make
+      python3-pip
+      python3:arm64
+      raspi-config
+      ruby
+      scons
+      sqlite3
+      swig
+      virtualenv
+      wireless-tools
+ )
+  execute_command "sudo apt-get install --fix-broken -y ${PACKAGES[*]}" "check_internet"
 }
 
 # Function to disable audio output
