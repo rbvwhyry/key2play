@@ -147,15 +147,6 @@ disable_audio_output() {
   sudo sed -i 's/dtparam=audio=on/#dtparam=audio=on/' /boot/firmware/config.txt
 }
 
-# Function to install RTP-midi server
-install_rtpmidi_server() {
-  execute_command "cd /home/key2play"
-  execute_command "sudo wget https://github.com/davidmoreno/rtpmidid/releases/download/v23.12/rtpmidid_23.12_arm64.deb" "check_internet"
-  execute_command "sudo dpkg -i rtpmidid_23.12_arm64.deb"
-  execute_command "sudo apt install --fix-broken -y"
-  execute_command "sudo rm rtpmidid_23.12_arm64.deb"
-}
-
 create_user_account()
 {
     set +e
@@ -238,7 +229,6 @@ install_uv
 install_packages
 enable_spi_interface
 disable_audio_output
-install_rtpmidi_server
 install_key2play
 put_swap_on_tmpfs
 finish_installation
