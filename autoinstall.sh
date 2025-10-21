@@ -158,7 +158,9 @@ install_rtpmidi_server() {
 
 create_user_account()
 {
+    set +e
     execute_command "sudo adduser key2play"
+    set -e
     sudo tee /etc/sudoers.d/key2play > /dev/null << 'EOF'
 key2play ALL=(ALL) NOPASSWD: ALL
 EOF
