@@ -60,7 +60,7 @@ install_uv() {
 
 # Function to add debian bullseye sources
 add_sources() {
-  cat <<EOF | sudo tee "/etc/apt/sources.list.d/debian-bullseye.list"
+  sudo tee "/etc/apt/sources.list.d/debian-bullseye.list" << 'EOF'
   deb http://deb.debian.org/debian bullseye main contrib non-free
   deb http://deb.debian.org/debian bullseye-updates main contrib non-free
   deb http://archive.debian.org/debian bullseye-backports main contrib non-free
@@ -79,7 +79,7 @@ update_os() {
 # Function to create and configure the autoconnect script
 configure_autoconnect_script() {
   # Create connectall.py file
-  sudo tee /usr/local/bin/connectall.py >/dev/null <<EOF
+  sudo tee /usr/local/bin/connectall.py >/dev/null << 'EOF'
 #!/usr/bin/python3
 import subprocess
 
