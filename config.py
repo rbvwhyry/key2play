@@ -12,6 +12,11 @@ defaults = {
     "keys_calibrated": False,
     "reinitialize_network_on_boot": True,
     "is_hotspot_active": False,
+    "color2x": "#0074DE", #blue-ish; https://htmlcolorcodes.com/
+    "color1x": "#B100B5", #purple-ish
+    "color1":  "#33BF00", #green-ish
+    "color2":  "#F5EC00", #yellow-ish
+    "color3":  "#B81D00", #red-ish
 }
 
 
