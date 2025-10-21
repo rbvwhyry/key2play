@@ -168,11 +168,11 @@ EOF
 
 # Function to install key2play
 install_key2play() {
-  execute_command "cd /home/"
-  execute_command "sudo rm -rf key2play"
+  execute_command "cd $HOME"
+  execute_command "sudo rm -rf ./key2play"
   execute_command "sudo git clone https://github.com/rbvwhyry/key2play" "check_internet"
-  execute_command "sudo chown -R $USER:$USER /home/key2play"
-  execute_command "sudo chmod -R a+rwx /home/key2play"
+  execute_command "sudo chown -R $USER:$USER ./key2play"
+  execute_command "sudo chmod -R a+rwx ./key2play"
   execute_command "cd key2play"
   execute_command "git submodule init"
   execute_command "git submodule update"
@@ -189,8 +189,8 @@ Wants=network-online.target
 WantedBy=multi-user.target
 
 [Service]
-WorkingDirectory=/home/key2play/
-ExecStart=sudo /home/key2play/venv/bin/python3 -u /home/key2play/visualizer.py
+WorkingDirectory=/home/key2play/key2play
+ExecStart=sudo /home/key2play/key2play/venv/bin/python3 -u /home/key2play/key2play/visualizer.py
 Restart=always
 Type=simple
 User=key2play
@@ -203,7 +203,7 @@ EOF
   execute_command "sudo systemctl enable key2play.service"
   execute_command "sudo systemctl start key2play.service"
 
-  execute_command "sudo chmod a+rwxX -R /home/key2play/"
+  execute_command "sudo chmod a+rwxX -R /home/key2play/key2play/"
 }
 
 put_swap_on_tmpfs() {
