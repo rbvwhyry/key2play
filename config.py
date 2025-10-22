@@ -17,21 +17,19 @@ defaults = {
     "color1":  "#33BF00", #green-ish
     "color2":  "#F5EC00", #yellow-ish
     "color3":  "#B81D00", #red-ish
+    "previewDepth": 1, #for use with the preview depth slider
 }
-
 
 class Base(DeclarativeBase):
     pass
-
 
 class SimpleConfigKV(Base):
     __tablename__ = "simple_config_kv"
     key: Mapped[str] = mapped_column(primary_key=True, nullable=False)
     value: Mapped[str] = mapped_column()
-
+    
     def __repr__(self) -> str:
         return f"SimpleConfigKV(key={self.key}, value={self.value}"
-
 
 class Config:
     def __init__(self):
