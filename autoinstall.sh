@@ -150,7 +150,6 @@ install_packages() {
       git
       hostapd
       libasound2-dev
-      libatlas-base-dev
       libavahi-client3
       libdbus-1-dev
       libglib2.0-dev
@@ -165,6 +164,7 @@ install_packages() {
       libudev-dev
       libusb-dev
       make
+      python3-numpy
       python3-pip
       python3:arm64
       raspi-config
