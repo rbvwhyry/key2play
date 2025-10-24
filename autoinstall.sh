@@ -148,9 +148,7 @@ install_packages() {
       fonts-freefont-ttf
       gcc
       git
-      git
       hostapd
-      libasound2-dev
       libasound2-dev
       libatlas-base-dev
       libavahi-client3
