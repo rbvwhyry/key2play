@@ -74,6 +74,15 @@ def get_current_song():
     return jsonify(song_tracks)
 
 
+@webinterface.route("/api/delete_song", methods=["POST"])
+def delete_song():
+    filename = request.values.get("filename", default=None)
+    if not filename:
+        return jsonify(success=False)
+    os.remove(f"Songs/{filename}")
+    return jsonify(success=True)
+
+
 @webinterface.route("/api/update_to_release", methods=["POST"])
 def update_to_release():
     release = request.values.get("release", default=None)
