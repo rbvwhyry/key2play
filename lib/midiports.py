@@ -90,9 +90,6 @@ class MidiPorts:
         # Now connect all the remaining ports
         connectall.connectall()
 
-    def add_instance(self, menu):
-        self.menu = menu
-
     def change_port(self, port, portname):
         try:
             destroy_old = None
@@ -104,13 +101,10 @@ class MidiPorts:
                 destory_old = self.playport
                 self.playport = mido.open_output(portname)
                 self.usersettings.change_setting_value("play_port", portname)
-            self.menu.render_message("Changing " + port + " to:", portname, 1500)
             if destroy_old is not None:
                 destory_old.close()
-            self.menu.show()
         except Exception:
-            self.menu.render_message("Can't change " + port + " to:", portname, 1500)
-            self.menu.show()
+            return
 
     def reconnect_ports(self):
         try:

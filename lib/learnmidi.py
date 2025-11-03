@@ -29,7 +29,6 @@ def get_tempo(mid):
 
 class LearnMIDI:
     def __init__(self, usersettings, ledsettings, midiports, ledstrip):
-        self.menu = None
         self.usersettings = usersettings
         self.ledsettings = ledsettings
         self.midiports = midiports
@@ -78,9 +77,6 @@ class LearnMIDI:
             usersettings.get_setting_value("number_of_mistakes")
         )
         self.awaiting_restart_loop = False
-
-    def add_instance(self, menu):
-        self.menu = menu
 
     def change_practice(self, value):
         self.practice += value
@@ -337,9 +333,6 @@ class LearnMIDI:
     def learn_midi(self):
         # Preliminary checks
         if self.is_started_midi:
-            return
-        if self.loading == 0:
-            self.menu.render_message("Load song to start", "", 1500)
             return
         elif 0 < self.loading < 4:
             self.is_started_midi = True  # Prevent restarting the Thread

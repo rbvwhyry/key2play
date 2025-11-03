@@ -14,7 +14,6 @@ class LedSettings:
         self.next_step = None
         self.sequences_tree = None
         self.ledstrip = None
-        self.menu = None
         self.usersettings: UserSettings = usersettings
         self.config = config
 
@@ -166,11 +165,6 @@ class LedSettings:
         # if self.mode == "Disabled" and self.color_mode != "disabled":
         #    usersettings.change_setting_value("color_mode", "disabled")
 
-    def add_instance(self, menu, ledstrip):
-        self.menu = menu
-        self.ledstrip = ledstrip
-        menu.update_multicolor(self.multicolor)
-
     def add_note_offset(self):
         self.note_offsets.insert(0, [100, 1])
         self.usersettings.change_setting_value("note_offsets", self.note_offsets)
@@ -206,8 +200,6 @@ class LedSettings:
             "multicolor_range", self.multicolor_range
         )
 
-        self.menu.update_multicolor(self.multicolor)
-        self.menu.show()
         self.incoming_setting_change = True
 
     def deletecolor(self, key):
@@ -219,9 +211,6 @@ class LedSettings:
             "multicolor_range", self.multicolor_range
         )
 
-        self.menu.update_multicolor(self.multicolor)
-        self.menu.go_back()
-        self.menu.show()
         self.incoming_setting_change = True
 
     def change_multicolor(self, choice, location, value):

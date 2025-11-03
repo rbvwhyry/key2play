@@ -39,12 +39,6 @@ def change_setting():
         reload_sequence = False
 
     if disable_sequence == "true":
-        # menu = webinterface.ledsettings.menu
-        # ledstrip = webinterface.ledsettings.ledstrip
-        # webinterface.ledsettings.__init__(webinterface.usersettings)
-        # webinterface.ledsettings.menu = menu
-        # webinterface.ledsettings.add_instance(menu, ledstrip)
-        # webinterface.ledsettings.ledstrip = ledstrip
         webinterface.ledsettings.sequence_active = False
 
     if setting_name == "clean_ledstrip":
@@ -446,10 +440,8 @@ def change_setting():
 
     if setting_name == "set_sequence":
         if int(value) == 0:
-            menu = webinterface.ledsettings.menu
             ledstrip = webinterface.ledsettings.ledstrip
             webinterface.ledsettings.__init__(webinterface.usersettings)
-            webinterface.ledsettings.menu = menu
             webinterface.ledsettings.ledstrip = ledstrip
             webinterface.ledsettings.sequence_active = False
         else:
@@ -1036,12 +1028,6 @@ def change_setting():
             success=True, reload_sequence=reload_sequence, reload_steps_list=True
         )
 
-    if setting_name == "screen_on":
-        if int(value) == 0:
-            webinterface.menu.disable_screen()
-        else:
-            webinterface.menu.enable_screen()
-
     if setting_name == "reinitialize_network_on_boot":
         if int(value) == 0:
             webinterface.usersettings.change_setting_value(
@@ -1211,7 +1197,6 @@ def change_setting():
                 value,
                 webinterface.midiports,
                 webinterface.saving,
-                webinterface.menu,
                 webinterface.ledsettings,
                 webinterface.ledstrip,
             ),
@@ -1445,17 +1430,9 @@ def change_setting():
 
     if setting_name == "animation_delay":
         value = max(int(value), 0)
-        webinterface.menu.led_animation_delay = value
-        if webinterface.menu.led_animation_delay < 0:
-            webinterface.menu.led_animation_delay = 0
-        webinterface.usersettings.change_setting_value(
-            "led_animation_delay", webinterface.menu.led_animation_delay
-        )
-
         return jsonify(success=True)
 
     if setting_name == "led_animation":
-        webinterface.menu.led_animation = value
         webinterface.usersettings.change_setting_value("led_animation", value)
 
         return jsonify(success=True)

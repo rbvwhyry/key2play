@@ -323,7 +323,6 @@ def get_homepage_data():
         "card_space_total": card_space.total,
         "card_space_percent": card_space.percent,
         "cover_state": "Opened" if cover_opened else "Closed",
-        "screen_on": webinterface.menu.screen_on,
         "reinitialize_network_on_boot": webinterface.appconfig.reinitialize_network_on_boot(),
     }
     return jsonify(homepage_data)
