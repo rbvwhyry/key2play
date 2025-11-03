@@ -133,6 +133,7 @@ def start_webserver():
     webinterface.learning = learning
     webinterface.midiports = midiports
     webinterface.platform = platform
+    webinterface.platform.manage_hotspot(usersetting, midiports, first_run=True)
 
     webinterface.appconfig = appconfig
     webinterface.appmap = appmap

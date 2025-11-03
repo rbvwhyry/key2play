@@ -260,7 +260,7 @@ class PlatformRasp(PlatformBase):
             logger.warning(f"Error checking hotspot status: {str(e)}")
             return False
 
-    def manage_hotspot(self, hotspot, usersettings, midiports, first_run=False):
+    def manage_hotspot(self, usersettings, midiports, first_run=False):
         if first_run:
             self.create_hotspot_profile()
             if int(usersettings.get("is_hotspot_active")):
