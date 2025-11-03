@@ -58,17 +58,6 @@ install_uv() {
     execute_command "curl -LsSf https://astral.sh/uv/install.sh | sh"
 }
 
-# Function to add debian bullseye sources
-add_sources() {
-  sudo tee "/etc/apt/sources.list.d/debian-bullseye.list" << 'EOF'
-  deb http://deb.debian.org/debian bullseye main contrib non-free
-  deb http://deb.debian.org/debian bullseye-updates main contrib non-free
-  deb http://archive.debian.org/debian bullseye-backports main contrib non-free
-  deb http://security.debian.org/debian-security/ bullseye-security main contrib non-free
-EOF
-}
-
-
 # Function to update the OS
 update_os() {
   execute_command "sudo apt-get update" "check_internet"
@@ -143,15 +132,17 @@ install_packages() {
       autoconf
       autotools-dev
       build-essential
-      dhcpcd
-      dnsmasq
       fonts-freefont-ttf
       gcc
       git
-      hostapd
+      libasound2
       libasound2-dev
+      libavahi-client-dev
       libavahi-client3
+      libavahi-common3
+      libc6
       libdbus-1-dev
+      libgcc-s1
       libglib2.0-dev
       libical-dev
       libjack-dev
@@ -159,21 +150,20 @@ install_packages() {
       libopenblas-dev
       libopenjp2-7
       libreadline-dev
+      libstdc++6
       libtiff6
       libtool
       libudev-dev
       libusb-dev
       make
-      python3-numpy
+      python3
       python3-pip
-      python3:arm64
-      raspi-config
+      python3-numpy
       ruby
       scons
       sqlite3
       swig
       virtualenv
-      wireless-tools
  )
   execute_command "sudo apt-get install --fix-broken -y ${PACKAGES[*]}" "check_internet"
 }
@@ -258,14 +248,13 @@ finish_installation() {
 
 
 # Main script execution
-add_sources
 update_os
 create_user_account
 configure_autoconnect_script
-install_uv
+# install_uv
 install_packages
 enable_spi_interface
 disable_audio_output
 install_key2play
-put_swap_on_tmpfs
+# put_swap_on_tmpfs
 finish_installation
