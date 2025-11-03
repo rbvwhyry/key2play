@@ -21,9 +21,8 @@ from lib.learnmidi import LearnMIDI
 from lib.ledsettings import LedSettings
 from lib.ledstrip import LedStrip
 from lib.log_setup import logger
-from lib.menulcd import MenuLCD
 from lib.midiports import MidiPorts
-from lib.platform import Hotspot, Platform_null, PlatformRasp
+from lib.platform import PlatformNull, PlatformRasp
 from lib.rpi_drivers import GPIO, Color, RPiException
 from lib.usersettings import UserSettings
 from webinterface import webinterface
@@ -86,7 +85,7 @@ appconfig = config.Config()
 if args.appmode == "platform":
     platform = PlatformRasp(appconfig)
 else:
-    platform = Platform_null()
+    platform = PlatformNull()
 
 if not args.skipupdate:
     platform.copy_connectall_script()
@@ -111,29 +110,12 @@ t = threading.Thread(target=startup_animation, args=(ledstrip, ledsettings))
 t.start()
 
 learning = LearnMIDI(usersettings, ledsettings, midiports, ledstrip)
-hotspot = Hotspot(platform)
-menu = MenuLCD(
-    "config/menu.xml",
-    usersettings,
-    ledsettings,
-    ledstrip,
-    learning,
-    midiports,
-    hotspot,
-    platform,
-)
 
-midiports.add_instance(menu)
-ledsettings.add_instance(menu, ledstrip)
-learning.add_instance(menu)
-
-menu.show()
 z = 0
 display_cycle = 0
 screen_hold_time = 16
 
 midiports.last_activity = time.time()
-hotspot.hotspot_script_time = time.time()
 
 last_sustain = 0
 pedal_deadzone = 10
@@ -150,8 +132,6 @@ def start_webserver():
     webinterface.ledstrip = ledstrip
     webinterface.learning = learning
     webinterface.midiports = midiports
-    webinterface.menu = menu
-    webinterface.hotspot = hotspot
     webinterface.platform = platform
 
     webinterface.appconfig = appconfig
@@ -179,8 +159,6 @@ processThread.start()
 atexit.register(web_mod.stop_server, websocket_loop)
 
 
-platform.manage_hotspot(hotspot, usersettings, midiports, True)
-
 # Frame rate counters
 event_loop_stamp = time.perf_counter()
 frame_count = 0
@@ -204,20 +182,6 @@ while True:
             usersettings.pending_reset = False
             ledsettings = LedSettings(usersettings)
             ledstrip = LedStrip(usersettings, ledsettings)
-            menu = MenuLCD(
-                "config/menu.xml",
-                usersettings,
-                ledsettings,
-                ledstrip,
-                learning,
-                midiports,
-                hotspot,
-                platform,
-            )
-            menu.show()
-            ledsettings.add_instance(menu, ledstrip)
-
-    platform.manage_hotspot(hotspot, usersettings, midiports)
 
     # Prep midi event queue
     if learning.is_started_midi is False:
