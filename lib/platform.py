@@ -317,9 +317,8 @@ class PlatformRasp(PlatformBase):
             usersettings.change_setting_value("is_hotspot_active", 1)
             self.enable_hotspot()
 
-    def disconnect_from_wifi(self, hotspot, usersettings):
+    def disconnect_from_wifi(self, usersettings):
         logger.info("Disconnecting from wifi")
-        hotspot.hotspot_script_time = time.time()
         self.enable_hotspot()
         usersettings.change_setting_value("is_hotspot_active", 1)
 

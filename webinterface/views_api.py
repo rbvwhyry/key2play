@@ -179,17 +179,13 @@ def set_all_lights():
 def connect_to_wifi():
     ssid = request.values.get("ssid")
     psk = request.values.get("psk")
-    webinterface.platform.connect_to_wifi(
-        ssid, psk, webinterface.hotspot, webinterface.usersettings
-    )
+    webinterface.platform.connect_to_wifi(ssid, psk, webinterface.usersettings)
     return jsonify(success=True)
 
 
 @webinterface.route("/api/disconnect_from_wifi", methods=["POST"])
 def disconnect_from_wifi():
-    webinterface.platform.disconnect_from_wifi(
-        webinterface.hotspot, webinterface.usersettings
-    )
+    webinterface.platform.disconnect_from_wifi(webinterface.usersettings)
     return jsonify(success=True)
 
 
