@@ -176,7 +176,7 @@ class PlatformRasp(PlatformBase):
                     "autoconnect",
                     "no",
                     "ssid",
-                    "PianoLEDVisualizer",
+                    "key2play",
                 ],
                 check=True,
             )
@@ -194,6 +194,8 @@ class PlatformRasp(PlatformBase):
                     "bg",
                     "ipv4.method",
                     "shared",
+                    "ipv4.address",
+                    "192.168.1.1/24",
                 ],
                 check=True,
             )
