@@ -282,6 +282,21 @@ class PlatformRasp(PlatformBase):
                 else:
                     logger.info("key2play-hotspot is already running")
 
+    def check_if_connected_to_wifi() -> bool:
+        try:
+            json_str = subprocess.check_output(
+                ["ip", "-j", "addr", "show", "dev", "wlan0"]
+            )
+            pydict = json.loads(json_str)
+            ip = pydict[0].get("addr_info")[0].get("local")
+            if ip is not None and not ip.startswith("169.254"):
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f"error checking wlan0 IP address, {str(e)}")
+            return False
+
     def connect_to_wifi(self, ssid, password, usersettings):
         # Disable the hotspot first
         self.disable_hotspot()
