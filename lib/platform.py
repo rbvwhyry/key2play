@@ -212,6 +212,7 @@ class PlatformRasp(PlatformBase):
     @staticmethod
     def enable_hotspot():
         logger.info("Enabling key2play-hotspot")
+        subprocess.run(["sudo", "nmcli", "connection", "down", "preconfigured"])
         subprocess.run(["sudo", "nmcli", "connection", "up", "key2play-hotspot"])
 
     @staticmethod
