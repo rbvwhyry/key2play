@@ -1,13 +1,14 @@
-import time
-import subprocess
-from subprocess import call
-import os
 import filecmp
-from shutil import copyfile
-from lib.log_setup import logger
+import json
+import os
 import re
 import socket
+import subprocess
+import time
 from collections import defaultdict
+from shutil import copyfile
+
+from lib.log_setup import logger
 
 
 class PlatformBase:
