@@ -135,6 +135,7 @@ install_packages() {
       fonts-freefont-ttf
       gcc
       git
+      iproute2
       libasound2
       libasound2-dev
       libavahi-client-dev
