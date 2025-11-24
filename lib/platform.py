@@ -288,7 +288,7 @@ class PlatformRasp(PlatformBase):
                 ["ip", "-j", "addr", "show", "dev", "wlan0"]
             )
             pydict = json.loads(json_str)
-            ip = pydict[0].get("addr_info")[0].get("local")
+            ip = pydict[0]["addr_info"][0]["local"]
             if ip is not None and not ip.startswith("169.254"):
                 return True
             else:
