@@ -282,7 +282,7 @@ class PlatformRasp(PlatformBase):
                 else:
                     logger.info("key2play-hotspot is already running")
 
-    def check_if_connected_to_wifi() -> bool:
+    def check_if_connected_to_wifi(self) -> bool:
         try:
             json_str = subprocess.check_output(
                 ["ip", "-j", "addr", "show", "dev", "wlan0"]
