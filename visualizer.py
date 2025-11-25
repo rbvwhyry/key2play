@@ -133,7 +133,6 @@ def start_webserver():
     webinterface.learning = learning
     webinterface.midiports = midiports
     webinterface.platform = platform
-    webinterface.platform.manage_hotspot(usersettings, midiports, first_run=True)
 
     webinterface.appconfig = appconfig
     webinterface.appmap = appmap
@@ -174,6 +173,8 @@ for i in range(0, numPixels):
     strip.setPixelColor(i, Color(0, 0, 0))
 strip.show()
 
+platform.manage_hotspot(usersettings, midiports, first_run=True)
+
 while True:
     # Save settings if changed
     if (time.time() - usersettings.last_save) > 1:
@@ -189,3 +190,5 @@ while True:
         midiports.midipending = midiports.midi_queue
     else:
         midiports.midipending = midiports.midifile_queue
+
+    platform.manage_hotspot(usersettings, midiports)
