@@ -158,8 +158,6 @@ class PlatformRasp(PlatformBase):
 
         # If we reach here, the profile doesn't exist, so we create it
         logger.info("Creating new key2play-hotspot profile...")
-        # Default password if not provided
-        password = "visualizer"
 
         try:
             subprocess.run(
@@ -201,9 +199,7 @@ class PlatformRasp(PlatformBase):
                 check=True,
             )
 
-            logger.info(
-                f"key2play-hotspot profile created successfully with password: {password}"
-            )
+            logger.info("key2play-hotspot profile created successfully")
         except subprocess.CalledProcessError as e:
             logger.warning(
                 f"An error occurred while creating the key2play-hotspot profile: {e}"
