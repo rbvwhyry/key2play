@@ -281,6 +281,19 @@ class PlatformRasp(PlatformBase):
                         logger.warning("Failed to start hotspot")
                 else:
                     logger.info("key2play-hotspot is already running")
+        # if we're supposed to be connected to a wifi, but we aren't:
+        # eventually turn on hotspot mode
+        if (
+            not int(usersettings.get("is_hotspot_active"))
+            and not self.check_if_connected_to_wifi()
+        ):
+            time.sleep(10)
+            if self.check_if_connected_to_wifi():
+                return
+            time.sleep(10)
+            if self.check_if_connected_to_wifi():
+                return
+            self.enable_hotspot()
 
     def check_if_connected_to_wifi(self) -> bool:
         try:
