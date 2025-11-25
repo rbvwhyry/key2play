@@ -1,5 +1,6 @@
 Flask~=2.3.2
 mido~=1.3.0
+numpy~=1.22
 Pillow~=10.4.0
 psutil~=5.9.5
 requests>=2.32.3
