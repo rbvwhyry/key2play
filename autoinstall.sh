@@ -195,7 +195,7 @@ install_key2play() {
   execute_command "cd key2play"
   execute_command "git submodule init"
   execute_command "git submodule update"
-  execute_command "virtualenv venv"
+  execute_command "virtualenv --system-site-packages venv"
   execute_command "venv/bin/pip3 install -r requirements.txt" "check_internet"
   execute_command "sudo raspi-config nonint do_boot_behaviour B2"
   sudo tee /lib/systemd/system/key2play.service > /dev/null << 'EOF'
