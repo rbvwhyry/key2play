@@ -12,9 +12,8 @@ import time
 from waitress import serve
 
 import config  # database
-import map  # midi led map
-
 import lib.colormaps as cmap
+import map  # midi led map
 import webinterface as web_mod
 from lib.functions import startup_animation
 from lib.learnmidi import LearnMIDI
