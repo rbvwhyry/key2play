@@ -192,3 +192,4 @@ while True:
         midiports.midipending = midiports.midifile_queue
 
     platform.manage_hotspot(usersettings, midiports)
+    time.sleep(1)

@@ -277,6 +277,7 @@ class PlatformRasp(PlatformBase):
                         logger.warning("Failed to start hotspot")
                 else:
                     logger.info("key2play-hotspot is already running")
+
         # if we're supposed to be connected to a wifi, but we aren't:
         # eventually turn on hotspot mode
         if (
