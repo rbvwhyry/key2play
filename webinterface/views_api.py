@@ -39,7 +39,7 @@ pid = psutil.Process(os.getpid())
 # 222 is probably safest
 brightest = 222
 
-@webinterface.route("/api/random_gif")
+@webinterface.route("/api/get_random_gif")
 def get_random_gif():
     folder = os.path.join(webinterface.static_folder, "gifs")
     files = [f for f in os.listdir(folder) if f.lower().endswith(".gif")]
