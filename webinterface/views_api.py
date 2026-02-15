@@ -39,6 +39,10 @@ pid = psutil.Process(os.getpid())
 # 222 is probably safest
 brightest = 222
 
+# IMPORTANT!!! 👇
+# ANY CHANGE HERE, AND THEN ANY UPDATE VIA GIT PULL WILL REQUIRE THE PI TO BE RESTARTED TO WORK!
+# IMPORTANT!!! 👆
+
 @webinterface.route("/api/get_random_gif", methods=["GET"])
 def get_random_gif():
     folder = os.path.join(webinterface.static_folder, "gifs")
