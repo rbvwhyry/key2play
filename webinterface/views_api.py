@@ -2,6 +2,7 @@ import ast
 import json
 import os
 import random
+import re
 import subprocess
 import sys
 import mido
@@ -43,14 +44,56 @@ brightest = 222
 # ANY CHANGE HERE, AND THEN ANY UPDATE VIA GIT PULL WILL REQUIRE THE PI TO BE RESTARTED TO WORK!
 # IMPORTANT!!! 👆
 
+# @webinterface.route("/api/get_random_gif", methods=["GET"])
+# def get_random_gif():
+#     folder = os.path.join(webinterface.static_folder, "gifs")
+#     files = [f for f in os.listdir(folder) if f.lower().endswith(".gif")]
+#     if not files:
+#         return jsonify(success=False), 404
+#     name = random.choice(files)
+#     return jsonify(success=True, url=url_for("static", filename=f"gifs/{name}"))
+
+
+
+
+import os, random, re
+from flask import request, jsonify, url_for
+
+_SAFE_NAME = re.compile(r"^[A-Za-z0-9_-]+$")  #folder name allowed chars only
 @webinterface.route("/api/get_random_gif", methods=["GET"])
 def get_random_gif():
-    folder = os.path.join(webinterface.static_folder, "gifs")
-    files = [f for f in os.listdir(folder) if f.lower().endswith(".gif")]
-    if not files:
-        return jsonify(success=False), 404
-    name = random.choice(files)
-    return jsonify(success=True, url=url_for("static", filename=f"gifs/{name}"))
+    #folders param like: "gifs,gifs2,gifs_funny"
+    raw = request.args.get("folders", "")
+    requested = [s.strip() for s in raw.split(",") if s.strip()]
+
+    #if none provided, we can either default or error out:
+    if not requested:
+        return jsonify(success=False, error="no folders provided"), 400
+
+    #sanitize + constrain to subfolders of static
+    folders = [f for f in requested if _SAFE_NAME.match(f)]
+
+    if not folders:
+        return jsonify(success=False, error="no valid folder names"), 400
+
+    pool = []  #(subfolder, filename)
+    for sub in folders:
+        folder_path = os.path.join(webinterface.static_folder, sub)
+        if not os.path.isdir(folder_path):
+            continue
+        for name in os.listdir(folder_path):
+            if name.lower().endswith(".gif"):
+                pool.append((sub, name))
+
+    if not pool:
+        return jsonify(success=False, error="no gifs found in requested folders"), 404
+
+    sub, name = random.choice(pool)
+    return jsonify(success=True, url=url_for("static", filename=f"{sub}/{name}"))
+
+
+
+
 
 @webinterface.route("/static/js/listenWorker.js")
 def serve_worker():
