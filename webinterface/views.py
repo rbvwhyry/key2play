@@ -5,7 +5,7 @@ from flask import jsonify, render_template, request, send_from_directory
 
 from webinterface import webinterface
 
-ALLOWED_EXTENSIONS = {"mid", "musicxml", "mxl", "xml", "abc"}
+ALLOWED_EXTENSIONS = {"mid", "midi", "musicxml", "mxl", "xml", "abc"}
 
 
 def allowed_file(filename):
