@@ -20,16 +20,19 @@ defaults = {
     "previewDepth": 1, #for use with the preview depth slider
 }
 
+
 class Base(DeclarativeBase):
     pass
+
 
 class SimpleConfigKV(Base):
     __tablename__ = "simple_config_kv"
     key: Mapped[str] = mapped_column(primary_key=True, nullable=False)
     value: Mapped[str] = mapped_column()
-    
+
     def __repr__(self) -> str:
         return f"SimpleConfigKV(key={self.key}, value={self.value}"
+
 
 class Config:
     def __init__(self):
@@ -137,9 +140,6 @@ class MidiLedMap(Base):
 
 
 class MidiToLedMapping:
-    def __init__(self):
-        self.create_schema()
-
     # Insert or update a mapping
     def set_midi_led_row(
         self,

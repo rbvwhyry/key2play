@@ -13,7 +13,6 @@ from waitress import serve
 
 import config  # database
 import lib.colormaps as cmap
-import map  # midi led map
 import webinterface as web_mod
 from lib.functions import startup_animation
 from lib.learnmidi import LearnMIDI
@@ -91,7 +90,7 @@ if not args.skipupdate:
 
 logger.info(args)
 
-appmap = map.MidiToLedMapping()
+appmap = config.MidiToLedMapping()
 
 # pins are interpreted as BCM pins.
 GPIO.setmode(GPIO.BCM)
