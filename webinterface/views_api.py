@@ -16,6 +16,7 @@ from lib.functions import (
 )
 from lib.rpi_drivers import GPIO, Color
 from webinterface import webinterface
+from webinterface.views import allowed_file
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -85,7 +86,7 @@ def currently_pressed_keys():
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
     songs_list = os.listdir("Songs/")
-    songs_list = list(filter(lambda s: s.endswith(".mid"), songs_list))
+    songs_list = list(filter(allowed_file, songs_list))
     return jsonify(songs_list)
 
 @webinterface.route("/api/get_current_song", methods=["GET"])
