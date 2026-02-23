@@ -16,7 +16,7 @@ defaults = {
     "color1x": "#B100B5", #purple-ish
     "color1":  "#33BF00", #green-ish
     "color2":  "#F5EC00", #yellow-ish
-    "color3":  "#B81D00", #red-ish
+    "color3":  "#CCCCCC", #light-gray-ish
     "previewDepth": 1, #for use with the preview depth slider
 }
 
