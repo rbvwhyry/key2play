@@ -45,6 +45,26 @@ brightest = 222
 # ANY CHANGE HERE, AND THEN ANY UPDATE VIA GIT PULL WILL REQUIRE THE PI TO BE RESTARTED TO WORK!
 # IMPORTANT!!! 👆
 
+@webinterface.route("/api/get_storage_info", methods=["GET"])
+def get_storage_info():
+    import shutil
+    songs_dir = "Songs/"
+    usage = shutil.disk_usage(songs_dir)
+
+    total_size = 0
+    count = 0
+    for f in os.listdir(songs_dir):
+        if f.lower().endswith((".mid", ".midi")):
+            total_size += os.path.getsize(os.path.join(songs_dir, f))
+            count += 1
+
+    return jsonify(
+        success=True,
+        available_bytes=usage.free,
+        songs_count=count,
+        songs_total_bytes=total_size
+    )
+
 _SAFE_NAME = re.compile(r"^[A-Za-z0-9_-]+$")  #folder name allowed chars only
 @webinterface.route("/api/get_random_gif", methods=["GET"])
 def get_random_gif():
