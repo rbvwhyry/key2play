@@ -84,7 +84,7 @@ def play_midi(song_path, midiports, saving, menu, ledsettings, ledstrip):
     saving.t = threading.currentThread()
 
     try:
-        mid = mido.MidiFile("Songs/" + song_path)
+        mid = mido.MidiFile(song_path)  #song_path is now the full resolved path from the caller
         fastColorWipe(ledstrip.strip, True, ledsettings)
         # length = mid.length
         t0 = False
