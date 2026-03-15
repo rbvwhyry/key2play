@@ -7,7 +7,14 @@ from flask import Flask
 from lib.functions import get_ip_address
 from lib.log_setup import logger
 
-UPLOAD_FOLDER = "Songs/"
+import os
+
+DIR_SONGS_DEFAULT = "Songs_Default/"  #bundled songs — tracked by git, can be updated
+DIR_SONGS_USER = "Songs_User_Upload/"  #user uploads — gitignored
+
+UPLOAD_FOLDER = DIR_SONGS_USER  #tells Flask where file.save() should write uploaded files
+
+os.makedirs(DIR_SONGS_USER, exist_ok=True)  #create folder if missing (a fresh run may not have this bc it would be ignored in the first place) — exist_ok means no crash if it's already there
 
 webinterface = Flask(__name__, template_folder="templates")
 webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -16,7 +23,6 @@ webinterface.config["MAX_CONTENT_LENGTH"] = 32 * 1000 * 1000
 webinterface.json.sort_keys = False
 
 webinterface.socket_input = []
-
 
 def start_server(loop):
     async def learning(websocket):
