@@ -38,7 +38,7 @@ def upload_file():
             return jsonify(success=False, error="no file")
         file = request.files["file"]
         filename = file.filename
-        if os.path.exists("Songs/" + filename):
+        if os.path.exists(os.path.join("Songs_User_Upload", filename)):
             return jsonify(
                 success=False, error="file already exists", song_name=filename
             )
