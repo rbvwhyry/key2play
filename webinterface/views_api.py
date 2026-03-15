@@ -17,6 +17,12 @@ from lib.functions import (
 from lib.rpi_drivers import GPIO, Color
 from webinterface import webinterface
 from webinterface.views import allowed_file
+from lib.song_info import get_all_songs_info
+
+@webinterface.route("/api/get_songs_info", methods=["GET"])
+def get_songs_info():
+    info = get_all_songs_info()
+    return jsonify(success=True, songs=info)
 
 # ----- ----- ----- ----- -----
 
