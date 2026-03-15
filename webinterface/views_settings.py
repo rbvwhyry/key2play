@@ -1170,10 +1170,13 @@ def change_setting():
             logger.warning("Converting failed")
 
     if setting_name == "start_midi_play":
+        full_path = resolve_song_path(value)
+        if not full_path:
+            return jsonify(success=False, error="song not found")
         webinterface.saving.t = threading.Thread(
             target=play_midi,
             args=(
-                value,
+                full_path,
                 webinterface.midiports,
                 webinterface.saving,
                 webinterface.ledsettings,
