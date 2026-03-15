@@ -1,5 +1,6 @@
 import os
 import time
+import shutil
 
 from flask import jsonify, render_template, request, send_from_directory
 
@@ -38,10 +39,24 @@ def upload_file():
             return jsonify(success=False, error="no file")
         file = request.files["file"]
         filename = file.filename
+        
         if os.path.exists(os.path.join("Songs_User_Upload", filename)):
             return jsonify(
                 success=False, error="file already exists", song_name=filename
             )
+        
+        usage = shutil.disk_usage("Songs_User_Upload")
+        avg_size = 30000  # 30KB conservative estimate
+        songs_dir = "Songs_User_Upload"
+        if os.path.isdir(songs_dir):
+            sizes = [os.path.getsize(os.path.join(songs_dir, f)) for f in os.listdir(songs_dir) if f.lower().endswith((".mid", ".midi"))]
+            if sizes:
+                avg_size = sum(sizes) / len(sizes)
+        remaining = int(usage.free / avg_size)
+        
+        if remaining <= 5:  # safety buffer — user sees "no space" but we actually have ~5 songs of headroom
+            return jsonify(success=False, error="no space", song_name=filename)
+            
         if not allowed_file(file.filename):
             return jsonify(success=False, error="not a midi file", song_name=filename)
 
