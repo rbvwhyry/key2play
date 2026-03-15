@@ -93,11 +93,11 @@ class PlatformRasp(PlatformBase):
         call("sudo git reset --hard HEAD", shell=True)
         call("sudo git checkout .", shell=True)
         call(
-            "sudo git clean -fdx -e Songs/ -e "
+            "sudo git clean -fdx -e Songs_User_Upload/ -e "
             "config/settings.xml -e config/wpa_disable_ap.conf -e visualizer.log",
             shell=True,
         )
-        call("sudo git clean -fdx Songs/cache", shell=True)
+        call("sudo git clean -fdx cache", shell=True)
         call("sudo git pull origin master", shell=True)
         call("sudo pip install -r requirements.txt", shell=True)
 
