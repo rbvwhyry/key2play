@@ -15,17 +15,30 @@ from lib.functions import clamp, fastColorWipe, play_midi
 from lib.log_setup import logger
 from webinterface import webinterface
 
+# ----- ----- ----- ----- -----
+
+DIR_SONGS_DEFAULT = "Songs_Default/"
+DIR_SONGS_USER = "Songs_User_Upload/"
+
+def resolve_song_path(filename):
+    """Same helper as views_api.py. User folder first, then defaults."""
+    user_path = os.path.join(DIR_SONGS_USER, filename)
+    if os.path.exists(user_path):
+        return user_path
+    default_path = os.path.join(DIR_SONGS_DEFAULT, filename)
+    if os.path.exists(default_path):
+        return default_path
+    return None
+# ----- ----- ----- ----- -----
 
 def pretty_print(dom):
     return "\n".join(
         [line for line in dom.toprettyxml(indent=" " * 4).split("\n") if line.strip()]
     )
 
-
 def pretty_save(file_path, sequences_tree):
     with open(file_path, "w", encoding="utf8") as outfile:
         outfile.write(pretty_print(sequences_tree))
-
 
 @webinterface.route("/api/change_setting", methods=["GET"])
 def change_setting():
@@ -1087,83 +1100,56 @@ def change_setting():
         webinterface.saving.save(current_date)
         return jsonify(success=True, reload_songs=True)
 
-    if setting_name == "change_song_name":
-        if os.path.exists("Songs/" + second_value):
-            return jsonify(
-                success=False, reload_songs=True, error=second_value + " already exists"
-            )
-
-        if "_main" in value:
-            search_name = value.replace("_main.mid", "")
-            for fname in os.listdir("Songs"):
-                if search_name in fname:
-                    new_name = second_value.replace(".mid", "") + fname.replace(
-                        search_name, ""
-                    )
-                    os.rename("Songs/" + fname, "Songs/" + new_name)
-        else:
-            os.rename("Songs/" + value, "Songs/" + second_value)
-            os.rename(
-                "Songs/cache/" + value + ".p", "Songs/cache/" + second_value + ".p"
-            )
-
-        return jsonify(success=True, reload_songs=True)
-
     if setting_name == "remove_song":
         if "_main" in value:
             name_no_suffix = value.replace("_main.mid", "")
-            for fname in os.listdir("Songs"):
-                if name_no_suffix in fname:
-                    os.remove("Songs/" + fname)
+            for d in [DIR_SONGS_DEFAULT, DIR_SONGS_USER]:
+                if not os.path.isdir(d):
+                    continue
+                for fname in os.listdir(d):
+                    if name_no_suffix in fname:
+                        os.remove(os.path.join(d, fname))
         else:
-            os.remove("Songs/" + value)
+            path = resolve_song_path(value)
+            if path:
+                os.remove(path)
 
             file_types = [".musicxml", ".xml", ".mxl", ".abc"]
             for file_type in file_types:
                 try:
-                    os.remove("Songs/" + value.replace(".mid", file_type))
+                    alt = resolve_song_path(value.replace(".mid", file_type))
+                    if alt:
+                        os.remove(alt)
                 except Exception:
                     pass
-
-            try:
-                os.remove("Songs/cache/" + value + ".p")
-            except Exception:
-                logger.info("No cache file for " + value)
 
         return jsonify(success=True, reload_songs=True)
 
     if setting_name == "download_song":
+        path = resolve_song_path(value)
+        if not path:
+            return jsonify(success=False, error="song not found")
+
         if "_main" in value:
-            zipObj = ZipFile("Songs/" + value.replace(".mid", "") + ".zip", "w")
+            zip_path = path.replace(".mid", "") + ".zip"
+            zipObj = ZipFile(zip_path, "w")
             name_no_suffix = value.replace("_main.mid", "")
             songs_count = 0
-            for fname in os.listdir("Songs"):
-                if name_no_suffix in fname and ".zip" not in fname:
-                    songs_count += 1
-                    zipObj.write("Songs/" + fname)
+            for d in [DIR_SONGS_DEFAULT, DIR_SONGS_USER]:
+                if not os.path.isdir(d):
+                    continue
+                for fname in os.listdir(d):
+                    if name_no_suffix in fname and ".zip" not in fname:
+                        songs_count += 1
+                        zipObj.write(os.path.join(d, fname))
             zipObj.close()
             if songs_count == 1:
-                os.remove("Songs/" + value.replace(".mid", "") + ".zip")
-                return send_file(
-                    safe_join("../Songs/" + value),
-                    mimetype="application/x-csv",
-                    download_name=value,
-                    as_attachment=True,
-                )
+                os.remove(zip_path)
+                return send_file(safe_join("../", path), mimetype="application/x-csv", download_name=value, as_attachment=True)
             else:
-                return send_file(
-                    safe_join("../Songs/" + value.replace(".mid", "")) + ".zip",
-                    mimetype="application/x-csv",
-                    download_name=value.replace(".mid", "") + ".zip",
-                    as_attachment=True,
-                )
+                return send_file(safe_join("../", zip_path), mimetype="application/x-csv", download_name=value.replace(".mid", "") + ".zip", as_attachment=True)
         else:
-            return send_file(
-                safe_join("../Songs/" + value),
-                mimetype="application/x-csv",
-                download_name=value,
-                as_attachment=True,
-            )
+            return send_file(safe_join("../", path), mimetype="application/x-csv", download_name=value, as_attachment=True)
 
     if setting_name == "download_sheet_music":
         file_types = [".musicxml", ".xml", ".mxl", ".abc"]
@@ -1171,22 +1157,15 @@ def change_setting():
         while i < len(file_types):
             try:
                 new_name = value.replace(".mid", file_types[i])
-                return send_file(
-                    safe_join("../Songs/" + new_name),
-                    mimetype="application/x-csv",
-                    download_name=new_name,
-                    as_attachment=True,
-                )
+                path = resolve_song_path(new_name)
+                if path:
+                    return send_file(safe_join("../", path), mimetype="application/x-csv", download_name=new_name, as_attachment=True)
             except Exception:
-                i += 1
+                pass
+            i += 1
         webinterface.learning.convert_midi_to_abc(value)
         try:
-            return send_file(
-                safe_join("../Songs/", value.replace(".mid", ".abc")),
-                mimetype="application/x-csv",
-                download_name=value.replace(".mid", ".abc"),
-                as_attachment=True,
-            )
+            return send_file(safe_join("../", DIR_SONGS_USER, value.replace(".mid", ".abc")), mimetype="application/x-csv", download_name=value.replace(".mid", ".abc"), as_attachment=True)
         except Exception:
             logger.warning("Converting failed")
 
@@ -1210,13 +1189,15 @@ def change_setting():
         fastColorWipe(webinterface.ledstrip.strip, True, webinterface.ledsettings)
 
         return jsonify(success=True, reload_songs=True)
-
+    
     if setting_name == "learning_load_song":
+        full_path = resolve_song_path(value)
+        if not full_path:
+            return jsonify(success=False, error="song not found")
         webinterface.learning.t = threading.Thread(
-            target=webinterface.learning.load_midi, args=(value,)
+            target=webinterface.learning.load_midi, args=(full_path,)
         )
         webinterface.learning.t.start()
-
         return jsonify(success=True, reload_learning_settings=True)
 
     if setting_name == "start_learning_song":
