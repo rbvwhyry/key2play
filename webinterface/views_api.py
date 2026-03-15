@@ -18,6 +18,25 @@ from lib.rpi_drivers import GPIO, Color
 from webinterface import webinterface
 from webinterface.views import allowed_file
 
+# ----- ----- ----- ----- -----
+
+DIR_SONGS_DEFAULT = "Songs_Default/"
+DIR_SONGS_USER = "Songs_User_Upload/"
+
+os.makedirs(DIR_SONGS_USER, exist_ok=True)
+
+# given a just filename like 'nocturne.mid', returns the full path to where file lives; checks user folder first so uploads is prioritized over defaults
+def resolve_song_path(filename):
+    user_path = os.path.join(DIR_SONGS_USER, filename)
+    if os.path.exists(user_path):
+        return user_path
+    default_path = os.path.join(DIR_SONGS_DEFAULT, filename)
+    if os.path.exists(default_path):
+        return default_path
+    return None
+
+# ----- ----- ----- ----- -----
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -48,15 +67,17 @@ brightest = 222
 @webinterface.route("/api/get_storage_info", methods=["GET"])
 def get_storage_info():
     import shutil
-    songs_dir = "Songs/"
-    usage = shutil.disk_usage(songs_dir)
+    usage = shutil.disk_usage(DIR_SONGS_USER)
 
     total_size = 0
     count = 0
-    for f in os.listdir(songs_dir):
-        if f.lower().endswith((".mid", ".midi")):
-            total_size += os.path.getsize(os.path.join(songs_dir, f))
-            count += 1
+    for d in [DIR_SONGS_DEFAULT, DIR_SONGS_USER]:
+        if not os.path.isdir(d):
+            continue
+        for f in os.listdir(d):
+            if f.lower().endswith((".mid", ".midi")):
+                total_size += os.path.getsize(os.path.join(d, f))
+                count += 1
 
     return jsonify(
         success=True,
@@ -105,9 +126,11 @@ def currently_pressed_keys():
 
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
-    songs_list = os.listdir("Songs/")
-    songs_list = list(filter(allowed_file, songs_list))
-    return jsonify(songs_list)
+    default_songs = os.listdir(DIR_SONGS_DEFAULT) if os.path.isdir(DIR_SONGS_DEFAULT) else []
+    user_songs = os.listdir(DIR_SONGS_USER) if os.path.isdir(DIR_SONGS_USER) else []
+    combined = list(set(filter(allowed_file, default_songs + user_songs)))
+    combined.sort()
+    return jsonify(combined)
 
 @webinterface.route("/api/get_current_song", methods=["GET"])
 def get_current_song():
@@ -119,10 +142,13 @@ def get_current_song():
 def delete_song():
     filename = request.values.get("filename", default=None)
     if not filename:
-        return jsonify(success=False)
-    os.remove(f"Songs/{filename}")
+        return jsonify(success=False, error="no filename")
+    path = resolve_song_path(filename)
+    if not path:
+        return jsonify(success=False, error="song not found")
+    os.remove(path)
     return jsonify(success=True)
-
+    
 @webinterface.route("/api/update_to_release", methods=["POST"])
 def update_to_release():
     release = request.values.get("release", default=None)
@@ -146,7 +172,10 @@ def load_local_midi():
     filename = request.values.get("filename", default=None)
     if not filename:
         return jsonify(success=False)
-    webinterface.learning.load_midi(filename)
+    full_path = resolve_song_path(filename)
+    if not full_path:
+        return jsonify(success=False, error="song not found")
+    webinterface.learning.load_midi(full_path)
     return jsonify(success=True)
 
 @webinterface.route("/api/set_light/<light_num>")
