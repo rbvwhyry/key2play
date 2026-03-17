@@ -94,15 +94,15 @@ class MidiPorts:
         try:
             destroy_old = None
             if port == "inport":
-                destory_old = self.inport
+                destroy_old = self.inport
                 self.inport = mido.open_input(portname, callback=self.msg_callback)
                 self.usersettings.change_setting_value("input_port", portname)
             elif port == "playport":
-                destory_old = self.playport
+                destroy_old = self.playport
                 self.playport = mido.open_output(portname)
                 self.usersettings.change_setting_value("play_port", portname)
             if destroy_old is not None:
-                destory_old.close()
+                destroy_old.close()
         except Exception:
             return
 
@@ -127,15 +127,25 @@ class MidiPorts:
             logger.info("Can't reconnect play port: " + port)
 
     def msg_callback(self, msg):
+        if msg.type not in ("note_on", "note_off"): #reject everything that isn't a real key press or release — active sensing, clock, control change, sysex, garbage bytes
+            return
+
+        if not hasattr(msg, "note") or not hasattr(msg, "velocity"): #safety net — some malformed messages pass the type check but lack expected attributes
+            return
+
+        if msg.note < 21 or msg.note > 108: #reject notes outside the 88-key piano range (A0=21 to C8=108); real keyboards never send these, but garbage bytes can decode to anything 0-127
+            return
+
         if msg.type == "note_on":
-            if msg.velocity == 0:
+            if msg.velocity == 0: #note_on with velocity 0 is equivalent to note_off per MIDI spec
                 self.currently_pressed_keys = [
                     x for x in self.currently_pressed_keys if msg.note != x.note
                 ]
             else:
                 self.currently_pressed_keys.append(msg)
-        if msg.type == "note_off":
+        elif msg.type == "note_off":
             self.currently_pressed_keys = [
                 x for x in self.currently_pressed_keys if msg.note != x.note
             ]
+
         self.midi_queue.append((msg, time.perf_counter()))
