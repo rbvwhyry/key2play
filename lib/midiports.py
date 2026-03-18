@@ -19,6 +19,7 @@ class MidiPorts:
         self.playport = None
         self.midipending = None
         self.currently_pressed_keys = []
+        self.frontend_events = deque() #accumulates note_on/note_off events for the frontend polling endpoint; drained on each read so no keypress is ever lost between polls
 
         # mido backend python-rtmidi has a bug on some (debian-based) systems
         # involving the library location of alsa plugins
@@ -149,3 +150,4 @@ class MidiPorts:
             ]
 
         self.midi_queue.append((msg, time.perf_counter()))
+        self.frontend_events.append({"type": msg.type, "note": msg.note, "velocity": msg.velocity})
