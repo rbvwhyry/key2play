@@ -130,6 +130,13 @@ def currently_pressed_keys():
     ]
     return jsonify(result)
 
+@webinterface.route("/api/drain_midi_events", methods=["GET"])
+def drain_midi_events():
+    events = []
+    while webinterface.midiports.frontend_events: #drain all accumulated events since last poll
+        events.append(webinterface.midiports.frontend_events.popleft())
+    return jsonify(events)
+
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
     default_songs = os.listdir(DIR_SONGS_DEFAULT) if os.path.isdir(DIR_SONGS_DEFAULT) else []
