@@ -24,6 +24,20 @@ def get_note_name(midi_note):
     name = names[midi_note % 12]
     return f"{name}{octave}"
 
+def has_playable_notes(file_path):
+    """Returns True if the MIDI file contains at least one note_on with velocity > 0."""
+    try:
+        mid = mido.MidiFile(file_path, clip=True)
+
+        for track in mid.tracks:
+            for msg in track:
+                if msg.type == "note_on" and msg.velocity > 0:
+                    return True
+
+        return False
+    except Exception:
+        return False
+
 def get_tempo(mid):
     """Extracts the first tempo marker from a MIDI file. Returns 500000 (120 BPM) if none found."""
     for track in mid.tracks:
