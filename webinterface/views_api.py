@@ -149,7 +149,11 @@ def get_songs():
 def get_current_song():
     song_tracks = webinterface.learning.song_tracks
     song_tracks = [msg.__dict__ for msg in song_tracks]
-    return jsonify(song_tracks)
+    return jsonify(
+        tracks=song_tracks,
+        ticks_per_beat=webinterface.learning.ticks_per_beat,
+        tempo=webinterface.learning.song_tempo
+    )
 
 @webinterface.route("/api/delete_song", methods=["POST"])
 def delete_song():
