@@ -61,5 +61,13 @@ def upload_file():
             return jsonify(success=False, error="not a midi file", song_name=filename)
 
         filename = filename.replace("'", "")
-        file.save(os.path.join(webinterface.config["UPLOAD_FOLDER"], filename))
+        save_path = os.path.join(webinterface.config["UPLOAD_FOLDER"], filename)
+        file.save(save_path)
+
+        from lib.song_info import has_playable_notes
+
+        if not has_playable_notes(save_path):
+            os.remove(save_path)  #delete the empty file so it doesn't clutter the list
+            return jsonify(success=False, error="no playable notes", song_name=filename)
+
         return jsonify(success=True, reload_songs=True, song_name=filename)
