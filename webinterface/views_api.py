@@ -389,7 +389,154 @@ def wifi_forget():
 @webinterface.route("/library/test/success.html")
 @webinterface.route("/connecttest.txt")
 def captive_portal_redirect():
-    return redirect("/")
+    #only intercept when hotspot is active; otherwise let normal connectivity checks pass
+    if not webinterface.platform.is_hotspot_running():
+        return "", 204  #return the expected 204 so the device thinks it has internet
+
+    return CAPTIVE_HTML, 200
+
+CAPTIVE_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ami — WiFi Setup</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f1f5;color:#1e1f26;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px}
+h1{font-size:28px;margin:20px 0 4px;letter-spacing:-0.02em}
+.sub{font-size:13px;color:#9ca3af;margin-bottom:20px}
+.card{background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.04),0 8px 32px rgba(0,0,0,.06);width:100%;max-width:400px;padding:20px;margin-bottom:16px}
+.card h2{font-size:16px;margin-bottom:12px}
+.net{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #f1f2f6;cursor:pointer;transition:background .15s;border-radius:6px}
+.net:hover{background:rgba(99,102,241,.07)}
+.net-name{font-weight:500;font-size:14px}
+.net-info{font-size:12px;color:#9ca3af}
+.btn{background:#6366f1;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px;transition:background .2s}
+.btn:hover{background:#4f46e5}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-scan{background:#e2e4ea;color:#374151}
+.btn-scan:hover{background:#d1d5db}
+input[type=password]{width:100%;padding:10px 12px;border:1px solid #e2e4ea;border-radius:8px;font-size:14px;margin:8px 0;box-sizing:border-box}
+.msg{font-size:13px;color:#6b7280;text-align:center;margin-top:8px}
+.msg.err{color:#c02f2f}
+.msg.ok{color:#22c55e}
+#networks{max-height:300px;overflow-y:auto}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #e2e4ea;border-top-color:#6366f1;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<h1>ami</h1>
+<p class="sub">WiFi Setup</p>
+
+<div class="card">
+<h2>Available Networks</h2>
+<div id="networks"><p class="msg">Tap Scan to find networks</p></div>
+<button class="btn btn-scan" id="btn-scan" onclick="scan()">Scan</button>
+</div>
+
+<div class="card" id="connect-card" style="display:none">
+<h2 id="connect-title">Connect</h2>
+<input type="password" id="pw" placeholder="WiFi password">
+<button class="btn" id="btn-connect" onclick="connect()">Connect</button>
+<p class="msg" id="status"></p>
+</div>
+
+<p class="msg">You can also open <strong>http://10.42.0.1</strong> in your browser</p>
+
+<script>
+var selectedSsid='';
+var selectedOpen=false;
+
+function scan(){
+  var btn=document.getElementById('btn-scan');
+  var div=document.getElementById('networks');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Scanning...';
+  div.innerHTML='<p class="msg"><span class="spinner"></span>Scanning...</p>';
+
+  fetch('/api/wifi/scan').then(function(r){return r.json()}).then(function(d){
+    btn.disabled=false;
+    btn.textContent='Scan';
+    if(!d.success||!d.networks.length){
+      div.innerHTML='<p class="msg">No networks found</p>';
+      return;
+    }
+    var html='';
+    for(var i=0;i<d.networks.length;i++){
+      var n=d.networks[i];
+      html+='<div class="net" onclick="pick(\''+n.ssid.replace(/'/g,"\\'")+'\','+n.is_open+')">';
+      html+='<span class="net-name">'+(n.is_open?'':'&#x1f512; ')+n.ssid+'</span>';
+      html+='<span class="net-info">'+n.signal+'%</span>';
+      html+='</div>';
+    }
+    div.innerHTML=html;
+  }).catch(function(){
+    btn.disabled=false;
+    btn.textContent='Scan';
+    div.innerHTML='<p class="msg err">Scan failed</p>';
+  });
+}
+
+function pick(ssid,isOpen){
+  selectedSsid=ssid;
+  selectedOpen=isOpen;
+  var card=document.getElementById('connect-card');
+  var pw=document.getElementById('pw');
+  var status=document.getElementById('status');
+  document.getElementById('connect-title').textContent='Connect to '+ssid;
+  card.style.display='block';
+  status.textContent='';
+  if(isOpen){
+    pw.style.display='none';
+  }else{
+    pw.style.display='block';
+    pw.value='';
+    pw.focus();
+  }
+}
+
+function connect(){
+  var pw=document.getElementById('pw').value;
+  var btn=document.getElementById('btn-connect');
+  var status=document.getElementById('status');
+
+  if(!selectedOpen&&!pw){
+    status.className='msg err';
+    status.textContent='Password required';
+    return;
+  }
+
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Connecting...';
+  status.className='msg';
+  status.textContent='This may take a moment...';
+
+  fetch('/api/wifi/connect',{
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'ssid='+encodeURIComponent(selectedSsid)+'&password='+encodeURIComponent(pw)
+  }).then(function(r){return r.json()}).then(function(d){
+    btn.disabled=false;
+    btn.textContent='Connect';
+    if(d.success){
+      status.className='msg ok';
+      status.textContent='Connected! You can close this and connect your device to '+selectedSsid+'. Then visit ami.local';
+    }else{
+      status.className='msg err';
+      status.textContent=d.message||'Connection failed';
+    }
+  }).catch(function(){
+    btn.disabled=false;
+    btn.textContent='Connect';
+    status.className='msg err';
+    status.textContent='Connection lost. Reconnect to ami WiFi and try again.';
+  });
+}
+</script>
+</body>
+</html>"""
     
 ### ---------------------------- database: settings table ---------------------------- ###
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
