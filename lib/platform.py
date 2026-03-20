@@ -593,13 +593,15 @@ class PlatformRasp(PlatformBase):
                 if len(parts) < 4:
                     continue
 
-                ssid = parts[0].strip()
+                #SSID may contain colons — everything except the last 3 fields is the SSID
+                ssid = ":".join(parts[:-3]).strip()
+                signal_str = parts[-3]
+                security = parts[-2].strip()
+                bars = parts[-1].strip()
                 if not ssid or ssid == "--" or ssid == "ami":
                     continue
 
-                signal = int(parts[1]) if parts[1].isdigit() else 0
-                security = parts[2].strip()
-                bars = parts[3].strip()
+                signal = int(signal_str) if signal_str.isdigit() else 0
 
                 if ssid not in networks or signal > networks[ssid]["signal"]:
                     networks[ssid] = {
