@@ -349,7 +349,7 @@ def wifi_status():
         hotspot_active=is_hotspot,
         ssid=ssid if is_connected else None,
         ip=address if is_connected else None,
-        hotspot_name="key2play"
+        hotspot_name="ami"
     )
 
 @webinterface.route("/api/wifi/scan", methods=["GET"])
@@ -371,7 +371,7 @@ def wifi_connect():
     if result:
         return jsonify(success=True, message=f"Connected to {ssid}")
 
-    return jsonify(success=False, message="Wrong password or network unavailable. Hotspot restarted — reconnect to key2play and try again.")
+    return jsonify(success=False, message="Wrong password or network unavailable. Hotspot restarted — reconnect to ami and try again.")
 
 @webinterface.route("/api/wifi/forget", methods=["POST"])
 def wifi_forget():
