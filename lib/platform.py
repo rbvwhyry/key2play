@@ -284,38 +284,49 @@ class PlatformRasp(PlatformBase):
 
     @staticmethod
     def enable_captive_portal():
-        """Redirects all HTTP traffic to the Pi using iptables so phones auto-open the app."""
+        """Redirects all HTTP/HTTPS/DNS traffic to the Pi using nftables so phones auto-open the captive portal."""
         try:
-            subprocess.run(["sudo", "iptables", "-t", "nat", "-F", "PREROUTING"], capture_output=True)
+            #delete old table if it exists (clean slate)
+            subprocess.run(["sudo", "nft", "delete", "table", "ip", "captive"], capture_output=True)
 
+            #create the table and chain
+            subprocess.run(["sudo", "nft", "add", "table", "ip", "captive"], check=True)
             subprocess.run([
-                "sudo", "iptables", "-t", "nat", "-A", "PREROUTING",
-                "-i", "wlan0", "-p", "udp", "--dport", "53",
-                "-j", "DNAT", "--to-destination", "10.42.0.1:53"
+                "sudo", "nft", "add", "chain", "ip", "captive", "prerouting",
+                "{ type nat hook prerouting priority -100 ; }"
             ], check=True)
 
+            #redirect DNS (udp 53) to the Pi so all domains resolve to 10.42.0.1
             subprocess.run([
-                "sudo", "iptables", "-t", "nat", "-A", "PREROUTING",
-                "-i", "wlan0", "-p", "tcp", "--dport", "80",
-                "-j", "DNAT", "--to-destination", "10.42.0.1:80"
+                "sudo", "nft", "add", "rule", "ip", "captive", "prerouting",
+                "iifname", "wlan0", "udp", "dport", "53",
+                "dnat", "to", "10.42.0.1:53"
             ], check=True)
 
+            #redirect HTTP (tcp 80) to the Pi's web server
             subprocess.run([
-                "sudo", "iptables", "-t", "nat", "-A", "PREROUTING",
-                "-i", "wlan0", "-p", "tcp", "--dport", "443",
-                "-j", "DNAT", "--to-destination", "10.42.0.1:80"
+                "sudo", "nft", "add", "rule", "ip", "captive", "prerouting",
+                "iifname", "wlan0", "tcp", "dport", "80",
+                "dnat", "to", "10.42.0.1:80"
             ], check=True)
 
-            logger.info("Captive portal enabled (iptables)")
+            #redirect HTTPS (tcp 443) to port 80 — the TLS handshake will fail but phones fall back to the captive portal page
+            subprocess.run([
+                "sudo", "nft", "add", "rule", "ip", "captive", "prerouting",
+                "iifname", "wlan0", "tcp", "dport", "443",
+                "dnat", "to", "10.42.0.1:80"
+            ], check=True)
+
+            logger.info("Captive portal enabled (nftables)")
 
         except Exception as e:
             logger.warning(f"Failed to enable captive portal: {e}")
 
     @staticmethod
     def disable_captive_portal():
-        """Removes the captive portal iptables rules and DNS redirect."""
+        """Removes the captive portal nftables rules and DNS redirect."""
         try:
-            subprocess.run(["sudo", "iptables", "-t", "nat", "-F", "PREROUTING"], capture_output=True)
+            subprocess.run(["sudo", "nft", "delete", "table", "ip", "captive"], capture_output=True)
 
             captive_conf = "/etc/NetworkManager/dnsmasq-shared.d/captive.conf"
 
