@@ -19,6 +19,34 @@ from webinterface import webinterface
 from webinterface.views import allowed_file
 from lib.song_info import get_all_songs_info
 
+# IMPORTANT!!! 👇
+# ANY CHANGE HERE, AND THEN ANY UPDATE VIA GIT PULL WILL REQUIRE THE PI TO BE RESTARTED TO WORK!
+# IMPORTANT!!! 👆
+
+@webinterface.before_request
+def captive_portal_intercept():
+    """When hotspot is active, serve the captive portal page for any non-API browser request."""
+    if not hasattr(webinterface, 'platform'):
+        return None  #platform not initialized yet
+
+    path = request.path
+
+    #let API calls and static files through
+    if path.startswith('/api/') or path.startswith('/static/'):
+        return None
+
+    #let captive portal detection URLs be handled by their own route
+    if path in ('/generate_204', '/gen_204', '/hotspot-detect.html', '/library/test/success.html', '/connecttest.txt'):
+        return None
+
+    try:
+        if webinterface.platform.is_hotspot_running():
+            return CAPTIVE_HTML, 200
+    except Exception:
+        pass
+
+    return None  #not in hotspot mode — let normal routes handle it
+
 # ----- ----- ----- ----- -----
 
 @webinterface.route("/api/download_song/<filename>", methods=["GET"])
@@ -139,10 +167,6 @@ pid = psutil.Process(os.getpid())
 # 223 seems to be the brightest for 200 LEDs (sometimes?);
 # 222 is probably safest
 brightest = 222
-
-# IMPORTANT!!! 👇
-# ANY CHANGE HERE, AND THEN ANY UPDATE VIA GIT PULL WILL REQUIRE THE PI TO BE RESTARTED TO WORK!
-# IMPORTANT!!! 👆
 
 @webinterface.route("/api/get_storage_info", methods=["GET"])
 def get_storage_info():
