@@ -29,6 +29,7 @@ class PlatformNull(PlatformBase):
 
 class PlatformRasp(PlatformBase):
     cached_scan_results = []  #cached WiFi scan from before hotspot started; single-radio Pi can't scan in AP mode
+    _hotspot_active = False  #cached hotspot state; updated by enable/disable methods to avoid subprocess on every HTTP request  #cached WiFi scan from before hotspot started; single-radio Pi can't scan in AP mode
 
     def __init__(self, appconfig):
         self.appconfig = appconfig
@@ -264,9 +265,12 @@ class PlatformRasp(PlatformBase):
         #iptables rules go after the interface is up
         PlatformRasp.enable_captive_portal()
 
+        PlatformRasp._hotspot_active = True
+
     @staticmethod
     def disable_hotspot():
         logger.info("Disabling ami-hotspot")
+        PlatformRasp._hotspot_active = False
         PlatformRasp.disable_captive_portal()
         subprocess.run(["sudo", "nmcli", "connection", "down", "ami-hotspot"])
 
@@ -347,6 +351,11 @@ class PlatformRasp(PlatformBase):
         except subprocess.CalledProcessError:
             return False, "Error occurred while getting Wi-Fi information.", ""
 
+    @staticmethod
+    def is_hotspot_active_cached():
+        """Returns cached hotspot state without spawning a subprocess."""
+        return PlatformRasp._hotspot_active
+    
     def is_hotspot_running(self):
         try:
             result = subprocess.run(
@@ -354,7 +363,9 @@ class PlatformRasp(PlatformBase):
                 capture_output=True,
                 text=True,
             )
-            return "ami-hotspot" in result.stdout
+            active = "ami-hotspot" in result.stdout
+            PlatformRasp._hotspot_active = active  #sync cache with real state
+            return active
         except Exception as e:
             logger.warning(f"Error checking hotspot status: {str(e)}")
             return False
