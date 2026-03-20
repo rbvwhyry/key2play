@@ -37,7 +37,7 @@ def captive_portal_intercept():
         return None
 
     try:
-        if webinterface.platform.is_hotspot_running():
+        if webinterface.platform.is_hotspot_active_cached():
             return CAPTIVE_HTML, 200
     except Exception:
         pass
@@ -412,8 +412,8 @@ def wifi_forget():
 @webinterface.route("/connecttest.txt")
 def captive_portal_redirect():
     #only intercept when hotspot is active; otherwise let normal connectivity checks pass
-    if not webinterface.platform.is_hotspot_running():
-        return "", 204  #return the expected 204 so the device thinks it has internet
+    if not webinterface.platform.is_hotspot_active_cached():
+        return "", 204
 
     return CAPTIVE_HTML, 200
 
