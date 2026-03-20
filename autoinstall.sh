@@ -239,7 +239,7 @@ finish_installation() {
   echo ""
   echo "Installation complete. Rasp Pi will auto restart in 30 seconds."
   echo "If Rasp Pi does not restart on its own, wait 2 minutes, then manually reboot."
-  echo "After reboot, wait for up to 10 minutes. The key2play server should start, and the Hotspot 'key2play' will become available."
+  echo "After reboot, wait for up to 10 minutes. The server should start, and the Hotspot 'ami' will become available."
 
   execute_command "sudo shutdown -r +1"
   sleep 30
