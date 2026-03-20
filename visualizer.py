@@ -171,7 +171,7 @@ for i in range(0, numPixels):
     strip.setPixelColor(i, Color(0, 0, 0))
 strip.show()
 
-platform.manage_hotspot(usersettings, midiports, first_run=True)
+platform.ensure_hostname("ami")
 
 while True:
     # Save settings if changed
