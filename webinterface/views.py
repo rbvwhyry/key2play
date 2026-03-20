@@ -8,20 +8,12 @@ from webinterface import webinterface
 
 ALLOWED_EXTENSIONS = {"mid", "midi", "musicxml", "mxl", "xml", "abc"}
 
-
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-@webinterface.before_request
-def before_request():
-    excluded_routes = ["/api/get_homepage_data"]
-
 
 @webinterface.route("/")
 def index():
     return render_template("index.html")
-
 
 @webinterface.route("/favicon.ico")
 def favicon():
@@ -30,7 +22,6 @@ def favicon():
         "favicon.ico",
         mimetype="image/vnd.microsoft.icon",
     )
-
 
 @webinterface.route("/upload", methods=["POST"])
 def upload_file():
