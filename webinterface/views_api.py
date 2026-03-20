@@ -1,23 +1,20 @@
-import ast
-import json
-import os
-import random
-import re
-import subprocess
-import sys
-import mido
-import psutil
-from flask import jsonify, redirect, request, send_file, send_from_directory, url_for
 import lib.colormaps as cmap
-from lib.functions import (
-    fastColorWipe,
-    find_between,
-    get_last_logs,
-)
+import subprocess
+import random
+import psutil
+import time
+import json
+import mido
+import ast
+import sys
+import os
+import re
+from flask import jsonify, redirect, request, send_file, send_from_directory, url_for
+from lib.functions import ( fastColorWipe, find_between, get_last_logs )
+from lib.song_info import get_all_songs_info
+from webinterface.views import allowed_file
 from lib.rpi_drivers import GPIO, Color
 from webinterface import webinterface
-from webinterface.views import allowed_file
-from lib.song_info import get_all_songs_info
 
 # IMPORTANT!!! 👇
 # ANY CHANGE HERE, AND THEN ANY UPDATE VIA GIT PULL WILL REQUIRE THE PI TO BE RESTARTED TO WORK!
@@ -382,6 +379,22 @@ def wifi_scan():
 
     return jsonify(success=True, networks=networks)
 
+@webinterface.route("/api/wifi/deep_scan", methods=["GET"])
+def wifi_deep_scan():
+    """Temporarily drops the hotspot to scan, then restarts it. Phone will briefly disconnect."""
+    was_hotspot = webinterface.platform.is_hotspot_running()
+
+    if was_hotspot:
+        webinterface.platform.disable_hotspot()
+        time.sleep(2)  #give the radio time to switch back to station mode
+
+    networks = webinterface.platform.scan_wifi_networks()
+
+    if was_hotspot:
+        webinterface.platform.enable_hotspot()
+
+    return jsonify(success=True, networks=networks)
+
 @webinterface.route("/api/wifi/connect", methods=["POST"])
 def wifi_connect():
     ssid = request.values.get("ssid")
@@ -477,30 +490,35 @@ function scan(){
   var btn=document.getElementById('btn-scan');
   var div=document.getElementById('networks');
   btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span>Scanning...';
-  div.innerHTML='<p class="msg"><span class="spinner"></span>Scanning...</p>';
+  btn.innerHTML='<span class="spinner"></span>Loading...';
+  div.innerHTML='<p class="msg"><span class="spinner"></span>Loading...</p>';
 
   fetch('/api/wifi/scan').then(function(r){return r.json()}).then(function(d){
     btn.disabled=false;
     btn.textContent='Scan';
     if(!d.success||!d.networks.length){
-      div.innerHTML='<p class="msg">No networks found</p>';
+      div.innerHTML='<p class="msg">No networks found. Try again in a moment.</p>';
       return;
     }
-    var html='';
-    for(var i=0;i<d.networks.length;i++){
-      var n=d.networks[i];
-      html+='<div class="net" onclick="pick(\''+n.ssid.replace(/'/g,"\\'")+'\','+n.is_open+')">';
-      html+='<span class="net-name">'+(n.is_open?'':'&#x1f512; ')+n.ssid+'</span>';
-      html+='<span class="net-info">'+n.signal+'%</span>';
-      html+='</div>';
-    }
-    div.innerHTML=html;
+    renderNetworks(d.networks);
   }).catch(function(){
     btn.disabled=false;
     btn.textContent='Scan';
-    div.innerHTML='<p class="msg err">Scan failed</p>';
+    div.innerHTML='<p class="msg err">Scan failed — is the hotspot running?</p>';
   });
+}
+
+function renderNetworks(nets){
+  var div=document.getElementById('networks');
+  var html='';
+  for(var i=0;i<nets.length;i++){
+    var n=nets[i];
+    html+='<div class="net" onclick="pick(\''+n.ssid.replace(/'/g,"\\'")+'\','+n.is_open+')">';
+    html+='<span class="net-name">'+(n.is_open?'':'&#x1f512; ')+n.ssid+'</span>';
+    html+='<span class="net-info">'+n.signal+'%</span>';
+    html+='</div>';
+  }
+  div.innerHTML=html;
 }
 
 function pick(ssid,isOpen){
