@@ -7,7 +7,7 @@ import subprocess
 import sys
 import mido
 import psutil
-from flask import jsonify, request, send_file, send_from_directory, url_for
+from flask import jsonify, redirect, request, send_file, send_from_directory, url_for
 import lib.colormaps as cmap
 from lib.functions import (
     fastColorWipe,
