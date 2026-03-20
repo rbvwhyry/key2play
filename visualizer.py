@@ -137,7 +137,6 @@ def start_webserver():
 
     webinterface.jinja_env.auto_reload = True
     webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
-    # webinterface.run(use_reloader=False, debug=False, port=80, host='0.0.0.0')
     serve(webinterface, host="0.0.0.0", port=args.port, threads=20)
 
 
@@ -177,7 +176,7 @@ platform.manage_hotspot(usersettings, midiports, first_run=True)
 def hotspot_watchdog():
     """Background thread that checks WiFi connectivity and starts hotspot if needed."""
     while True:
-        time.sleep(30)  #check every 30 seconds instead of every 1 second
+        time.sleep(30)  #check every 30 seconds instead of blocking the main loop
         try:
             platform.manage_hotspot(usersettings, midiports)
         except Exception as e:
