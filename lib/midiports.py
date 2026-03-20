@@ -1,4 +1,5 @@
 import time
+import threading
 from collections import deque
 
 import mido
@@ -19,6 +20,7 @@ class MidiPorts:
         self.playport = None
         self.midipending = None
         self.currently_pressed_keys = []
+        self._keys_lock = threading.Lock()
         self.frontend_events = deque() #accumulates note_on/note_off events for the frontend polling endpoint; drained on each read so no keypress is ever lost between polls
 
         # mido backend python-rtmidi has a bug on some (debian-based) systems
@@ -137,17 +139,18 @@ class MidiPorts:
         if msg.note < 21 or msg.note > 108: #reject notes outside the 88-key piano range (A0=21 to C8=108); real keyboards never send these, but garbage bytes can decode to anything 0-127
             return
 
-        if msg.type == "note_on":
-            if msg.velocity == 0: #note_on with velocity 0 is equivalent to note_off per MIDI spec
+        with self._keys_lock:
+            if msg.type == "note_on":
+                if msg.velocity == 0:
+                    self.currently_pressed_keys = [
+                        x for x in self.currently_pressed_keys if msg.note != x.note
+                    ]
+                else:
+                    self.currently_pressed_keys.append(msg)
+            elif msg.type == "note_off":
                 self.currently_pressed_keys = [
                     x for x in self.currently_pressed_keys if msg.note != x.note
                 ]
-            else:
-                self.currently_pressed_keys.append(msg)
-        elif msg.type == "note_off":
-            self.currently_pressed_keys = [
-                x for x in self.currently_pressed_keys if msg.note != x.note
-            ]
 
         self.midi_queue.append((msg, time.perf_counter()))
         self.frontend_events.append({"type": msg.type, "note": msg.note, "velocity": msg.velocity})
