@@ -58,7 +58,7 @@ def captive_portal_intercept():
 
     try:
         if webinterface.platform.is_hotspot_active_cached():
-            return CAPTIVE_HTML, 200
+            return build_captive_html(), 200
     except Exception:
         pass
 
@@ -70,13 +70,39 @@ def captive_portal_intercept():
 @webinterface.route("/library/test/success.html")
 @webinterface.route("/connecttest.txt")
 def captive_portal_redirect():
-    #only intercept when hotspot is active; otherwise let normal connectivity checks pass
     if not webinterface.platform.is_hotspot_active_cached():
-        return "", 204  #return the expected 204 so the device thinks it has internet
+        return "", 204
 
-    return CAPTIVE_HTML, 200
+    return build_captive_html(), 200
 
-CAPTIVE_HTML = """<!DOCTYPE html>
+import json as _json
+
+def build_captive_html():
+    """Builds the captive portal page with cached networks pre-rendered in the HTML."""
+    try:
+        networks = webinterface.platform.scan_wifi_networks()
+    except Exception:
+        networks = []
+
+    #build network rows as raw HTML — no JavaScript fetch needed
+    if networks:
+        rows = ""
+        for n in networks:
+            ssid_escaped = n["ssid"].replace("'", "\\'").replace('"', "&quot;")
+            lock = "" if n.get("is_open") else "&#x1f512; "
+            rows += (
+                f'<div class="net" onclick="pick(\'{ssid_escaped}\',{str(n.get("is_open", False)).lower()})">'
+                f'<span class="net-name">{lock}{n["ssid"]}</span>'
+                f'<span class="net-info">{n["signal"]}%</span>'
+                f'</div>'
+            )
+        network_html = rows
+    else:
+        network_html = '<p class="msg">No networks found</p>'
+
+    return CAPTIVE_TEMPLATE.replace("{{NETWORKS}}", network_html)
+
+CAPTIVE_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -96,8 +122,6 @@ h1{font-size:28px;margin:20px 0 4px;letter-spacing:-0.02em}
 .btn{background:#6366f1;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px;transition:background .2s}
 .btn:hover{background:#4f46e5}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-scan{background:#e2e4ea;color:#374151}
-.btn-scan:hover{background:#d1d5db}
 input[type=password]{width:100%;padding:10px 12px;border:1px solid #e2e4ea;border-radius:8px;font-size:14px;margin:8px 0;box-sizing:border-box}
 .msg{font-size:13px;color:#6b7280;text-align:center;margin-top:8px}
 .msg.err{color:#c02f2f}
@@ -109,12 +133,11 @@ input[type=password]{width:100%;padding:10px 12px;border:1px solid #e2e4ea;borde
 </head>
 <body>
 <h1>ami</h1>
-<p class="sub">WiFi Setup</p>
+<p class="sub">WiFi Setup — tap a network to connect</p>
 
 <div class="card">
 <h2>Available Networks</h2>
-<div id="networks"><p class="msg">Tap Scan to find networks</p></div>
-<button class="btn btn-scan" id="btn-scan" onclick="scan()">Scan</button>
+<div id="networks">{{NETWORKS}}</div>
 </div>
 
 <div class="card" id="connect-card" style="display:none">
@@ -129,41 +152,6 @@ input[type=password]{width:100%;padding:10px 12px;border:1px solid #e2e4ea;borde
 <script>
 var selectedSsid='';
 var selectedOpen=false;
-
-function scan(){
-  var btn=document.getElementById('btn-scan');
-  var div=document.getElementById('networks');
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span>Loading...';
-  div.innerHTML='<p class="msg"><span class="spinner"></span>Loading...</p>';
-
-  fetch('/api/wifi/scan').then(function(r){return r.json()}).then(function(d){
-    btn.disabled=false;
-    btn.textContent='Scan';
-    if(!d.success||!d.networks.length){
-      div.innerHTML='<p class="msg">No networks found. Try again in a moment.</p>';
-      return;
-    }
-    renderNetworks(d.networks);
-  }).catch(function(){
-    btn.disabled=false;
-    btn.textContent='Scan';
-    div.innerHTML='<p class="msg err">Scan failed — is the hotspot running?</p>';
-  });
-}
-
-function renderNetworks(nets){
-  var div=document.getElementById('networks');
-  var html='';
-  for(var i=0;i<nets.length;i++){
-    var n=nets[i];
-    html+='<div class="net" onclick="pick(\''+n.ssid.replace(/'/g,"\\'")+'\','+n.is_open+')">';
-    html+='<span class="net-name">'+(n.is_open?'':'&#x1f512; ')+n.ssid+'</span>';
-    html+='<span class="net-info">'+n.signal+'%</span>';
-    html+='</div>';
-  }
-  div.innerHTML=html;
-}
 
 function pick(ssid,isOpen){
   selectedSsid=ssid;
@@ -199,26 +187,33 @@ function connect(){
   status.className='msg';
   status.textContent='This may take a moment...';
 
-  fetch('/api/wifi/connect',{
-    method:'POST',
-    headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:'ssid='+encodeURIComponent(selectedSsid)+'&password='+encodeURIComponent(pw)
-  }).then(function(r){return r.json()}).then(function(d){
+  var xhr=new XMLHttpRequest();
+  xhr.open('POST','/api/wifi/connect',true);
+  xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+  xhr.onload=function(){
     btn.disabled=false;
     btn.textContent='Connect';
-    if(d.success){
-      status.className='msg ok';
-      status.textContent='Connected! You can close this and connect your device to '+selectedSsid+'. Then visit ami.local';
-    }else{
+    try{
+      var d=JSON.parse(xhr.responseText);
+      if(d.success){
+        status.className='msg ok';
+        status.textContent='Connected! Connect your device to '+selectedSsid+', then visit ami.local';
+      }else{
+        status.className='msg err';
+        status.textContent=d.message||'Connection failed';
+      }
+    }catch(e){
       status.className='msg err';
-      status.textContent=d.message||'Connection failed';
+      status.textContent='Connection lost. Reconnect to ami WiFi and try again.';
     }
-  }).catch(function(){
+  };
+  xhr.onerror=function(){
     btn.disabled=false;
     btn.textContent='Connect';
     status.className='msg err';
     status.textContent='Connection lost. Reconnect to ami WiFi and try again.';
-  });
+  };
+  xhr.send('ssid='+encodeURIComponent(selectedSsid)+'&password='+encodeURIComponent(pw));
 }
 </script>
 </body>
