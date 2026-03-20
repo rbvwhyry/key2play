@@ -537,52 +537,6 @@ class PlatformRasp(PlatformBase):
             return []
 
     @staticmethod
-    def scan_wifi_networks():
-        """Scans for nearby WiFi networks using nmcli. Returns a sorted list of dicts."""
-        try:
-            subprocess.run(["nmcli", "dev", "wifi", "rescan"], capture_output=True, timeout=10)
-            time.sleep(2)
-
-            output = subprocess.check_output(
-                ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,BARS", "dev", "wifi", "list"],
-                text=True, timeout=15
-            )
-
-            networks = {}
-
-            for line in output.strip().split("\n"):
-                if not line.strip():
-                    continue
-
-                parts = line.split(":")
-                if len(parts) < 4:
-                    continue
-
-                ssid = parts[0].strip()
-                if not ssid or ssid == "--" or ssid == "key2play":
-                    continue
-
-                signal = int(parts[1]) if parts[1].isdigit() else 0
-                security = parts[2].strip()
-                bars = parts[3].strip()
-
-                if ssid not in networks or signal > networks[ssid]["signal"]:
-                    networks[ssid] = {
-                        "ssid": ssid,
-                        "signal": signal,
-                        "security": security,
-                        "bars": bars,
-                        "is_open": security == "" or security == "--"
-                    }
-
-            result = sorted(networks.values(), key=lambda n: n["signal"], reverse=True)
-            return result
-
-        except Exception as e:
-            logger.warning(f"Error scanning WiFi networks: {e}")
-            return []
-
-    @staticmethod
     def forget_all_wifi():
         """Deletes all saved WiFi connections from NetworkManager except the hotspot."""
         forgotten = []
