@@ -310,13 +310,6 @@ class PlatformRasp(PlatformBase):
                 "dnat", "to", "10.42.0.1:80"
             ], check=True)
 
-            #redirect HTTPS (tcp 443) to port 80 — the TLS handshake will fail but phones fall back to the captive portal page
-            subprocess.run([
-                "sudo", "nft", "add", "rule", "ip", "captive", "prerouting",
-                "iifname", "wlan0", "tcp", "dport", "443",
-                "dnat", "to", "10.42.0.1:80"
-            ], check=True)
-
             logger.info("Captive portal enabled (nftables)")
 
         except Exception as e:
