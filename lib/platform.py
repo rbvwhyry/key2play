@@ -32,6 +32,34 @@ class PlatformRasp(PlatformBase):
         self.appconfig = appconfig
 
     @staticmethod
+    def ensure_hostname(name="ami"):
+        """Sets the Pi's hostname so it's reachable at name.local via mDNS."""
+        try:
+            current = subprocess.check_output(["hostname"], text=True).strip()
+
+            if current == name:
+                return
+
+            logger.info(f"Setting hostname to {name} (was {current})")
+            subprocess.run(["sudo", "hostnamectl", "set-hostname", name], check=True)
+
+            with open("/etc/hosts", "r") as f:
+                lines = f.readlines()
+
+            with open("/etc/hosts", "w") as f:
+                for line in lines:
+                    if "127.0.1.1" in line:
+                        f.write(f"127.0.1.1\t{name}\n")
+                    else:
+                        f.write(line)
+
+            subprocess.run(["sudo", "systemctl", "restart", "avahi-daemon"], check=True)
+            logger.info(f"Hostname set to {name}.local")
+
+        except Exception as e:
+            logger.warning(f"Failed to set hostname: {e}")
+    
+    @staticmethod
     def check_and_enable_spi():
         try:
             # Check if SPI is enabled by looking for spidev in /dev
@@ -194,7 +222,7 @@ class PlatformRasp(PlatformBase):
                     "ipv4.method",
                     "shared",
                     "ipv4.address",
-                    "192.168.1.1/24",
+                    "10.42.0.1/24",
                 ],
                 check=True,
             )
@@ -210,12 +238,49 @@ class PlatformRasp(PlatformBase):
         logger.info("Enabling key2play-hotspot")
         subprocess.run(["sudo", "nmcli", "connection", "down", "preconfigured"])
         subprocess.run(["sudo", "nmcli", "connection", "up", "key2play-hotspot"])
+        PlatformRasp.enable_captive_portal()
 
     @staticmethod
     def disable_hotspot():
         logger.info("Disabling key2play-hotspot")
+        PlatformRasp.disable_captive_portal()
         subprocess.run(["sudo", "nmcli", "connection", "down", "key2play-hotspot"])
 
+    @staticmethod
+    def enable_captive_portal():
+        """Redirects all DNS queries to the Pi so phones auto-open the app on hotspot connect."""
+        try:
+            subprocess.run(["sudo", "apt-get", "install", "-y", "dnsmasq"], capture_output=True, timeout=60)
+
+            config = (
+                "interface=wlan0\n"
+                "bind-interfaces\n"
+                "address=/#/10.42.0.1\n"
+            )
+
+            with open("/tmp/captive-dnsmasq.conf", "w") as f:
+                f.write(config)
+
+            subprocess.run(["sudo", "cp", "/tmp/captive-dnsmasq.conf", "/etc/dnsmasq.d/captive.conf"], check=True)
+            subprocess.run(["sudo", "systemctl", "restart", "dnsmasq"], check=True)
+            logger.info("Captive portal DNS enabled")
+
+        except Exception as e:
+            logger.warning(f"Failed to enable captive portal: {e}")
+
+    @staticmethod
+    def disable_captive_portal():
+        """Removes the captive portal DNS redirect."""
+        try:
+            if os.path.exists("/etc/dnsmasq.d/captive.conf"):
+                subprocess.run(["sudo", "rm", "/etc/dnsmasq.d/captive.conf"], check=True)
+                subprocess.run(["sudo", "systemctl", "restart", "dnsmasq"], capture_output=True)
+
+            logger.info("Captive portal DNS disabled")
+
+        except Exception as e:
+            logger.warning(f"Failed to disable captive portal: {e}")
+    
     @staticmethod
     def get_current_connections():
         try:
@@ -470,6 +535,76 @@ class PlatformRasp(PlatformBase):
         except Exception as e:
             logger.warning(f"Error scanning WiFi networks: {e}")
             return []
+
+    @staticmethod
+    def scan_wifi_networks():
+        """Scans for nearby WiFi networks using nmcli. Returns a sorted list of dicts."""
+        try:
+            subprocess.run(["nmcli", "dev", "wifi", "rescan"], capture_output=True, timeout=10)
+            time.sleep(2)
+
+            output = subprocess.check_output(
+                ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,BARS", "dev", "wifi", "list"],
+                text=True, timeout=15
+            )
+
+            networks = {}
+
+            for line in output.strip().split("\n"):
+                if not line.strip():
+                    continue
+
+                parts = line.split(":")
+                if len(parts) < 4:
+                    continue
+
+                ssid = parts[0].strip()
+                if not ssid or ssid == "--" or ssid == "key2play":
+                    continue
+
+                signal = int(parts[1]) if parts[1].isdigit() else 0
+                security = parts[2].strip()
+                bars = parts[3].strip()
+
+                if ssid not in networks or signal > networks[ssid]["signal"]:
+                    networks[ssid] = {
+                        "ssid": ssid,
+                        "signal": signal,
+                        "security": security,
+                        "bars": bars,
+                        "is_open": security == "" or security == "--"
+                    }
+
+            result = sorted(networks.values(), key=lambda n: n["signal"], reverse=True)
+            return result
+
+        except Exception as e:
+            logger.warning(f"Error scanning WiFi networks: {e}")
+            return []
+
+    @staticmethod
+    def forget_all_wifi():
+        """Deletes all saved WiFi connections from NetworkManager except the hotspot."""
+        forgotten = []
+
+        try:
+            output = subprocess.check_output(
+                ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"],
+                text=True
+            )
+
+            for line in output.strip().split("\n"):
+                parts = line.split(":")
+
+                if len(parts) >= 2 and parts[1] == "802-11-wireless" and parts[0] != "key2play-hotspot":
+                    subprocess.run(["sudo", "nmcli", "connection", "delete", parts[0]])
+                    forgotten.append(parts[0])
+                    logger.info(f"Forgot WiFi network: {parts[0]}")
+
+        except Exception as e:
+            logger.warning(f"Error forgetting WiFi networks: {e}")
+
+        return forgotten
     
     @staticmethod
     def get_local_address():
