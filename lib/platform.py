@@ -28,6 +28,8 @@ class PlatformNull(PlatformBase):
 
 
 class PlatformRasp(PlatformBase):
+    cached_scan_results = []  #cached WiFi scan from before hotspot started; single-radio Pi can't scan in AP mode
+
     def __init__(self, appconfig):
         self.appconfig = appconfig
 
@@ -243,6 +245,11 @@ class PlatformRasp(PlatformBase):
     @staticmethod
     def enable_hotspot():
         logger.info("Enabling ami-hotspot")
+
+        #scan for networks BEFORE starting the hotspot — single-radio Pi can't scan in AP mode
+        logger.info("Pre-scanning WiFi networks before hotspot start...")
+        PlatformRasp.cached_scan_results = PlatformRasp.scan_wifi_networks()
+        logger.info(f"Cached {len(PlatformRasp.cached_scan_results)} networks")
 
         #write the captive portal DNS config BEFORE starting the hotspot so NM's dnsmasq picks it up on launch
         nm_dnsmasq_dir = "/etc/NetworkManager/dnsmasq-shared.d"
@@ -521,6 +528,13 @@ class PlatformRasp(PlatformBase):
     def scan_wifi_networks():
         """Scans for nearby WiFi networks using nmcli. Returns a sorted list of dicts."""
         try:
+            #check if we're in AP mode — if so, return cached results since single-radio can't scan
+            check_ap = subprocess.run(
+                ["nmcli", "-t", "-f", "WIFI-PROPERTIES.AP", "dev", "show", "wlan0"],
+                capture_output=True, text=True, timeout=5
+            )
+
+            #try a rescan; will silently fail in AP mode but that's ok
             subprocess.run(["nmcli", "dev", "wifi", "rescan"], capture_output=True, timeout=10)
             time.sleep(2)
 
@@ -557,10 +571,25 @@ class PlatformRasp(PlatformBase):
                     }
 
             result = sorted(networks.values(), key=lambda n: n["signal"], reverse=True)
-            return result
+
+            if result:
+                PlatformRasp.cached_scan_results = result  #update cache with fresh results
+                return result
+
+            #no live results (probably in AP mode) — return cached
+            if PlatformRasp.cached_scan_results:
+                logger.info(f"Returning {len(PlatformRasp.cached_scan_results)} cached scan results (AP mode)")
+                return PlatformRasp.cached_scan_results
+
+            return []
 
         except Exception as e:
             logger.warning(f"Error scanning WiFi networks: {e}")
+
+            #return cached on error too
+            if PlatformRasp.cached_scan_results:
+                return PlatformRasp.cached_scan_results
+
             return []
 
     @staticmethod
