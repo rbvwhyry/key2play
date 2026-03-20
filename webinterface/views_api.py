@@ -7,7 +7,7 @@ import subprocess
 import sys
 import mido
 import psutil
-from flask import jsonify, request, send_from_directory, url_for
+from flask import jsonify, request, send_file, send_from_directory, url_for
 import lib.colormaps as cmap
 from lib.functions import (
     fastColorWipe,
@@ -19,8 +19,6 @@ from webinterface import webinterface
 from webinterface.views import allowed_file
 from lib.song_info import get_all_songs_info
 
-from flask import send_file
-
 # ----- ----- ----- ----- -----
 
 @webinterface.route("/api/download_song/<filename>", methods=["GET"])
@@ -28,7 +26,7 @@ def download_song(filename):
     path = resolve_song_path(filename)
     if not path:
         return jsonify(success=False, error="song not found"), 404
-    return send_file(path, as_attachment=True, download_name=filename)
+    return send_file(os.path.abspath(path), as_attachment=True, download_name=filename)
 
 @webinterface.route("/api/save_recording", methods=["POST"])
 def save_recording():
