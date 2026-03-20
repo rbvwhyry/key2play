@@ -75,8 +75,6 @@ def captive_portal_redirect():
 
     return build_captive_html(), 200
 
-import json as _json
-
 def build_captive_html():
     """Builds the captive portal page with cached networks pre-rendered in the HTML."""
     try:
@@ -88,11 +86,12 @@ def build_captive_html():
     if networks:
         rows = ""
         for n in networks:
-            ssid_escaped = n["ssid"].replace("'", "\\'").replace('"', "&quot;")
+            ssid_safe = n["ssid"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            ssid_attr = ssid_safe.replace("'", "\\'").replace('"', "&quot;")
             lock = "" if n.get("is_open") else "&#x1f512; "
             rows += (
-                f'<div class="net" onclick="pick(\'{ssid_escaped}\',{str(n.get("is_open", False)).lower()})">'
-                f'<span class="net-name">{lock}{n["ssid"]}</span>'
+                f'<div class="net" onclick="pick(\'{ssid_attr}\',{str(n.get("is_open", False)).lower()})">'
+                f'<span class="net-name">{lock}{ssid_safe}</span>'
                 f'<span class="net-info">{n["signal"]}%</span>'
                 f'</div>'
             )
