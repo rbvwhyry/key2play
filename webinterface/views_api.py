@@ -373,6 +373,24 @@ def wifi_connect():
 
     return jsonify(success=False, message="Wrong password or network unavailable. Hotspot restarted — reconnect to key2play and try again.")
 
+@webinterface.route("/api/wifi/forget", methods=["POST"])
+def wifi_forget():
+    forgotten = webinterface.platform.forget_all_wifi()
+
+    if forgotten:
+        webinterface.platform.enable_hotspot()
+        webinterface.usersettings.change_setting_value("is_hotspot_active", 1)
+
+    return jsonify(success=True, forgotten=forgotten, count=len(forgotten))
+
+@webinterface.route("/generate_204")
+@webinterface.route("/gen_204")
+@webinterface.route("/hotspot-detect.html")
+@webinterface.route("/library/test/success.html")
+@webinterface.route("/connecttest.txt")
+def captive_portal_redirect():
+    return redirect("/")
+    
 ### ---------------------------- database: settings table ---------------------------- ###
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
