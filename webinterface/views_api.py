@@ -19,6 +19,82 @@ from webinterface import webinterface
 from webinterface.views import allowed_file
 from lib.song_info import get_all_songs_info
 
+from flask import send_file
+
+# ----- ----- ----- ----- -----
+
+@webinterface.route("/api/download_song/<filename>", methods=["GET"])
+def download_song(filename):
+    path = resolve_song_path(filename)
+    if not path:
+        return jsonify(success=False, error="song not found"), 404
+    return send_file(path, as_attachment=True, download_name=filename)
+
+@webinterface.route("/api/save_recording", methods=["POST"])
+def save_recording():
+    data = request.get_json()
+    if not data:
+        return jsonify(success=False, error="no data")
+
+    filename = data.get("filename", "").strip()
+    events = data.get("events", [])
+
+    if not filename:
+        return jsonify(success=False, error="no filename")
+    if not events:
+        return jsonify(success=False, error="no events recorded")
+
+    # sanitize filename
+    filename = filename.replace("'", "").replace("/", "").replace("\\", "")
+    if not filename.lower().endswith((".mid", ".midi")):
+        filename += ".mid"
+
+    save_path = os.path.join(DIR_SONGS_USER, filename)
+
+    if os.path.exists(save_path):
+        return jsonify(success=False, error="file already exists")
+
+    try:
+        mid = mido.MidiFile(ticks_per_beat=480)
+        track = mido.MidiTrack()
+        mid.tracks.append(track)
+
+        track.append(mido.MetaMessage('set_tempo', tempo=500000))  # 120 BPM default
+
+        # sort events by time just in case
+        events.sort(key=lambda e: e.get("time", 0))
+
+        prev_time_ms = 0
+
+        for evt in events:
+            evt_type = evt.get("type")
+            note = evt.get("note")
+            velocity = evt.get("velocity", 64)
+            time_ms = evt.get("time", 0)
+
+            if evt_type not in ("note_on", "note_off") or note is None:
+                continue
+
+            # convert millisecond delta to ticks
+            delta_ms = max(0, time_ms - prev_time_ms)
+            delta_ticks = int(delta_ms * 480 / 500)  # at 120 BPM: 500ms per beat, 480 ticks per beat
+
+            if evt_type == "note_off":
+                velocity = 0
+
+            track.append(mido.Message(evt_type, note=int(note), velocity=int(velocity), time=delta_ticks))
+            prev_time_ms = time_ms
+
+        mid.save(save_path)
+        return jsonify(success=True, filename=filename)
+
+    except Exception as e:
+        if os.path.exists(save_path):
+            os.remove(save_path)  # clean up partial file
+        return jsonify(success=False, error=str(e))
+
+# ----- ----- ----- ----- -----
+
 @webinterface.route("/api/get_songs_info", methods=["GET"])
 def get_songs_info():
     info = get_all_songs_info()
