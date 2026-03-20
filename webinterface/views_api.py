@@ -10,8 +10,8 @@ import sys
 import os
 import re
 from flask import jsonify, redirect, request, send_file, send_from_directory, url_for
+from lib.song_info import get_all_songs_info, resolve_song_path, DIR_SONGS_USER
 from lib.functions import ( fastColorWipe, find_between, get_last_logs )
-from lib.song_info import get_all_songs_info
 from webinterface.views import allowed_file
 from lib.rpi_drivers import GPIO, Color
 from webinterface import webinterface
@@ -122,23 +122,6 @@ def save_recording():
 def get_songs_info():
     info = get_all_songs_info()
     return jsonify(success=True, songs=info)
-
-# ----- ----- ----- ----- -----
-
-DIR_SONGS_DEFAULT = "Songs_Default/"
-DIR_SONGS_USER = "Songs_User_Upload/"
-
-os.makedirs(DIR_SONGS_USER, exist_ok=True)
-
-# given a just filename like 'nocturne.mid', returns the full path to where file lives; checks user folder first so uploads is prioritized over defaults
-def resolve_song_path(filename):
-    user_path = os.path.join(DIR_SONGS_USER, filename)
-    if os.path.exists(user_path):
-        return user_path
-    default_path = os.path.join(DIR_SONGS_DEFAULT, filename)
-    if os.path.exists(default_path):
-        return default_path
-    return None
 
 # ----- ----- ----- ----- -----
 
@@ -306,7 +289,8 @@ def set_light(light_num):
 def set_many_lights():
     lights = request.values.get("lights")
     lights = json.loads(lights)
-    assert len(lights) > 0
+    if not lights:
+        return jsonify(success=True)
     strip = webinterface.ledstrip.strip
     for light_num, color in lights:
         red = int(color["r"])
@@ -322,7 +306,8 @@ def set_many_lights():
 def off_many_lights():
     indices = request.values.get("indices")
     indices = json.loads(indices)
-    assert len(indices) > 0
+    if not indices:
+        return jsonify(success=True)
     strip = webinterface.ledstrip.strip
     for index in indices:
         black = Color(0, 0, 0)
