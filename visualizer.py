@@ -172,6 +172,7 @@ for i in range(0, numPixels):
 strip.show()
 
 platform.ensure_hostname("ami")
+platform.manage_hotspot(usersettings, midiports, first_run=True)
 
 while True:
     # Save settings if changed
