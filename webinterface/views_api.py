@@ -1,24 +1,44 @@
-import lib.colormaps as cmap
-import subprocess
-import random
-import psutil
-import time
-import json
-import mido
 import ast
-import sys
+import json
 import os
+import random
 import re
+import subprocess
+import sys
+import time
+
+import mido
+import psutil
 from flask import jsonify, redirect, request, send_file, send_from_directory, url_for
-from lib.song_info import get_all_songs_info, resolve_song_path, DIR_SONGS_USER
-from lib.functions import ( fastColorWipe, find_between, get_last_logs )
-from webinterface.views import allowed_file
+
+import lib.colormaps as cmap
+from lib.functions import fastColorWipe, find_between, get_last_logs
 from lib.rpi_drivers import GPIO, Color
+from lib.song_info import get_all_songs_info, resolve_song_path, DIR_SONGS_DEFAULT, DIR_SONGS_USER
 from webinterface import webinterface
+from webinterface.views import allowed_file
 
 # IMPORTANT!!! 👇
 # ANY CHANGE HERE, AND THEN ANY UPDATE VIA GIT PULL WILL REQUIRE THE PI TO BE RESTARTED TO WORK!
 # IMPORTANT!!! 👆
+
+os.makedirs(DIR_SONGS_USER, exist_ok=True)
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+SENSECOVER = 12
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(SENSECOVER, GPIO.IN, GPIO.PUD_UP)
+
+pid = psutil.Process(os.getpid())
+
+# 224 definitely doesn't work;
+# 223 seems to be the brightest for 200 LEDs (sometimes?);
+# 222 is probably safest
+brightest = 222
+
+### ===== captive portal ===== ###
 
 @webinterface.before_request
 def captive_portal_intercept():
@@ -44,367 +64,6 @@ def captive_portal_intercept():
 
     return None  #not in hotspot mode — let normal routes handle it
 
-# ----- ----- ----- ----- -----
-
-@webinterface.route("/api/download_song/<filename>", methods=["GET"])
-def download_song(filename):
-    path = resolve_song_path(filename)
-    if not path:
-        return jsonify(success=False, error="song not found"), 404
-    return send_file(os.path.abspath(path), as_attachment=True, download_name=filename)
-
-@webinterface.route("/api/save_recording", methods=["POST"])
-def save_recording():
-    data = request.get_json()
-    if not data:
-        return jsonify(success=False, error="no data")
-
-    filename = data.get("filename", "").strip()
-    events = data.get("events", [])
-
-    if not filename:
-        return jsonify(success=False, error="no filename")
-    if not events:
-        return jsonify(success=False, error="no events recorded")
-
-    # sanitize filename
-    filename = filename.replace("'", "").replace("/", "").replace("\\", "")
-    if not filename.lower().endswith((".mid", ".midi")):
-        filename += ".mid"
-
-    save_path = os.path.join(DIR_SONGS_USER, filename)
-
-    if os.path.exists(save_path):
-        return jsonify(success=False, error="file already exists")
-
-    try:
-        mid = mido.MidiFile(ticks_per_beat=480)
-        track = mido.MidiTrack()
-        mid.tracks.append(track)
-
-        track.append(mido.MetaMessage('set_tempo', tempo=500000))  # 120 BPM default
-
-        # sort events by time just in case
-        events.sort(key=lambda e: e.get("time", 0))
-
-        prev_time_ms = 0
-
-        for evt in events:
-            evt_type = evt.get("type")
-            note = evt.get("note")
-            velocity = evt.get("velocity", 64)
-            time_ms = evt.get("time", 0)
-
-            if evt_type not in ("note_on", "note_off") or note is None:
-                continue
-
-            # convert millisecond delta to ticks
-            delta_ms = max(0, time_ms - prev_time_ms)
-            delta_ticks = int(delta_ms * 480 / 500)  # at 120 BPM: 500ms per beat, 480 ticks per beat
-
-            if evt_type == "note_off":
-                velocity = 0
-
-            track.append(mido.Message(evt_type, note=int(note), velocity=int(velocity), time=delta_ticks))
-            prev_time_ms = time_ms
-
-        mid.save(save_path)
-        return jsonify(success=True, filename=filename)
-
-    except Exception as e:
-        if os.path.exists(save_path):
-            os.remove(save_path)  # clean up partial file
-        return jsonify(success=False, error=str(e))
-
-# ----- ----- ----- ----- -----
-
-@webinterface.route("/api/get_songs_info", methods=["GET"])
-def get_songs_info():
-    info = get_all_songs_info()
-    return jsonify(success=True, songs=info)
-
-# ----- ----- ----- ----- -----
-
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-def pretty_print(dom):
-    return "\n".join(
-        [line for line in dom.toprettyxml(indent=" " * 4).split("\n") if line.strip()]
-    )
-
-def pretty_save(file_path, sequences_tree):
-    with open(file_path, "w", encoding="utf8") as outfile:
-        outfile.write(pretty_print(sequences_tree))
-
-SENSECOVER = 12
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(SENSECOVER, GPIO.IN, GPIO.PUD_UP)
-
-pid = psutil.Process(os.getpid())
-
-# 224 definitely doesn't work;
-# 223 seems to be the brightest for 200 LEDs (sometimes?);
-# 222 is probably safest
-brightest = 222
-
-@webinterface.route("/api/get_storage_info", methods=["GET"])
-def get_storage_info():
-    import shutil
-    usage = shutil.disk_usage(DIR_SONGS_USER)
-
-    total_size = 0
-    count = 0
-    for d in [DIR_SONGS_DEFAULT, DIR_SONGS_USER]:
-        if not os.path.isdir(d):
-            continue
-        for f in os.listdir(d):
-            if f.lower().endswith((".mid", ".midi")):
-                total_size += os.path.getsize(os.path.join(d, f))
-                count += 1
-
-    return jsonify(
-        success=True,
-        available_bytes=usage.free,
-        songs_count=count,
-        songs_total_bytes=total_size
-    )
-
-_SAFE_NAME = re.compile(r"^[A-Za-z0-9_-]+$")  #folder name allowed chars only
-@webinterface.route("/api/get_random_gif", methods=["GET"])
-def get_random_gif():
-    #folders param like: "gifs,gifs2,gifs_funny"
-    raw = request.args.get("folders", "")
-    requested = [s.strip() for s in raw.split(",") if s.strip()]
-    #if none provided, we can either default or error out:
-    if not requested:
-        return jsonify(success=False, error="no folders provided"), 400
-    #sanitize + constrain to subfolders of static
-    folders = [f for f in requested if _SAFE_NAME.match(f)]
-    if not folders:
-        return jsonify(success=False, error="no valid folder names"), 400
-    pool = []  #(subfolder, filename)
-    for sub in folders:
-        folder_path = os.path.join(webinterface.static_folder, sub)
-        if not os.path.isdir(folder_path):
-            continue
-        for name in os.listdir(folder_path):
-            if name.lower().endswith(".gif"):
-                pool.append((sub, name))
-    if not pool:
-        return jsonify(success=False, error="no gifs found in requested folders"), 404
-    sub, name = random.choice(pool)
-    return jsonify(success=True, url=url_for("static", filename=f"{sub}/{name}"))
-
-@webinterface.route("/static/js/listenWorker.js")
-def serve_worker():
-    return send_from_directory("static/js", "listenWorker.js", mimetype="application/javascript")
-    
-@webinterface.route("/api/currently_pressed_keys", methods=["GET"])
-def currently_pressed_keys():
-    result = [
-        {"note": msg.note, "velocity": msg.velocity}
-        for msg in webinterface.midiports.currently_pressed_keys
-    ]
-    return jsonify(result)
-
-@webinterface.route("/api/drain_midi_events", methods=["GET"])
-def drain_midi_events():
-    events = []
-    while webinterface.midiports.frontend_events: #drain all accumulated events since last poll
-        events.append(webinterface.midiports.frontend_events.popleft())
-    return jsonify(events)
-
-@webinterface.route("/api/get_songs", methods=["GET"])
-def get_songs():
-    default_songs = os.listdir(DIR_SONGS_DEFAULT) if os.path.isdir(DIR_SONGS_DEFAULT) else []
-    user_songs = os.listdir(DIR_SONGS_USER) if os.path.isdir(DIR_SONGS_USER) else []
-    combined = list(set(filter(allowed_file, default_songs + user_songs)))
-    combined.sort()
-    return jsonify(combined)
-
-@webinterface.route("/api/get_current_song", methods=["GET"])
-def get_current_song():
-    song_tracks = webinterface.learning.song_tracks
-    song_tracks = [msg.__dict__ for msg in song_tracks]
-    return jsonify(
-        tracks=song_tracks,
-        ticks_per_beat=webinterface.learning.ticks_per_beat,
-        tempo=webinterface.learning.song_tempo
-    )
-
-@webinterface.route("/api/delete_song", methods=["POST"])
-def delete_song():
-    filename = request.values.get("filename", default=None)
-    if not filename:
-        return jsonify(success=False, error="no filename")
-    path = resolve_song_path(filename)
-    if not path:
-        return jsonify(success=False, error="song not found")
-    os.remove(path)
-    return jsonify(success=True)
-    
-@webinterface.route("/api/update_to_release", methods=["POST"])
-def update_to_release():
-    release = request.values.get("release", default=None)
-    if not release:
-        return jsonify(success=False)
-    print(f"updating to release {release}")
-    import requests
-
-    req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}")
-    with open(release, "wb") as fd:
-        for chunk in req.iter_content(chunk_size=128):
-            fd.write(chunk)
-    print(f"downloaded release to {release}")
-    releasedir = release.removesuffix(".zip")
-    subprocess.run(["unzip", release, "-d", releasedir])
-    subprocess.run(["cp", "-R", f"{releasedir}/", "."])
-    return jsonify(success=True)
-
-@webinterface.route("/api/load_local_midi", methods=["POST"])
-def load_local_midi():
-    filename = request.values.get("filename", default=None)
-    if not filename:
-        return jsonify(success=False)
-    full_path = resolve_song_path(filename)
-    if not full_path:
-        return jsonify(success=False, error="song not found")
-    webinterface.learning.load_midi(full_path)
-    return jsonify(success=True)
-
-@webinterface.route("/api/set_light/<light_num>")
-def set_light(light_num):
-    light_num = int(light_num)
-    strip = webinterface.ledstrip.strip
-    red = int(request.args.get("red", default=255))
-    blue = int(request.args.get("blue", default=255))
-    green = int(request.args.get("green", default=255))
-    color = Color(red, green, blue)
-    strip.setPixelColor(light_num, color)
-    strip.show()
-    return jsonify(success=True)
-
-@webinterface.route("/api/set_many_lights", methods=["POST"])
-def set_many_lights():
-    lights = request.values.get("lights")
-    lights = json.loads(lights)
-    if not lights:
-        return jsonify(success=True)
-    strip = webinterface.ledstrip.strip
-    for light_num, color in lights:
-        red = int(color["r"])
-        blue = int(color["b"])
-        green = int(color["g"])
-        color = Color(red, green, blue)
-        strip.setPixelColor(light_num, color)
-    strip.setBrightness(brightest)
-    strip.show()
-    return jsonify(success=True)
-
-@webinterface.route("/api/off_many_lights", methods=["POST"])
-def off_many_lights():
-    indices = request.values.get("indices")
-    indices = json.loads(indices)
-    if not indices:
-        return jsonify(success=True)
-    strip = webinterface.ledstrip.strip
-    for index in indices:
-        black = Color(0, 0, 0)
-        strip.setPixelColor(index, black)
-    strip.setBrightness(brightest)
-    strip.show()
-    return jsonify(success=True)
-
-@webinterface.route("/api/set_all_lights", methods=["POST"])
-def set_all_lights():
-    color = request.values.get("color")
-    color = json.loads(color)
-    strip = webinterface.ledstrip.strip
-    red = int(color["r"])
-    blue = int(color["b"])
-    green = int(color["g"])
-    color = Color(red, green, blue)
-    cntLed = webinterface.appconfig.num_leds_on_strip()
-    for i in range(cntLed):
-        strip.setPixelColor(i, color)
-    strip.setBrightness(brightest)
-    strip.show()
-    return jsonify(success=True)
-
-@webinterface.route("/api/connect_to_wifi", methods=["POST"])
-def connect_to_wifi():
-    ssid = request.values.get("ssid")
-    psk = request.values.get("psk")
-    webinterface.platform.connect_to_wifi(ssid, psk, webinterface.usersettings)
-    return jsonify(success=True)
-
-@webinterface.route("/api/disconnect_from_wifi", methods=["POST"])
-def disconnect_from_wifi():
-    webinterface.platform.disconnect_from_wifi(webinterface.usersettings)
-    return jsonify(success=True)
-
-@webinterface.route("/api/wifi/status", methods=["GET"])
-def wifi_status():
-    is_hotspot = webinterface.platform.is_hotspot_running()
-    is_connected, ssid, address = webinterface.platform.get_current_connections()
-
-    return jsonify(
-        success=True,
-        connected=is_connected,
-        hotspot_active=is_hotspot,
-        ssid=ssid if is_connected else None,
-        ip=address if is_connected else None,
-        hotspot_name="ami"
-    )
-
-@webinterface.route("/api/wifi/scan", methods=["GET"])
-def wifi_scan():
-    networks = webinterface.platform.scan_wifi_networks()
-
-    return jsonify(success=True, networks=networks)
-
-@webinterface.route("/api/wifi/deep_scan", methods=["GET"])
-def wifi_deep_scan():
-    """Temporarily drops the hotspot to scan, then restarts it. Phone will briefly disconnect."""
-    was_hotspot = webinterface.platform.is_hotspot_running()
-
-    if was_hotspot:
-        webinterface.platform.disable_hotspot()
-        time.sleep(2)  #give the radio time to switch back to station mode
-
-    networks = webinterface.platform.scan_wifi_networks()
-
-    if was_hotspot:
-        webinterface.platform.enable_hotspot()
-
-    return jsonify(success=True, networks=networks)
-
-@webinterface.route("/api/wifi/connect", methods=["POST"])
-def wifi_connect():
-    ssid = request.values.get("ssid")
-    password = request.values.get("password", "")
-
-    if not ssid:
-        return jsonify(success=False, error="no SSID provided")
-
-    result = webinterface.platform.connect_to_wifi(ssid, password, webinterface.usersettings)
-
-    if result:
-        return jsonify(success=True, message=f"Connected to {ssid}")
-
-    return jsonify(success=False, message="Wrong password or network unavailable. Hotspot restarted — reconnect to ami and try again.")
-
-@webinterface.route("/api/wifi/forget", methods=["POST"])
-def wifi_forget():
-    forgotten = webinterface.platform.forget_all_wifi()
-
-    if forgotten:
-        webinterface.platform.enable_hotspot()
-        webinterface.usersettings.change_setting_value("is_hotspot_active", 1)
-
-    return jsonify(success=True, forgotten=forgotten, count=len(forgotten))
-
 @webinterface.route("/generate_204")
 @webinterface.route("/gen_204")
 @webinterface.route("/hotspot-detect.html")
@@ -413,7 +72,7 @@ def wifi_forget():
 def captive_portal_redirect():
     #only intercept when hotspot is active; otherwise let normal connectivity checks pass
     if not webinterface.platform.is_hotspot_active_cached():
-        return "", 204
+        return "", 204  #return the expected 204 so the device thinks it has internet
 
     return CAPTIVE_HTML, 200
 
@@ -564,8 +223,339 @@ function connect(){
 </script>
 </body>
 </html>"""
-    
-### ---------------------------- database: settings table ---------------------------- ###
+
+### ===== songs: list / load / delete / download / record ===== ###
+
+@webinterface.route("/api/get_songs", methods=["GET"])
+def get_songs():
+    default_songs = os.listdir(DIR_SONGS_DEFAULT) if os.path.isdir(DIR_SONGS_DEFAULT) else []
+    user_songs = os.listdir(DIR_SONGS_USER) if os.path.isdir(DIR_SONGS_USER) else []
+    combined = list(set(filter(allowed_file, default_songs + user_songs)))
+    combined.sort()
+    return jsonify(combined)
+
+@webinterface.route("/api/get_songs_info", methods=["GET"])
+def get_songs_info():
+    info = get_all_songs_info()
+    return jsonify(success=True, songs=info)
+
+@webinterface.route("/api/get_current_song", methods=["GET"])
+def get_current_song():
+    song_tracks = webinterface.learning.song_tracks
+    song_tracks = [msg.__dict__ for msg in song_tracks]
+    return jsonify(
+        tracks=song_tracks,
+        ticks_per_beat=webinterface.learning.ticks_per_beat,
+        tempo=webinterface.learning.song_tempo
+    )
+
+@webinterface.route("/api/load_local_midi", methods=["POST"])
+def load_local_midi():
+    filename = request.values.get("filename", default=None)
+    if not filename:
+        return jsonify(success=False)
+    full_path = resolve_song_path(filename)
+    if not full_path:
+        return jsonify(success=False, error="song not found")
+    webinterface.learning.load_midi(full_path)
+    return jsonify(success=True)
+
+@webinterface.route("/api/delete_song", methods=["POST"])
+def delete_song():
+    filename = request.values.get("filename", default=None)
+    if not filename:
+        return jsonify(success=False, error="no filename")
+    path = resolve_song_path(filename)
+    if not path:
+        return jsonify(success=False, error="song not found")
+    os.remove(path)
+    return jsonify(success=True)
+
+@webinterface.route("/api/download_song/<filename>", methods=["GET"])
+def download_song(filename):
+    path = resolve_song_path(filename)
+    if not path:
+        return jsonify(success=False, error="song not found"), 404
+    return send_file(os.path.abspath(path), as_attachment=True, download_name=filename)
+
+@webinterface.route("/api/save_recording", methods=["POST"])
+def save_recording():
+    data = request.get_json()
+    if not data:
+        return jsonify(success=False, error="no data")
+
+    filename = data.get("filename", "").strip()
+    events = data.get("events", [])
+
+    if not filename:
+        return jsonify(success=False, error="no filename")
+    if not events:
+        return jsonify(success=False, error="no events recorded")
+
+    #sanitize filename
+    filename = filename.replace("'", "").replace("/", "").replace("\\", "")
+    if not filename.lower().endswith((".mid", ".midi")):
+        filename += ".mid"
+
+    save_path = os.path.join(DIR_SONGS_USER, filename)
+
+    if os.path.exists(save_path):
+        return jsonify(success=False, error="file already exists")
+
+    try:
+        mid = mido.MidiFile(ticks_per_beat=480)
+        track = mido.MidiTrack()
+        mid.tracks.append(track)
+
+        track.append(mido.MetaMessage('set_tempo', tempo=500000))  #120 BPM default
+
+        #sort events by time just in case
+        events.sort(key=lambda e: e.get("time", 0))
+
+        prev_time_ms = 0
+
+        for evt in events:
+            evt_type = evt.get("type")
+            note = evt.get("note")
+            velocity = evt.get("velocity", 64)
+            time_ms = evt.get("time", 0)
+
+            if evt_type not in ("note_on", "note_off") or note is None:
+                continue
+
+            #convert millisecond delta to ticks
+            delta_ms = max(0, time_ms - prev_time_ms)
+            delta_ticks = int(delta_ms * 480 / 500)  #at 120 BPM: 500ms per beat, 480 ticks per beat
+
+            if evt_type == "note_off":
+                velocity = 0
+
+            track.append(mido.Message(evt_type, note=int(note), velocity=int(velocity), time=delta_ticks))
+            prev_time_ms = time_ms
+
+        mid.save(save_path)
+        return jsonify(success=True, filename=filename)
+
+    except Exception as e:
+        if os.path.exists(save_path):
+            os.remove(save_path)  #clean up partial file
+        return jsonify(success=False, error=str(e))
+
+@webinterface.route("/api/get_storage_info", methods=["GET"])
+def get_storage_info():
+    import shutil
+    usage = shutil.disk_usage(DIR_SONGS_USER)
+
+    total_size = 0
+    count = 0
+    for d in [DIR_SONGS_DEFAULT, DIR_SONGS_USER]:
+        if not os.path.isdir(d):
+            continue
+        for f in os.listdir(d):
+            if f.lower().endswith((".mid", ".midi")):
+                total_size += os.path.getsize(os.path.join(d, f))
+                count += 1
+
+    return jsonify(
+        success=True,
+        available_bytes=usage.free,
+        songs_count=count,
+        songs_total_bytes=total_size
+    )
+
+### ===== MIDI: keys / events / ports ===== ###
+
+@webinterface.route("/api/currently_pressed_keys", methods=["GET"])
+def currently_pressed_keys():
+    result = [
+        {"note": msg.note, "velocity": msg.velocity}
+        for msg in webinterface.midiports.currently_pressed_keys
+    ]
+    return jsonify(result)
+
+@webinterface.route("/api/drain_midi_events", methods=["GET"])
+def drain_midi_events():
+    events = []
+    while webinterface.midiports.frontend_events:  #drain all accumulated events since last poll
+        events.append(webinterface.midiports.frontend_events.popleft())
+    return jsonify(events)
+
+@webinterface.route("/api/get_ports", methods=["GET"])
+def get_ports():
+    ports = mido.get_input_names()
+    ports = list(dict.fromkeys(ports))
+    response = {
+        "ports_list": ports,
+        "input_port": webinterface.usersettings.get_setting_value("input_port"),
+        "secondary_input_port": webinterface.usersettings.get_setting_value(
+            "secondary_input_port"
+        ),
+        "play_port": webinterface.usersettings.get_setting_value("play_port"),
+        "connected_ports": str(subprocess.check_output(["aconnect", "-i", "-l"])),
+        "midi_logging": webinterface.usersettings.get_setting_value("midi_logging"),
+    }
+    return jsonify(response)
+
+@webinterface.route("/api/switch_ports", methods=["GET"])
+def switch_ports():
+    active_input = webinterface.usersettings.get_setting_value("input_port")
+    secondary_input = webinterface.usersettings.get_setting_value(
+        "secondary_input_port"
+    )
+    webinterface.midiports.change_port("inport", secondary_input)
+    webinterface.usersettings.change_setting_value("secondary_input_port", active_input)
+    webinterface.usersettings.change_setting_value("input_port", secondary_input)
+    fastColorWipe(webinterface.ledstrip.strip, True, webinterface.ledsettings)
+    return jsonify(success=True)
+
+### ===== LEDs ===== ###
+
+@webinterface.route("/api/set_light/<light_num>")
+def set_light(light_num):
+    light_num = int(light_num)
+    strip = webinterface.ledstrip.strip
+    red = int(request.args.get("red", default=255))
+    blue = int(request.args.get("blue", default=255))
+    green = int(request.args.get("green", default=255))
+    color = Color(red, green, blue)
+    strip.setPixelColor(light_num, color)
+    strip.show()
+    return jsonify(success=True)
+
+@webinterface.route("/api/set_many_lights", methods=["POST"])
+def set_many_lights():
+    lights = request.values.get("lights")
+    lights = json.loads(lights)
+    if not lights:
+        return jsonify(success=True)
+    strip = webinterface.ledstrip.strip
+    for light_num, color in lights:
+        red = int(color["r"])
+        blue = int(color["b"])
+        green = int(color["g"])
+        color = Color(red, green, blue)
+        strip.setPixelColor(light_num, color)
+    strip.setBrightness(brightest)
+    strip.show()
+    return jsonify(success=True)
+
+@webinterface.route("/api/off_many_lights", methods=["POST"])
+def off_many_lights():
+    indices = request.values.get("indices")
+    indices = json.loads(indices)
+    if not indices:
+        return jsonify(success=True)
+    strip = webinterface.ledstrip.strip
+    for index in indices:
+        black = Color(0, 0, 0)
+        strip.setPixelColor(index, black)
+    strip.setBrightness(brightest)
+    strip.show()
+    return jsonify(success=True)
+
+@webinterface.route("/api/set_all_lights", methods=["POST"])
+def set_all_lights():
+    color = request.values.get("color")
+    color = json.loads(color)
+    strip = webinterface.ledstrip.strip
+    red = int(color["r"])
+    blue = int(color["b"])
+    green = int(color["g"])
+    color = Color(red, green, blue)
+    cntLed = webinterface.appconfig.num_leds_on_strip()
+    for i in range(cntLed):
+        strip.setPixelColor(i, color)
+    strip.setBrightness(brightest)
+    strip.show()
+    return jsonify(success=True)
+
+### ===== WiFi ===== ###
+
+@webinterface.route("/api/wifi/status", methods=["GET"])
+def wifi_status():
+    is_hotspot = webinterface.platform.is_hotspot_running()
+    is_connected, ssid, address = webinterface.platform.get_current_connections()
+
+    return jsonify(
+        success=True,
+        connected=is_connected,
+        hotspot_active=is_hotspot,
+        ssid=ssid if is_connected else None,
+        ip=address if is_connected else None,
+        hotspot_name="ami"
+    )
+
+@webinterface.route("/api/wifi/scan", methods=["GET"])
+def wifi_scan():
+    networks = webinterface.platform.scan_wifi_networks()
+    return jsonify(success=True, networks=networks)
+
+@webinterface.route("/api/wifi/deep_scan", methods=["GET"])
+def wifi_deep_scan():
+    """Temporarily drops the hotspot to scan, then restarts it. Phone will briefly disconnect."""
+    was_hotspot = webinterface.platform.is_hotspot_running()
+
+    if was_hotspot:
+        webinterface.platform.disable_hotspot()
+        time.sleep(2)  #give the radio time to switch back to station mode
+
+    networks = webinterface.platform.scan_wifi_networks()
+
+    if was_hotspot:
+        webinterface.platform.enable_hotspot()
+
+    return jsonify(success=True, networks=networks)
+
+@webinterface.route("/api/wifi/connect", methods=["POST"])
+def wifi_connect():
+    ssid = request.values.get("ssid")
+    password = request.values.get("password", "")
+
+    if not ssid:
+        return jsonify(success=False, error="no SSID provided")
+
+    result = webinterface.platform.connect_to_wifi(ssid, password, webinterface.usersettings)
+
+    if result:
+        return jsonify(success=True, message=f"Connected to {ssid}")
+
+    return jsonify(success=False, message="Wrong password or network unavailable. Hotspot restarted — reconnect to ami and try again.")
+
+@webinterface.route("/api/wifi/forget", methods=["POST"])
+def wifi_forget():
+    forgotten = webinterface.platform.forget_all_wifi()
+
+    if forgotten:
+        webinterface.platform.enable_hotspot()
+        webinterface.usersettings.change_setting_value("is_hotspot_active", 1)
+
+    return jsonify(success=True, forgotten=forgotten, count=len(forgotten))
+
+@webinterface.route("/api/connect_to_wifi", methods=["POST"])
+def connect_to_wifi():
+    ssid = request.values.get("ssid")
+    psk = request.values.get("psk")
+    webinterface.platform.connect_to_wifi(ssid, psk, webinterface.usersettings)
+    return jsonify(success=True)
+
+@webinterface.route("/api/disconnect_from_wifi", methods=["POST"])
+def disconnect_from_wifi():
+    webinterface.platform.disconnect_from_wifi(webinterface.usersettings)
+    return jsonify(success=True)
+
+@webinterface.route("/api/get_wifi_list", methods=["GET"])
+def get_wifi_list():
+    wifi_list = webinterface.platform.get_wifi_networks()
+    success, wifi_ssid, address = webinterface.platform.get_current_connections()
+    response = {
+        "wifi_list": wifi_list,
+        "connected_wifi": wifi_ssid,
+        "connected_wifi_address": address,
+    }
+    return jsonify(response)
+
+### ===== database: config table ===== ###
+
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
     value = webinterface.appconfig.get_config(key)
@@ -573,7 +563,7 @@ def get_config(key):
 
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
-    assert key is not None  # assert non-emptiness
+    assert key is not None
     value = request.values.get("value")
     assert value is not None
     value = str(value)
@@ -596,10 +586,8 @@ def backup_config_file_and_reset_to_factory():
     webinterface.appconfig.backup_config_file_and_reset_to_factory()
     return jsonify(success=True)
 
-### ------------------------------------------------------------------------------------ ###
+### ===== database: map table ===== ###
 
-
-### ---------------------------- database: map table ---------------------------- ###
 @webinterface.route("/api/get_row/<key>", methods=["GET"])
 def get_row(key):
     value = webinterface.appmap.get_midi_led_row(key)
@@ -607,7 +595,7 @@ def get_row(key):
 
 @webinterface.route("/api/set_row/<key>", methods=["POST"])
 def set_row(key):
-    assert key is not None  # assert non-emptiness
+    assert key is not None
     led_index = int(request.values.get("led_index"))
     r = int(request.values.get("r"))
     g = int(request.values.get("g"))
@@ -625,11 +613,9 @@ def delete_row(key):
 
 @webinterface.route("/api/get_map", methods=["GET"])
 def get_map():
-    mappings = (
-        webinterface.appmap.get_midi_led_map()
-    )  # call existing method to get all mappings from the database
+    mappings = webinterface.appmap.get_midi_led_map()
     result = []
-    for mapping in mappings:  # convert SQLAlchemy objects to a serializable format
+    for mapping in mappings:
         result.append(
             {
                 "midi_note": mapping.midi_note,
@@ -643,15 +629,12 @@ def get_map():
         )
     return jsonify(success=True, mappings=result)
 
-### ------------------------------------------------------------------------------------ ###
-
 @webinterface.route("/api/delete_all_maps", methods=["POST"])
 def delete_all_maps():
     webinterface.appmap.delete_all_maps()
     return jsonify(success=True)
 
-def get_random_color():
-    return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+### ===== system / misc ===== ###
 
 @webinterface.route("/api/get_homepage_data")
 def get_homepage_data():
@@ -717,44 +700,50 @@ def get_learning_status():
     }
     return jsonify(response)
 
-@webinterface.route("/api/get_ports", methods=["GET"])
-def get_ports():
-    ports = mido.get_input_names()
-    ports = list(dict.fromkeys(ports))
-    response = {
-        "ports_list": ports,
-        "input_port": webinterface.usersettings.get_setting_value("input_port"),
-        "secondary_input_port": webinterface.usersettings.get_setting_value(
-            "secondary_input_port"
-        ),
-        "play_port": webinterface.usersettings.get_setting_value("play_port"),
-        "connected_ports": str(subprocess.check_output(["aconnect", "-i", "-l"])),
-        "midi_logging": webinterface.usersettings.get_setting_value("midi_logging"),
-    }
-    return jsonify(response)
+@webinterface.route("/api/update_to_release", methods=["POST"])
+def update_to_release():
+    release = request.values.get("release", default=None)
+    if not release:
+        return jsonify(success=False)
+    print(f"updating to release {release}")
+    import requests
 
-@webinterface.route("/api/switch_ports", methods=["GET"])
-def switch_ports():
-    active_input = webinterface.usersettings.get_setting_value("input_port")
-    secondary_input = webinterface.usersettings.get_setting_value(
-        "secondary_input_port"
-    )
-    webinterface.midiports.change_port("inport", secondary_input)
-    webinterface.usersettings.change_setting_value("secondary_input_port", active_input)
-    webinterface.usersettings.change_setting_value("input_port", secondary_input)
-    fastColorWipe(webinterface.ledstrip.strip, True, webinterface.ledsettings)
+    req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}")
+    with open(release, "wb") as fd:
+        for chunk in req.iter_content(chunk_size=128):
+            fd.write(chunk)
+    print(f"downloaded release to {release}")
+    releasedir = release.removesuffix(".zip")
+    subprocess.run(["unzip", release, "-d", releasedir])
+    subprocess.run(["cp", "-R", f"{releasedir}/", "."])
     return jsonify(success=True)
 
-@webinterface.route("/api/get_wifi_list", methods=["GET"])
-def get_wifi_list():
-    wifi_list = webinterface.platform.get_wifi_networks()
-    success, wifi_ssid, address = webinterface.platform.get_current_connections()
-    response = {
-        "wifi_list": wifi_list,
-        "connected_wifi": wifi_ssid,
-        "connected_wifi_address": address,
-    }
-    return jsonify(response)
+_SAFE_NAME = re.compile(r"^[A-Za-z0-9_-]+$")
+@webinterface.route("/api/get_random_gif", methods=["GET"])
+def get_random_gif():
+    raw = request.args.get("folders", "")
+    requested = [s.strip() for s in raw.split(",") if s.strip()]
+    if not requested:
+        return jsonify(success=False, error="no folders provided"), 400
+    folders = [f for f in requested if _SAFE_NAME.match(f)]
+    if not folders:
+        return jsonify(success=False, error="no valid folder names"), 400
+    pool = []
+    for sub in folders:
+        folder_path = os.path.join(webinterface.static_folder, sub)
+        if not os.path.isdir(folder_path):
+            continue
+        for name in os.listdir(folder_path):
+            if name.lower().endswith(".gif"):
+                pool.append((sub, name))
+    if not pool:
+        return jsonify(success=False, error="no gifs found in requested folders"), 404
+    sub, name = random.choice(pool)
+    return jsonify(success=True, url=url_for("static", filename=f"{sub}/{name}"))
+
+@webinterface.route("/static/js/listenWorker.js")
+def serve_worker():
+    return send_from_directory("static/js", "listenWorker.js", mimetype="application/javascript")
 
 @webinterface.route("/api/get_logs", methods=["GET"])
 def get_logs():
