@@ -29,10 +29,12 @@ class PlatformNull(PlatformBase):
 
 class PlatformRasp(PlatformBase):
     cached_scan_results = []  #cached WiFi scan from before hotspot started; single-radio Pi can't scan in AP mode
-    _hotspot_active = False  #cached hotspot state; updated by enable/disable methods to avoid subprocess on every HTTP request  #cached WiFi scan from before hotspot started; single-radio Pi can't scan in AP mode
+    _hotspot_active = False  #cached hotspot state; updated by enable/disable to avoid subprocess on every HTTP request
 
     def __init__(self, appconfig):
         self.appconfig = appconfig
+
+    # ===== hostname =====
 
     @staticmethod
     def ensure_hostname(name="ami"):
@@ -61,11 +63,12 @@ class PlatformRasp(PlatformBase):
 
         except Exception as e:
             logger.warning(f"Failed to set hostname: {e}")
-    
+
+    # ===== SPI =====
+
     @staticmethod
     def check_and_enable_spi():
         try:
-            # Check if SPI is enabled by looking for spidev in /dev
             if not os.path.exists("/dev/spidev0.0"):
                 logger.info("SPI is not enabled. Enabling SPI interface...")
                 subprocess.run(
@@ -83,27 +86,24 @@ class PlatformRasp(PlatformBase):
             logger.warning(f"Error checking SPI status: {e}")
             return False
 
+    # ===== system MIDI scripts =====
+
     @staticmethod
     def disable_system_midi_scripts():
         """Disable udev rules and systemd service that run the old connectall script"""
         try:
-            # Disable the udev rule
             udev_rule_path = "/etc/udev/rules.d/33-midiusb.rules"
             if os.path.exists(udev_rule_path):
                 logger.info("Disabling udev MIDI rule...")
-                # Rename the file to disable it
                 os.rename(udev_rule_path, udev_rule_path + ".disabled")
                 subprocess.call(["sudo", "udevadm", "control", "--reload"], check=False)
                 logger.info("udev MIDI rule disabled")
 
-            # Disable the systemd service
             service_name = "midi.service"
             try:
-                # Stop the service
                 subprocess.call(
                     ["sudo", "systemctl", "stop", service_name], check=False
                 )
-                # Disable the service
                 subprocess.call(
                     ["sudo", "systemctl", "disable", service_name], check=False
                 )
@@ -114,10 +114,39 @@ class PlatformRasp(PlatformBase):
         except Exception as e:
             logger.warning(f"Error disabling system MIDI scripts: {e}")
 
+    # ===== packages =====
+
     def install_midi2abc(self):
         if not self.is_package_installed("abcmidi"):
             logger.info("Installing abcmidi")
             subprocess.call(["sudo", "apt-get", "install", "abcmidi", "-y"])
+
+    @staticmethod
+    def is_package_installed(package_name):
+        try:
+            result = subprocess.run(
+                ["dpkg", "-s", package_name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+                text=True,
+            )
+            output = result.stdout
+            status_line = [
+                line for line in output.split("\n") if line.startswith("Status:")
+            ][0]
+
+            if "install ok installed" in status_line:
+                logger.info(f"{package_name} package is installed")
+                return True
+            else:
+                logger.info(f"{package_name} package is not installed")
+                return False
+        except subprocess.CalledProcessError:
+            logger.warning(f"Error checking {package_name} package status")
+            return False
+
+    # ===== system commands =====
 
     @staticmethod
     def update_visualizer():
@@ -148,31 +177,7 @@ class PlatformRasp(PlatformBase):
     def restart_rtpmidid():
         call("sudo systemctl restart rtpmidid", shell=True)
 
-    @staticmethod
-    def is_package_installed(package_name):
-        try:
-            # Run the 'dpkg' command to check if the package is installed
-            result = subprocess.run(
-                ["dpkg", "-s", package_name],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-                text=True,
-            )
-            output = result.stdout
-            status_line = [
-                line for line in output.split("\n") if line.startswith("Status:")
-            ][0]
-
-            if "install ok installed" in status_line:
-                logger.info(f"{package_name} package is installed")
-                return True
-            else:
-                logger.info(f"{package_name} package is not installed")
-                return False
-        except subprocess.CalledProcessError:
-            logger.warning(f"Error checking {package_name} package status")
-            return False
+    # ===== hotspot: profile =====
 
     @staticmethod
     def create_hotspot_profile():
@@ -186,7 +191,7 @@ class PlatformRasp(PlatformBase):
             logger.info("ami-hotspot profile already exists. Skipping creation.")
             return
 
-        # clean up old profiles and dnsmasq config from previous versions
+        #clean up old profiles and dnsmasq config from previous versions
         subprocess.run(["sudo", "nmcli", "connection", "delete", "key2play-hotspot"], capture_output=True)
         old_conf = "/etc/dnsmasq.d/captive.conf"
         if os.path.exists(old_conf):
@@ -243,6 +248,8 @@ class PlatformRasp(PlatformBase):
                 f"An error occurred while creating the ami-hotspot profile: {e}"
             )
 
+    # ===== hotspot: enable / disable =====
+
     @staticmethod
     def enable_hotspot():
         logger.info("Enabling ami-hotspot")
@@ -264,7 +271,6 @@ class PlatformRasp(PlatformBase):
 
         #iptables rules go after the interface is up
         PlatformRasp.enable_captive_portal()
-
         PlatformRasp._hotspot_active = True
 
     @staticmethod
@@ -273,6 +279,8 @@ class PlatformRasp(PlatformBase):
         PlatformRasp._hotspot_active = False
         PlatformRasp.disable_captive_portal()
         subprocess.run(["sudo", "nmcli", "connection", "down", "ami-hotspot"])
+
+    # ===== captive portal =====
 
     @staticmethod
     def enable_captive_portal():
@@ -318,44 +326,14 @@ class PlatformRasp(PlatformBase):
 
         except Exception as e:
             logger.warning(f"Failed to disable captive portal: {e}")
-    
-    @staticmethod
-    def get_current_connections():
-        try:
-            with open(os.devnull, "w") as null_file:
-                output = subprocess.check_output(
-                    ["iwconfig"], text=True, stderr=null_file
-                )
 
-            if "Mode:Master" in output:
-                return False, "Running as hotspot", ""
-
-            for line in output.split("\n"):
-                if "ESSID:" in line:
-                    ssid = line.split("ESSID:")[-1].strip().strip('"')
-                    if ssid != "off/any":
-                        access_point_line = [
-                            line
-                            for line in output.split("\n")
-                            if "Access Point:" in line
-                        ]
-                        if access_point_line:
-                            access_point = (
-                                access_point_line[0].split("Access Point:")[1].strip()
-                            )
-                            return True, ssid, access_point
-                        return False, "Not connected to any Wi-Fi network.", ""
-                    return False, "Not connected to any Wi-Fi network.", ""
-
-            return False, "No Wi-Fi interface found.", ""
-        except subprocess.CalledProcessError:
-            return False, "Error occurred while getting Wi-Fi information.", ""
+    # ===== hotspot: status =====
 
     @staticmethod
     def is_hotspot_active_cached():
         """Returns cached hotspot state without spawning a subprocess."""
         return PlatformRasp._hotspot_active
-    
+
     def is_hotspot_running(self):
         try:
             result = subprocess.run(
@@ -388,8 +366,8 @@ class PlatformRasp(PlatformBase):
                 else:
                     logger.info("ami-hotspot is already running")
 
-        # if we're supposed to be connected to a wifi, but we aren't:
-        # eventually turn on hotspot mode
+        #if we're supposed to be connected to a wifi, but we aren't:
+        #eventually turn on hotspot mode
         if (
             not int(usersettings.get("is_hotspot_active"))
             and not self.check_if_connected_to_wifi()
@@ -401,6 +379,40 @@ class PlatformRasp(PlatformBase):
             if self.check_if_connected_to_wifi():
                 return
             self.enable_hotspot()
+
+    # ===== WiFi: connection status =====
+
+    @staticmethod
+    def get_current_connections():
+        try:
+            with open(os.devnull, "w") as null_file:
+                output = subprocess.check_output(
+                    ["iwconfig"], text=True, stderr=null_file
+                )
+
+            if "Mode:Master" in output:
+                return False, "Running as hotspot", ""
+
+            for line in output.split("\n"):
+                if "ESSID:" in line:
+                    ssid = line.split("ESSID:")[-1].strip().strip('"')
+                    if ssid != "off/any":
+                        access_point_line = [
+                            line
+                            for line in output.split("\n")
+                            if "Access Point:" in line
+                        ]
+                        if access_point_line:
+                            access_point = (
+                                access_point_line[0].split("Access Point:")[1].strip()
+                            )
+                            return True, ssid, access_point
+                        return False, "Not connected to any Wi-Fi network.", ""
+                    return False, "Not connected to any Wi-Fi network.", ""
+
+            return False, "No Wi-Fi interface found.", ""
+        except subprocess.CalledProcessError:
+            return False, "Error occurred while getting Wi-Fi information.", ""
 
     def check_if_connected_to_wifi(self) -> bool:
         try:
@@ -417,8 +429,9 @@ class PlatformRasp(PlatformBase):
             logger.error(f"error checking wlan0 IP address, {str(e)}")
             return False
 
+    # ===== WiFi: connect / disconnect / forget =====
+
     def connect_to_wifi(self, ssid, password, usersettings):
-        # Disable the hotspot first
         self.disable_hotspot()
 
         try:
@@ -435,9 +448,8 @@ class PlatformRasp(PlatformBase):
                 ],
                 capture_output=True,
                 text=True,
-                timeout=30,  # Set a timeout for the connection attempt
+                timeout=30,
             )
-            # Check if the connection was successful
             if result.returncode == 0:
                 logger.info(f"Successfully connected to {ssid}")
                 usersettings.change_setting_value("is_hotspot_active", 0)
@@ -465,6 +477,32 @@ class PlatformRasp(PlatformBase):
         usersettings.change_setting_value("is_hotspot_active", 1)
 
     @staticmethod
+    def forget_all_wifi():
+        """Deletes all saved WiFi connections from NetworkManager except the hotspot."""
+        forgotten = []
+
+        try:
+            output = subprocess.check_output(
+                ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"],
+                text=True
+            )
+
+            for line in output.strip().split("\n"):
+                parts = line.split(":")
+
+                if len(parts) >= 2 and parts[1] == "802-11-wireless" and parts[0] != "ami-hotspot":
+                    subprocess.run(["sudo", "nmcli", "connection", "delete", parts[0]])
+                    forgotten.append(parts[0])
+                    logger.info(f"Forgot WiFi network: {parts[0]}")
+
+        except Exception as e:
+            logger.warning(f"Error forgetting WiFi networks: {e}")
+
+        return forgotten
+
+    # ===== WiFi: scanning =====
+
+    @staticmethod
     def get_wifi_networks():
         try:
             output = subprocess.check_output(
@@ -473,9 +511,6 @@ class PlatformRasp(PlatformBase):
             networks = output.decode().split("Cell ")
 
             def calculate_signal_strength(level):
-                # Map the signal level to a percentage (0% to 100%) linearly.
-                # -50 dBm or higher -> 100%
-                # -90 dBm or lower -> 0%
                 if level >= -50:
                     return 100
                 elif level <= -90:
@@ -520,14 +555,10 @@ class PlatformRasp(PlatformBase):
                     wifi_data["Signal Strength"] = signal_strength
                     wifi_data["Signal dBm"] = signal_dbm
 
-                # Update the network info if this is the strongest signal for this SSID
                 if wifi_data["Signal Strength"] > wifi_dict[ssid]["Signal Strength"]:
                     wifi_dict[ssid].update(wifi_data)
 
-            # Convert the dictionary to a list
             wifi_list = list(wifi_dict.values())
-
-            # Sort descending by "Signal Strength"
             wifi_list.sort(key=lambda x: x["Signal Strength"], reverse=True)
 
             return wifi_list
@@ -539,12 +570,6 @@ class PlatformRasp(PlatformBase):
     def scan_wifi_networks():
         """Scans for nearby WiFi networks using nmcli. Returns a sorted list of dicts."""
         try:
-            #check if we're in AP mode — if so, return cached results since single-radio can't scan
-            check_ap = subprocess.run(
-                ["nmcli", "-t", "-f", "WIFI-PROPERTIES.AP", "dev", "show", "wlan0"],
-                capture_output=True, text=True, timeout=5
-            )
-
             #try a rescan; will silently fail in AP mode but that's ok
             subprocess.run(["nmcli", "dev", "wifi", "rescan"], capture_output=True, timeout=10)
             time.sleep(2)
@@ -603,40 +628,13 @@ class PlatformRasp(PlatformBase):
 
             return []
 
-    @staticmethod
-    def forget_all_wifi():
-        """Deletes all saved WiFi connections from NetworkManager except the hotspot."""
-        forgotten = []
+    # ===== network address =====
 
-        try:
-            output = subprocess.check_output(
-                ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"],
-                text=True
-            )
-
-            for line in output.strip().split("\n"):
-                parts = line.split(":")
-
-                if len(parts) >= 2 and parts[1] == "802-11-wireless" and parts[0] != "ami-hotspot":
-                    subprocess.run(["sudo", "nmcli", "connection", "delete", parts[0]])
-                    forgotten.append(parts[0])
-                    logger.info(f"Forgot WiFi network: {parts[0]}")
-
-        except Exception as e:
-            logger.warning(f"Error forgetting WiFi networks: {e}")
-
-        return forgotten
-    
     @staticmethod
     def get_local_address():
         try:
-            # Get the hostname
             hostname = socket.gethostname()
-
-            # Get the IP address
             ip_address = socket.gethostbyname(hostname + ".local")
-
-            # Construct the full local address
             local_address = f"{hostname}.local"
 
             return {
@@ -651,17 +649,15 @@ class PlatformRasp(PlatformBase):
     def change_local_address(new_name):
         new_name = new_name.rstrip(".local")
         logger.info("Changing local address to " + new_name)
-        # Validate the new name
+
         if not re.match(r"^[a-zA-Z0-9-]+$", new_name):
             raise ValueError("Invalid name. Use only letters, numbers, and hyphens.")
 
         try:
-            # Change the hostname
             subprocess.run(
                 ["sudo", "hostnamectl", "set-hostname", new_name], check=True
             )
 
-            # Update /etc/hosts file
             with open("/etc/hosts", "r") as file:
                 hosts_content = file.readlines()
 
@@ -672,10 +668,7 @@ class PlatformRasp(PlatformBase):
                     else:
                         file.write(line)
 
-            # Restart avahi-daemon to apply changes
             subprocess.run(["sudo", "systemctl", "restart", "avahi-daemon"], check=True)
-
-            # Optionally, restart the networking service
             subprocess.run(["sudo", "systemctl", "restart", "networking"], check=True)
 
             logger.info(f"Local address successfully changed to {new_name}.local")
