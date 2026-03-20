@@ -173,19 +173,26 @@ class PlatformRasp(PlatformBase):
 
     @staticmethod
     def create_hotspot_profile():
-        # Check if the 'key2play-hotspot' profile already exists
         check_profile = subprocess.run(
-            ["sudo", "nmcli", "connection", "show", "key2play-hotspot"],
+            ["sudo", "nmcli", "connection", "show", "ami-hotspot"],
             capture_output=True,
             text=True,
         )
 
-        if "key2play-hotspot" in check_profile.stdout:
-            logger.info("key2play-hotspot profile already exists. Skipping creation.")
+        if "ami-hotspot" in check_profile.stdout:
+            logger.info("ami-hotspot profile already exists. Skipping creation.")
             return
 
-        # If we reach here, the profile doesn't exist, so we create it
-        logger.info("Creating new key2play-hotspot profile...")
+        # clean up old profiles and dnsmasq config from previous versions
+        subprocess.run(["sudo", "nmcli", "connection", "delete", "key2play-hotspot"], capture_output=True)
+        old_conf = "/etc/dnsmasq.d/captive.conf"
+        if os.path.exists(old_conf):
+            subprocess.run(["sudo", "rm", "-f", old_conf], capture_output=True)
+            subprocess.run(["sudo", "systemctl", "stop", "dnsmasq"], capture_output=True)
+            subprocess.run(["sudo", "systemctl", "disable", "dnsmasq"], capture_output=True)
+            logger.info("Cleaned up old dnsmasq captive portal config")
+
+        logger.info("Creating new ami-hotspot profile...")
 
         try:
             subprocess.run(
@@ -199,11 +206,11 @@ class PlatformRasp(PlatformBase):
                     "ifname",
                     "wlan0",
                     "con-name",
-                    "key2play-hotspot",
+                    "ami-hotspot",
                     "autoconnect",
                     "no",
                     "ssid",
-                    "key2play",
+                    "ami",
                 ],
                 check=True,
             )
@@ -214,7 +221,7 @@ class PlatformRasp(PlatformBase):
                     "nmcli",
                     "connection",
                     "modify",
-                    "key2play-hotspot",
+                    "ami-hotspot",
                     "802-11-wireless.mode",
                     "ap",
                     "802-11-wireless.band",
@@ -227,56 +234,72 @@ class PlatformRasp(PlatformBase):
                 check=True,
             )
 
-            logger.info("key2play-hotspot profile created successfully")
+            logger.info("ami-hotspot profile created successfully")
         except subprocess.CalledProcessError as e:
             logger.warning(
-                f"An error occurred while creating the key2play-hotspot profile: {e}"
+                f"An error occurred while creating the ami-hotspot profile: {e}"
             )
 
     @staticmethod
     def enable_hotspot():
-        logger.info("Enabling key2play-hotspot")
+        logger.info("Enabling ami-hotspot")
         subprocess.run(["sudo", "nmcli", "connection", "down", "preconfigured"])
-        subprocess.run(["sudo", "nmcli", "connection", "up", "key2play-hotspot"])
+        subprocess.run(["sudo", "nmcli", "connection", "up", "ami-hotspot"])
         PlatformRasp.enable_captive_portal()
 
     @staticmethod
     def disable_hotspot():
-        logger.info("Disabling key2play-hotspot")
+        logger.info("Disabling ami-hotspot")
         PlatformRasp.disable_captive_portal()
-        subprocess.run(["sudo", "nmcli", "connection", "down", "key2play-hotspot"])
+        subprocess.run(["sudo", "nmcli", "connection", "down", "ami-hotspot"])
 
     @staticmethod
     def enable_captive_portal():
-        """Redirects all DNS queries to the Pi so phones auto-open the app on hotspot connect."""
+        """Redirects all HTTP traffic to the Pi using iptables so phones auto-open the app."""
         try:
-            subprocess.run(["sudo", "apt-get", "install", "-y", "dnsmasq"], capture_output=True, timeout=60)
+            subprocess.run(["sudo", "iptables", "-t", "nat", "-F", "PREROUTING"], capture_output=True)
 
-            config = (
-                "interface=wlan0\n"
-                "bind-interfaces\n"
-                "address=/#/10.42.0.1\n"
-            )
+            subprocess.run([
+                "sudo", "iptables", "-t", "nat", "-A", "PREROUTING",
+                "-i", "wlan0", "-p", "udp", "--dport", "53",
+                "-j", "DNAT", "--to-destination", "10.42.0.1:53"
+            ], check=True)
 
-            with open("/tmp/captive-dnsmasq.conf", "w") as f:
-                f.write(config)
+            subprocess.run([
+                "sudo", "iptables", "-t", "nat", "-A", "PREROUTING",
+                "-i", "wlan0", "-p", "tcp", "--dport", "80",
+                "-j", "DNAT", "--to-destination", "10.42.0.1:80"
+            ], check=True)
 
-            subprocess.run(["sudo", "cp", "/tmp/captive-dnsmasq.conf", "/etc/dnsmasq.d/captive.conf"], check=True)
-            subprocess.run(["sudo", "systemctl", "restart", "dnsmasq"], check=True)
-            logger.info("Captive portal DNS enabled")
+            subprocess.run([
+                "sudo", "iptables", "-t", "nat", "-A", "PREROUTING",
+                "-i", "wlan0", "-p", "tcp", "--dport", "443",
+                "-j", "DNAT", "--to-destination", "10.42.0.1:80"
+            ], check=True)
+
+            nm_dnsmasq_dir = "/etc/NetworkManager/dnsmasq-shared.d"
+            os.makedirs(nm_dnsmasq_dir, exist_ok=True)
+
+            with open(os.path.join(nm_dnsmasq_dir, "captive.conf"), "w") as f:
+                f.write("address=/#/10.42.0.1\n")
+
+            logger.info("Captive portal enabled (iptables + NM dnsmasq)")
 
         except Exception as e:
             logger.warning(f"Failed to enable captive portal: {e}")
 
     @staticmethod
     def disable_captive_portal():
-        """Removes the captive portal DNS redirect."""
+        """Removes the captive portal iptables rules and DNS redirect."""
         try:
-            if os.path.exists("/etc/dnsmasq.d/captive.conf"):
-                subprocess.run(["sudo", "rm", "/etc/dnsmasq.d/captive.conf"], check=True)
-                subprocess.run(["sudo", "systemctl", "restart", "dnsmasq"], capture_output=True)
+            subprocess.run(["sudo", "iptables", "-t", "nat", "-F", "PREROUTING"], capture_output=True)
 
-            logger.info("Captive portal DNS disabled")
+            captive_conf = "/etc/NetworkManager/dnsmasq-shared.d/captive.conf"
+
+            if os.path.exists(captive_conf):
+                os.remove(captive_conf)
+
+            logger.info("Captive portal disabled")
 
         except Exception as e:
             logger.warning(f"Failed to disable captive portal: {e}")
@@ -320,7 +343,7 @@ class PlatformRasp(PlatformBase):
                 capture_output=True,
                 text=True,
             )
-            return "key2play-hotspot" in result.stdout
+            return "ami-hotspot" in result.stdout
         except Exception as e:
             logger.warning(f"Error checking hotspot status: {str(e)}")
             return False
@@ -331,17 +354,17 @@ class PlatformRasp(PlatformBase):
             if int(usersettings.get("is_hotspot_active")):
                 if not self.is_hotspot_running():
                     logger.info(
-                        "key2play-hotspot is enabled in settings but not running. Starting hotspot..."
+                        "ami-hotspot is enabled in settings but not running. Starting hotspot..."
                     )
                     self.enable_hotspot()
                     time.sleep(5)
 
                     if self.is_hotspot_running():
-                        logger.info("key2play-hotspot started successfully")
+                        logger.info("ami-hotspot started successfully")
                     else:
                         logger.warning("Failed to start hotspot")
                 else:
-                    logger.info("key2play-hotspot is already running")
+                    logger.info("ami-hotspot is already running")
 
         # if we're supposed to be connected to a wifi, but we aren't:
         # eventually turn on hotspot mode
@@ -513,7 +536,7 @@ class PlatformRasp(PlatformBase):
                     continue
 
                 ssid = parts[0].strip()
-                if not ssid or ssid == "--" or ssid == "key2play":
+                if not ssid or ssid == "--" or ssid == "ami":
                     continue
 
                 signal = int(parts[1]) if parts[1].isdigit() else 0
@@ -550,7 +573,7 @@ class PlatformRasp(PlatformBase):
             for line in output.strip().split("\n"):
                 parts = line.split(":")
 
-                if len(parts) >= 2 and parts[1] == "802-11-wireless" and parts[0] != "key2play-hotspot":
+                if len(parts) >= 2 and parts[1] == "802-11-wireless" and parts[0] != "ami-hotspot":
                     subprocess.run(["sudo", "nmcli", "connection", "delete", parts[0]])
                     forgotten.append(parts[0])
                     logger.info(f"Forgot WiFi network: {parts[0]}")
