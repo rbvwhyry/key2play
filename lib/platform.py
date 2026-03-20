@@ -243,8 +243,18 @@ class PlatformRasp(PlatformBase):
     @staticmethod
     def enable_hotspot():
         logger.info("Enabling ami-hotspot")
+
+        #write the captive portal DNS config BEFORE starting the hotspot so NM's dnsmasq picks it up on launch
+        nm_dnsmasq_dir = "/etc/NetworkManager/dnsmasq-shared.d"
+        os.makedirs(nm_dnsmasq_dir, exist_ok=True)
+
+        with open(os.path.join(nm_dnsmasq_dir, "captive.conf"), "w") as f:
+            f.write("address=/#/10.42.0.1\n")
+
         subprocess.run(["sudo", "nmcli", "connection", "down", "preconfigured"])
         subprocess.run(["sudo", "nmcli", "connection", "up", "ami-hotspot"])
+
+        #iptables rules go after the interface is up
         PlatformRasp.enable_captive_portal()
 
     @staticmethod
@@ -277,13 +287,7 @@ class PlatformRasp(PlatformBase):
                 "-j", "DNAT", "--to-destination", "10.42.0.1:80"
             ], check=True)
 
-            nm_dnsmasq_dir = "/etc/NetworkManager/dnsmasq-shared.d"
-            os.makedirs(nm_dnsmasq_dir, exist_ok=True)
-
-            with open(os.path.join(nm_dnsmasq_dir, "captive.conf"), "w") as f:
-                f.write("address=/#/10.42.0.1\n")
-
-            logger.info("Captive portal enabled (iptables + NM dnsmasq)")
+            logger.info("Captive portal enabled (iptables)")
 
         except Exception as e:
             logger.warning(f"Failed to enable captive portal: {e}")
