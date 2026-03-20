@@ -174,6 +174,17 @@ strip.show()
 platform.ensure_hostname("ami")
 platform.manage_hotspot(usersettings, midiports, first_run=True)
 
+def hotspot_watchdog():
+    """Background thread that checks WiFi connectivity and starts hotspot if needed."""
+    while True:
+        time.sleep(30)  #check every 30 seconds instead of every 1 second
+        try:
+            platform.manage_hotspot(usersettings, midiports)
+        except Exception as e:
+            logger.warning(f"Hotspot watchdog error: {e}")
+
+threading.Thread(target=hotspot_watchdog, daemon=True).start()
+
 while True:
     # Save settings if changed
     if (time.time() - usersettings.last_save) > 1:
@@ -190,5 +201,4 @@ while True:
     else:
         midiports.midipending = midiports.midifile_queue
 
-    platform.manage_hotspot(usersettings, midiports)
     time.sleep(1)
