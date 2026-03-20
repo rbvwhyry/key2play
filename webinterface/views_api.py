@@ -338,6 +338,41 @@ def disconnect_from_wifi():
     webinterface.platform.disconnect_from_wifi(webinterface.usersettings)
     return jsonify(success=True)
 
+@webinterface.route("/api/wifi/status", methods=["GET"])
+def wifi_status():
+    is_hotspot = webinterface.platform.is_hotspot_running()
+    is_connected, ssid, address = webinterface.platform.get_current_connections()
+
+    return jsonify(
+        success=True,
+        connected=is_connected,
+        hotspot_active=is_hotspot,
+        ssid=ssid if is_connected else None,
+        ip=address if is_connected else None,
+        hotspot_name="key2play"
+    )
+
+@webinterface.route("/api/wifi/scan", methods=["GET"])
+def wifi_scan():
+    networks = webinterface.platform.scan_wifi_networks()
+
+    return jsonify(success=True, networks=networks)
+
+@webinterface.route("/api/wifi/connect", methods=["POST"])
+def wifi_connect():
+    ssid = request.values.get("ssid")
+    password = request.values.get("password", "")
+
+    if not ssid:
+        return jsonify(success=False, error="no SSID provided")
+
+    result = webinterface.platform.connect_to_wifi(ssid, password, webinterface.usersettings)
+
+    if result:
+        return jsonify(success=True, message=f"Connected to {ssid}")
+
+    return jsonify(success=False, message="Wrong password or network unavailable. Hotspot restarted — reconnect to key2play and try again.")
+
 ### ---------------------------- database: settings table ---------------------------- ###
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
