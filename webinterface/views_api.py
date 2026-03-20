@@ -4,9 +4,8 @@ import os
 import random
 import re
 import subprocess
-import sys
 import time
-
+import shutil
 import mido
 import psutil
 from flask import jsonify, redirect, request, send_file, send_from_directory, url_for
@@ -23,9 +22,6 @@ from webinterface.views import allowed_file
 # IMPORTANT!!! 👆
 
 os.makedirs(DIR_SONGS_USER, exist_ok=True)
-
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
 SENSECOVER = 12
 GPIO.setmode(GPIO.BCM)
@@ -337,7 +333,6 @@ def save_recording():
 
 @webinterface.route("/api/get_storage_info", methods=["GET"])
 def get_storage_info():
-    import shutil
     usage = shutil.disk_usage(DIR_SONGS_USER)
 
     total_size = 0
@@ -361,9 +356,11 @@ def get_storage_info():
 
 @webinterface.route("/api/currently_pressed_keys", methods=["GET"])
 def currently_pressed_keys():
+    with webinterface.midiports._keys_lock:
+        snapshot = list(webinterface.midiports.currently_pressed_keys)
     result = [
         {"note": msg.note, "velocity": msg.velocity}
-        for msg in webinterface.midiports.currently_pressed_keys
+        for msg in snapshot
     ]
     return jsonify(result)
 
