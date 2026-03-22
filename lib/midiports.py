@@ -8,7 +8,6 @@ import mido
 from lib import connectall
 from lib.log_setup import logger
 
-
 class MidiPorts:
     def __init__(self, config, usersettings):
         self.config = config
