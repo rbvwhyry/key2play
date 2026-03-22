@@ -9,11 +9,13 @@ DIR_SONGS_USER = "Songs_User_Upload/"
 DIR_CACHE = "cache/"
 
 def resolve_song_path(filename):
+    if not filename or '/' in filename or '\\' in filename or '..' in filename:
+        return None
     user_path = os.path.join(DIR_SONGS_USER, filename)
-    if os.path.exists(user_path):
+    if os.path.abspath(user_path).startswith(os.path.abspath(DIR_SONGS_USER)) and os.path.exists(user_path):
         return user_path
     default_path = os.path.join(DIR_SONGS_DEFAULT, filename)
-    if os.path.exists(default_path):
+    if os.path.abspath(default_path).startswith(os.path.abspath(DIR_SONGS_DEFAULT)) and os.path.exists(default_path):
         return default_path
     return None
 
