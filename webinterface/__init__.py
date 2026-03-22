@@ -109,8 +109,6 @@ def start_server(loop):
             await learning(websocket)
         elif websocket.path == "/ledemu":
             await asyncio.gather(ledemu(websocket), ledemu_recv(websocket))
-        elif websocket.path == "/midi":
-            await midi(websocket)
         else:
             return  #no handler for this path — close connection
 
@@ -129,5 +127,41 @@ def stop_server(loop):
         task.cancel()
     loop.stop()
 
+def start_midi_server(loop, midiports):
+    async def midi(websocket):
+        queue = asyncio.Queue()
+        midiports.ws_queue = queue
+        midiports.ws_loop = asyncio.get_event_loop()
+        try:
+            while True:
+                event = await queue.get()
+                batch = [event]
+                while not queue.empty():
+                    batch.append(queue.get_nowait())
+                await websocket.send(json.dumps(batch))
+        except websockets.exceptions.ConnectionClosed:
+            pass
+        except Exception as e:
+            logger.warning(f"midi websocket error: {e}")
+        finally:
+            midiports.ws_queue = None
+            midiports.ws_loop = None
+
+    async def main():
+        logger.info("MIDI WebSocket listening on: " + str(get_ip_address()) + ":8766")
+        async with websockets.serve(midi, "0.0.0.0", 8766):
+            await asyncio.Future()
+
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
+
+
+def stop_midi_server(loop):
+    for task in asyncio.all_tasks(loop=loop):
+        task.cancel()
+    loop.stop()
+
+
+from webinterface import views, views_api, views_settings  # noqa: F401 E402
 
 from webinterface import views, views_api, views_settings  # noqa: F401 E402
