@@ -1,4 +1,5 @@
 import time
+import asyncio
 import threading
 from collections import deque
 
@@ -12,8 +13,7 @@ class MidiPorts:
     def __init__(self, config, usersettings):
         self.config = config
         self.usersettings = usersettings
-        # midi queues will contain a tuple (midi_msg, timestamp)
-        self.midifile_queue = deque()
+        self.midifile_queue = deque() #midi queue will contain a tuple (midi_msg, timestamp)
         self.midi_queue = deque()
         self.last_activity = 0
         self.inport = None
@@ -21,7 +21,9 @@ class MidiPorts:
         self.midipending = None
         self.currently_pressed_keys = []
         self._keys_lock = threading.Lock()
-        self.frontend_events = deque() #accumulates note_on/note_off events for the frontend polling endpoint; drained on each read so no keypress is ever lost between polls
+        self.frontend_events = deque() #kept for HTTP fallback endpoint compatibility; drained on each read
+        self.ws_queue = None #asyncio.Queue for WebSocket push; set by the WebSocket server after the event loop starts
+        self.ws_loop = None #reference to the asyncio event loop running the WebSocket server; needed for thread-safe queue puts
 
         # mido backend python-rtmidi has a bug on some (debian-based) systems
         # involving the library location of alsa plugins
@@ -36,7 +38,6 @@ class MidiPorts:
                 "First access to mido failed.  Possibly from known issue: https://github.com/SpotlightKid/python-rtmidi/issues/138"
             )
 
-        # checking if the input port was previously set by the user
         port = self.usersettings.get_setting_value("input_port")
         if port != "default":
             try:
@@ -45,7 +46,6 @@ class MidiPorts:
             except Exception:
                 logger.info("Can't load input port: " + port)
         else:
-            # if not, try to find the new midi port
             try:
                 for port in mido.get_input_names():
                     if (
@@ -60,7 +60,7 @@ class MidiPorts:
                         break
             except Exception:
                 logger.info("no input port")
-        # checking if the play port was previously set by the user
+
         port = self.usersettings.get_setting_value("play_port")
         if port != "default":
             try:
@@ -69,7 +69,6 @@ class MidiPorts:
             except Exception:
                 logger.info("Can't load input port: " + port)
         else:
-            # if not, try to find the new midi port
             try:
                 for port in mido.get_output_names():
                     if (
@@ -88,9 +87,7 @@ class MidiPorts:
         self.portname = "inport"
 
     def connectall(self):
-        # Reconnect the input and playports on a connectall
         self.reconnect_ports()
-        # Now connect all the remaining ports
         connectall.connectall()
 
     def change_port(self, port, portname):
@@ -130,13 +127,13 @@ class MidiPorts:
             logger.info("Can't reconnect play port: " + port)
 
     def msg_callback(self, msg):
-        if msg.type not in ("note_on", "note_off"): #reject everything that isn't a real key press or release — active sensing, clock, control change, sysex, garbage bytes
+        if msg.type not in ("note_on", "note_off"): #reject everything that isn't a real key press or release
             return
 
-        if not hasattr(msg, "note") or not hasattr(msg, "velocity"): #safety net — some malformed messages pass the type check but lack expected attributes
+        if not hasattr(msg, "note") or not hasattr(msg, "velocity"): #safety net for malformed messages
             return
 
-        if msg.note < 21 or msg.note > 108: #reject notes outside the 88-key piano range (A0=21 to C8=108); real keyboards never send these, but garbage bytes can decode to anything 0-127
+        if msg.note < 21 or msg.note > 108: #reject notes outside 88-key piano range (A0=21 to C8=108)
             return
 
         with self._keys_lock:
@@ -153,4 +150,10 @@ class MidiPorts:
                 ]
 
         self.midi_queue.append((msg, time.perf_counter()))
-        self.frontend_events.append({"type": msg.type, "note": msg.note, "velocity": msg.velocity})
+
+        Event = {"type": msg.type, "note": msg.note, "velocity": msg.velocity}
+
+        self.frontend_events.append(Event) #HTTP fallback — kept for /api/drain_midi_events compatibility
+
+        if self.ws_queue is not None and self.ws_loop is not None: #push to WebSocket queue if available
+            self.ws_loop.call_soon_threadsafe(self.ws_queue.put_nowait, Event) #thread-safe push from mido callback thread into asyncio event loop
