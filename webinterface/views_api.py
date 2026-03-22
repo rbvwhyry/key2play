@@ -282,8 +282,11 @@ def save_recording():
     if not events:
         return jsonify(success=False, error="no events recorded")
 
-    #sanitize filename
-    filename = filename.replace("'", "").replace("/", "").replace("\\", "")
+    #sanitize filename — strip path separators, traversal, and non-printable chars
+    filename = filename.replace("'", "").replace("/", "").replace("\\", "").replace("..", "").replace("\x00", "")
+    filename = filename.strip(". ")  #no leading dots or spaces
+    if not filename:
+        return jsonify(success=False, error="invalid filename")
     if not filename.lower().endswith((".mid", ".midi")):
         filename += ".mid"
 
@@ -403,8 +406,13 @@ def switch_ports():
 
 @webinterface.route("/api/set_light/<light_num>")
 def set_light(light_num):
-    light_num = int(light_num)
+    try:
+        light_num = int(light_num)
+    except (TypeError, ValueError):
+        return jsonify(success=False, error="invalid light number"), 400
     strip = webinterface.ledstrip.strip
+    if light_num < 0 or light_num >= strip.numPixels():
+        return jsonify(success=False, error="light index out of range"), 400
     red = int(request.args.get("red", default=255))
     blue = int(request.args.get("blue", default=255))
     green = int(request.args.get("green", default=255))
@@ -416,7 +424,10 @@ def set_light(light_num):
 @webinterface.route("/api/set_many_lights", methods=["POST"])
 def set_many_lights():
     lights = request.values.get("lights")
-    lights = json.loads(lights)
+    try:
+        lights = json.loads(lights)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return jsonify(success=False, error="invalid JSON"), 400
     if not lights:
         return jsonify(success=True)
     strip = webinterface.ledstrip.strip
@@ -433,7 +444,10 @@ def set_many_lights():
 @webinterface.route("/api/off_many_lights", methods=["POST"])
 def off_many_lights():
     indices = request.values.get("indices")
-    indices = json.loads(indices)
+    try:
+        indices = json.loads(indices)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return jsonify(success=False, error="invalid JSON"), 400
     if not indices:
         return jsonify(success=True)
     strip = webinterface.ledstrip.strip
@@ -447,7 +461,10 @@ def off_many_lights():
 @webinterface.route("/api/set_all_lights", methods=["POST"])
 def set_all_lights():
     color = request.values.get("color")
-    color = json.loads(color)
+    try:
+        color = json.loads(color)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return jsonify(success=False, error="invalid JSON"), 400
     strip = webinterface.ledstrip.strip
     red = int(color["r"])
     blue = int(color["b"])
@@ -549,21 +566,26 @@ def get_wifi_list():
 
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
+    if not key or not _SAFE_CONFIG_KEY.match(key):
+        return jsonify(success=False, error="invalid key"), 400
     value = webinterface.appconfig.get_config(key)
     return jsonify(success=True, value=value)
 
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
-    assert key is not None
+    if not key or not _SAFE_CONFIG_KEY.match(key):
+        return jsonify(success=False, error="invalid key"), 400
     value = request.values.get("value")
-    assert value is not None
-    value = str(value)
+    if value is None:
+        return jsonify(success=False, error="no value"), 400
+    value = str(value)[:1000]  #cap length to prevent oversized entries
     webinterface.appconfig.set_config(key, value)
     return jsonify(success=True)
 
 @webinterface.route("/api/delete_config/<key>", methods=["DELETE"])
 def delete_config(key):
-    assert key is not None
+    if not key or not _SAFE_CONFIG_KEY.match(key):
+        return jsonify(success=False, error="invalid key"), 400
     webinterface.appconfig.delete_config(key)
     return jsonify(success=True)
 
@@ -586,19 +608,24 @@ def get_row(key):
 
 @webinterface.route("/api/set_row/<key>", methods=["POST"])
 def set_row(key):
-    assert key is not None
-    led_index = int(request.values.get("led_index"))
-    r = int(request.values.get("r"))
-    g = int(request.values.get("g"))
-    b = int(request.values.get("b"))
-    time_on = int(request.values.get("time_on"))
-    time_off = int(request.values.get("time_off"))
+    if not key or not _SAFE_CONFIG_KEY.match(key):
+        return jsonify(success=False, error="invalid key"), 400
+    try:
+        led_index = int(request.values.get("led_index"))
+        r = int(request.values.get("r"))
+        g = int(request.values.get("g"))
+        b = int(request.values.get("b"))
+        time_on = int(request.values.get("time_on"))
+        time_off = int(request.values.get("time_off"))
+    except (TypeError, ValueError):
+        return jsonify(success=False, error="invalid values"), 400
     webinterface.appmap.set_midi_led_row(key, led_index, r, g, b, time_on, time_off)
     return jsonify(success=True)
 
 @webinterface.route("/api/delete_row/<key>", methods=["DELETE"])
 def delete_row(key):
-    assert key is not None
+    if not key or not _SAFE_CONFIG_KEY.match(key):
+        return jsonify(success=False, error="invalid key"), 400
     webinterface.appmap.delete_midi_led_row(key)
     return jsonify(success=True)
 
@@ -695,21 +722,27 @@ def get_learning_status():
 def update_to_release():
     release = request.values.get("release", default=None)
     if not release:
-        return jsonify(success=False)
-    print(f"updating to release {release}")
+        return jsonify(success=False, error="no release specified")
+    #validate release name — only allow safe filenames ending in .zip
+    if not re.match(r'^[a-zA-Z0-9._-]+\.zip$', release):
+        return jsonify(success=False, error="invalid release name"), 400
+    if '..' in release or '/' in release or '\\' in release:
+        return jsonify(success=False, error="invalid release name"), 400
+    logger.info(f"updating to release {release}")
     import requests
-
-    req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}")
+    req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}", timeout=60)
+    if req.status_code != 200:
+        return jsonify(success=False, error=f"download failed: HTTP {req.status_code}")
     with open(release, "wb") as fd:
         for chunk in req.iter_content(chunk_size=128):
             fd.write(chunk)
-    print(f"downloaded release to {release}")
+    logger.info(f"downloaded release to {release}")
     releasedir = release.removesuffix(".zip")
-    subprocess.run(["unzip", release, "-d", releasedir])
+    subprocess.run(["unzip", "-o", release, "-d", releasedir])
     subprocess.run(["cp", "-R", f"{releasedir}/", "."])
     return jsonify(success=True)
 
-_SAFE_NAME = re.compile(r"^[A-Za-z0-9_-]+$")
+_SAFE_CONFIG_KEY = re.compile(r"^[a-zA-Z0-9_]+$")
 @webinterface.route("/api/get_random_gif", methods=["GET"])
 def get_random_gif():
     raw = request.args.get("folders", "")
