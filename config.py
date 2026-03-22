@@ -1,8 +1,8 @@
-from sqlalchemy import create_engine, delete, select
-from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
-import subprocess
+from sqlalchemy import create_engine, delete, select, text
+from sqlalchemy.dialects.sqlite import insert
 from datetime import datetime
+import subprocess
 
 DB_FILENAME = "key2play.sqlite"
 CONNECTION_STRING = f"sqlite:///{DB_FILENAME}"
@@ -38,6 +38,9 @@ class Config:
     def __init__(self):
         self._engine = create_engine(CONNECTION_STRING) #shared engine — created once, reused for all queries
         self._cache = {} #in-memory cache for config values; invalidated on write
+        with Session(self._engine) as session: #enable WAL mode — allows reads to proceed concurrently during writes
+            session.execute(text("PRAGMA journal_mode=WAL"))
+            session.commit()
         self.create_schema()
 
     def backup_config_file_and_reset_to_factory(self):
