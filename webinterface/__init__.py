@@ -77,24 +77,32 @@ def start_server(loop):
                 return
 
     async def midi(websocket):
-        """Pushes MIDI events to the frontend as they arrive; drains frontend_events at 1ms intervals.
-        Replaces the HTTP polling endpoint for real-time note delivery."""
+        """Zero-latency MIDI push via asyncio.Queue.
+        msg_callback in midiports.py pushes events into ws_queue via call_soon_threadsafe;
+        this handler awaits the queue — no polling, no sleep, no event loop starvation."""
+        queue = asyncio.Queue() #per-connection queue; each connected client gets its own
+
+        webinterface.midiports.ws_queue = queue #give midiports a reference so msg_callback can push into it
+        webinterface.midiports.ws_loop = asyncio.get_event_loop() #give midiports the event loop for thread-safe puts
+
         try:
             while True:
-                events = []
+                event = await queue.get() #blocks until a MIDI event arrives — zero CPU when idle
 
-                while webinterface.midiports.frontend_events:  #drain all events accumulated since last push
-                    events.append(webinterface.midiports.frontend_events.popleft())
+                batch = [event]
 
-                if events:
-                    await websocket.send(json.dumps(events))  #push the batch immediately
-                else:
-                    await asyncio.sleep(0.001)  #1ms idle poll — much faster than the old 50ms HTTP poll
+                while not queue.empty(): #drain any additional events that arrived simultaneously
+                    batch.append(queue.get_nowait())
+
+                await websocket.send(json.dumps(batch)) #push the batch immediately
 
         except websockets.exceptions.ConnectionClosed:
             pass
         except Exception as e:
             logger.warning(f"midi websocket error: {e}")
+        finally:
+            webinterface.midiports.ws_queue = None #clear the queue reference on disconnect so msg_callback stops pushing
+            webinterface.midiports.ws_loop = None
 
     async def handler(websocket):
         if websocket.path == "/learning":
