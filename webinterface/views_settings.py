@@ -15,6 +15,22 @@ from lib.functions import clamp, fastColorWipe, play_midi
 from lib.log_setup import logger
 from webinterface import webinterface
 
+import socket
+
+@webinterface.route("/api/wifi/ip", methods=["GET"])
+def get_wifi_ip():
+    try:
+        Sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        Sock.connect(('8.8.8.8', 80)) #connect to external address to find outbound interface IP
+        Ip = Sock.getsockname()[0]
+        Sock.close()
+
+        return jsonify(success=True, ip=Ip)
+    except Exception as error:
+        logger.warning(f"get_wifi_ip failed: {error}")
+
+        return jsonify(success=False, ip=None)
+
 # ----- ----- ----- ----- -----
 
 DIR_SONGS_DEFAULT = "Songs_Default/"
