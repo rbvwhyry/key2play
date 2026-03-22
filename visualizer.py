@@ -152,9 +152,16 @@ processThread = threading.Thread(
 )
 processThread.start()
 
-# Register the shutdown handler
-atexit.register(web_mod.stop_server, websocket_loop)
+# Start dedicated MIDI websocket server on its own isolated event loop
+midi_websocket_loop = asyncio.new_event_loop()
+midiThread = threading.Thread(
+    target=web_mod.start_midi_server, args=(midi_websocket_loop, midiports), daemon=True
+)
+midiThread.start()
 
+# Register the shutdown handlers
+atexit.register(web_mod.stop_server, websocket_loop)
+atexit.register(web_mod.stop_midi_server, midi_websocket_loop)
 
 # Frame rate counters
 event_loop_stamp = time.perf_counter()
