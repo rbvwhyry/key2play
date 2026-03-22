@@ -36,6 +36,8 @@ class SimpleConfigKV(Base):
 
 class Config:
     def __init__(self):
+        self._engine = create_engine(CONNECTION_STRING) #shared engine — created once, reused for all queries
+        self._cache = {} #in-memory cache for config values; invalidated on write
         self.create_schema()
 
     def backup_config_file_and_reset_to_factory(self):
@@ -43,11 +45,12 @@ class Config:
         timestamp = now.strftime("%Y%m%d_%H%M%S")
         backup_filename = f"key2play.{timestamp}.sqlite"
         _exitcode = subprocess.call(["mv", "key2play.sqlite", backup_filename])
+        self._engine = create_engine(CONNECTION_STRING) #new file — new engine
+        self._cache = {} #clear cache after reset
         self.create_schema()
 
     def create_schema(self):
-        engine = create_engine(CONNECTION_STRING)
-        Base.metadata.create_all(engine)
+        Base.metadata.create_all(self._engine)
 
     def get_sqlite_dump(self) -> str:
         return subprocess.check_output(["sqlite3", DB_FILENAME, ".dump"]).decode(
@@ -55,20 +58,28 @@ class Config:
         )
 
     def get_config(self, key: str) -> str:
-        engine = create_engine(CONNECTION_STRING)
-        with Session(engine) as session:
+        if key in self._cache: #return cached value instantly — no SQLite hit
+            return self._cache[key]
+
+        with Session(self._engine) as session:
             stmt = select(SimpleConfigKV).where(SimpleConfigKV.key == key)
             value = [kv.value for kv in session.scalars(stmt)]
+
             if value is not None and len(value) > 0:
-                return value[0]
+                result = value[0]
             elif key in defaults:
-                return defaults[key]
+                result = defaults[key]
             else:
-                return None
+                result = None
+
+        self._cache[key] = result #cache for next time
+
+        return result
 
     def set_config(self, key: str, value):
-        engine = create_engine(CONNECTION_STRING)
-        with Session(engine) as session:
+        self._cache.pop(key, None) #invalidate cache on write so next read gets fresh value
+
+        with Session(self._engine) as session:
             stmt = (
                 insert(SimpleConfigKV)
                 .values(key=key, value=value)
@@ -78,8 +89,9 @@ class Config:
             session.commit()
 
     def delete_config(self, key: str):
-        engine = create_engine(CONNECTION_STRING)
-        with Session(engine) as session:
+        self._cache.pop(key, None) #invalidate cache on delete
+
+        with Session(self._engine) as session:
             stmt = delete(SimpleConfigKV).where(SimpleConfigKV.key == key)
             session.execute(stmt)
             session.commit()
@@ -140,7 +152,9 @@ class MidiLedMap(Base):
 
 
 class MidiToLedMapping:
-    # Insert or update a mapping
+    def __init__(self):
+        self._engine = create_engine(CONNECTION_STRING) #shared engine — created once, reused for all queries
+
     def set_midi_led_row(
         self,
         midi_note: int,
@@ -151,8 +165,7 @@ class MidiToLedMapping:
         time_on: int,
         time_off: int,
     ):
-        engine = create_engine(CONNECTION_STRING)
-        with Session(engine) as session:
+        with Session(self._engine) as session:
             stmt = (
                 insert(MidiLedMap)
                 .values(
@@ -179,32 +192,27 @@ class MidiToLedMapping:
             session.execute(stmt)
             session.commit()
 
-    # Get a mapping by midi_note
     def get_midi_led_row(self, midi_note: int) -> MidiLedMap | None:
-        engine = create_engine(CONNECTION_STRING)
-        with Session(engine) as session:
+        with Session(self._engine) as session:
             stmt = select(MidiLedMap).where(MidiLedMap.midi_note == midi_note)
             result = session.scalar(stmt)
+
             return result
 
-    # Delete a mapping by midi_note
     def delete_midi_led_row(self, midi_note: int):
-        engine = create_engine(CONNECTION_STRING)
-        with Session(engine) as session:
+        with Session(self._engine) as session:
             stmt = delete(MidiLedMap).where(MidiLedMap.midi_note == midi_note)
             session.execute(stmt)
             session.commit()
 
-    # get the entire map
     def get_midi_led_map(self) -> list[MidiLedMap]:
-        engine = create_engine(CONNECTION_STRING)
-        with Session(engine) as session:
+        with Session(self._engine) as session:
             stmt = select(MidiLedMap)
+
             return list(session.scalars(stmt))
 
     def delete_all_maps(self):
-        engine = create_engine(CONNECTION_STRING)
-        with Session(engine) as session:
+        with Session(self._engine) as session:
             stmt = delete(MidiLedMap)
             session.execute(stmt)
             session.commit()
