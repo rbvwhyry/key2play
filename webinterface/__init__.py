@@ -1,28 +1,24 @@
 import asyncio
 import json
-
 import websockets
 from flask import Flask
-
 from lib.functions import get_ip_address
 from lib.log_setup import logger
-
 import os
 
 DIR_SONGS_DEFAULT = "Songs_Default/"  #bundled songs — tracked by git, can be updated
 DIR_SONGS_USER = "Songs_User_Upload/"  #user uploads — gitignored
-
 UPLOAD_FOLDER = DIR_SONGS_USER  #tells Flask where file.save() should write uploaded files
 
-os.makedirs(DIR_SONGS_USER, exist_ok=True)  #create folder if missing (a fresh run may not have this bc it would be ignored in the first place) — exist_ok means no crash if it's already there
+os.makedirs(DIR_SONGS_USER, exist_ok=True)  #create folder if missing; exist_ok means no crash if already there
 
 webinterface = Flask(__name__, template_folder="templates")
 webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
 webinterface.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 webinterface.config["MAX_CONTENT_LENGTH"] = 32 * 1000 * 1000
 webinterface.json.sort_keys = False
-
 webinterface.socket_input = []
+
 
 def start_server(loop):
     async def learning(websocket):
@@ -33,8 +29,6 @@ def start_server(loop):
                     await websocket.send(str(msg))
                     webinterface.learning.socket_send.remove(msg)
         except Exception:
-            # Handle the connection closed error
-            # You can log the error or perform any necessary cleanup tasks
             pass
 
     async def ledemu_recv(websocket):
@@ -67,17 +61,13 @@ def start_server(loop):
             )
         except Exception:
             pass
-
         while True:
             try:
                 ledstrip = webinterface.ledstrip
                 await asyncio.sleep(1 / ledstrip.WEBEMU_FPS)
-
                 if webinterface.ledemu_pause:
                     continue
-
                 await websocket.send(json.dumps({"leds": ledstrip.strip.getPixels()}))
-
             except websockets.exceptions.ConnectionClosed:
                 pass
             except websockets.exceptions.WebSocketException:
@@ -86,14 +76,35 @@ def start_server(loop):
                 logger.warning(e)
                 return
 
+    async def midi(websocket):
+        """Pushes MIDI events to the frontend as they arrive; drains frontend_events at 1ms intervals.
+        Replaces the HTTP polling endpoint for real-time note delivery."""
+        try:
+            while True:
+                events = []
+
+                while webinterface.midiports.frontend_events:  #drain all events accumulated since last push
+                    events.append(webinterface.midiports.frontend_events.popleft())
+
+                if events:
+                    await websocket.send(json.dumps(events))  #push the batch immediately
+                else:
+                    await asyncio.sleep(0.001)  #1ms idle poll — much faster than the old 50ms HTTP poll
+
+        except websockets.exceptions.ConnectionClosed:
+            pass
+        except Exception as e:
+            logger.warning(f"midi websocket error: {e}")
+
     async def handler(websocket):
         if websocket.path == "/learning":
             await learning(websocket)
         elif websocket.path == "/ledemu":
             await asyncio.gather(ledemu(websocket), ledemu_recv(websocket))
+        elif websocket.path == "/midi":
+            await midi(websocket)
         else:
-            # No handler for this path; close the connection.
-            return
+            return  #no handler for this path — close connection
 
     async def main():
         logger.info("WebSocket listening on: " + str(get_ip_address()) + ":8765")
@@ -101,12 +112,10 @@ def start_server(loop):
             await asyncio.Future()
 
     webinterface.ledemu_pause = False
-
     asyncio.set_event_loop(loop)
     loop.run_until_complete(main())
 
 
-# Stop the WebSocket server and cancel pending tasks on shutdown
 def stop_server(loop):
     for task in asyncio.all_tasks(loop=loop):
         task.cancel()
