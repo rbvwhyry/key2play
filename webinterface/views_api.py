@@ -14,12 +14,16 @@ import lib.colormaps as cmap
 from lib.functions import fastColorWipe, find_between, get_last_logs
 from lib.rpi_drivers import GPIO, Color
 from lib.song_info import get_all_songs_info, resolve_song_path, DIR_SONGS_DEFAULT, DIR_SONGS_USER
+from lib.log_setup import logger
 from webinterface import webinterface
 from webinterface.views import allowed_file
 
 # IMPORTANT!!! 👇
 # ANY CHANGE HERE, AND THEN ANY UPDATE VIA GIT PULL WILL REQUIRE THE PI TO BE RESTARTED TO WORK!
 # IMPORTANT!!! 👆
+
+_SAFE_NAME = re.compile(r"^[A-Za-z0-9_-]+$")
+_SAFE_CONFIG_KEY = re.compile(r"^[a-zA-Z0-9_]+$")
 
 os.makedirs(DIR_SONGS_USER, exist_ok=True)
 
@@ -742,7 +746,6 @@ def update_to_release():
     subprocess.run(["cp", "-R", f"{releasedir}/", "."])
     return jsonify(success=True)
 
-_SAFE_CONFIG_KEY = re.compile(r"^[a-zA-Z0-9_]+$")
 @webinterface.route("/api/get_random_gif", methods=["GET"])
 def get_random_gif():
     raw = request.args.get("folders", "")
