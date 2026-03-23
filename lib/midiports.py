@@ -1,5 +1,4 @@
 import time
-import asyncio
 import threading
 from collections import deque
 
@@ -7,6 +6,7 @@ import mido
 
 from lib import connectall
 from lib.log_setup import logger
+
 
 class MidiPorts:
     def __init__(self, config, usersettings):
@@ -20,9 +20,7 @@ class MidiPorts:
         self.midipending = None
         self.currently_pressed_keys = []
         self._keys_lock = threading.Lock()
-        self.frontend_events = deque() #kept for HTTP fallback endpoint compatibility; drained on each read
-        self.ws_queue = None #asyncio.Queue for WebSocket push; set by the WebSocket server after the event loop starts
-        self.ws_loop = None #reference to the asyncio event loop running the WebSocket server; needed for thread-safe queue puts
+        self.frontend_events = deque() #drained by /api/drain_midi_events on each poll
 
         # mido backend python-rtmidi has a bug on some (debian-based) systems
         # involving the library location of alsa plugins
@@ -151,8 +149,4 @@ class MidiPorts:
         self.midi_queue.append((msg, time.perf_counter()))
 
         Event = {"type": msg.type, "note": msg.note, "velocity": msg.velocity}
-
-        self.frontend_events.append(Event) #HTTP fallback — kept for /api/drain_midi_events compatibility
-
-        if self.ws_queue is not None and self.ws_loop is not None: #push to WebSocket queue if available
-            self.ws_loop.call_soon_threadsafe(self.ws_queue.put_nowait, Event) #thread-safe push from mido callback thread into asyncio event loop
+        self.frontend_events.append(Event)
