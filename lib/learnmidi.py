@@ -158,14 +158,13 @@ class LearnMIDI:
             if os.path.isfile(cache_path):
                 logger.info("Loading song from cache")
                 with open(cache_path, "rb") as handle:
-                    data = handle.read()  #file I/O releases the GIL — other threads can run
-                cache = pickle.loads(data)  #deserialization holds GIL but only for CPU work, not disk wait
-                self.song_tempo = cache["song_tempo"]
-                self.ticks_per_beat = cache["ticks_per_beat"]
-                self.song_tracks = cache["song_tracks"]
-                self.notes_time = cache["notes_time"]
-                self.loading = 4
-                return True
+                    cache = pickle.loads(data)  #deserialization holds GIL but only for CPU work, not disk wait
+                    self.song_tempo = cache["song_tempo"]
+                    self.ticks_per_beat = cache["ticks_per_beat"]
+                    self.song_tracks = cache["song_tracks"]
+                    self.notes_time = cache["notes_time"]
+                    self.loading = 4
+                    return True
             else:
                 return False
         except Exception as e:
