@@ -76,34 +76,6 @@ def start_server(loop):
                 logger.warning(e)
                 return
 
-    async def midi(websocket):
-        """Zero-latency MIDI push via asyncio.Queue.
-        msg_callback in midiports.py pushes events into ws_queue via call_soon_threadsafe;
-        this handler awaits the queue — no polling, no sleep, no event loop starvation."""
-        queue = asyncio.Queue() #per-connection queue; each connected client gets its own
-
-        webinterface.midiports.ws_queue = queue #give midiports a reference so msg_callback can push into it
-        webinterface.midiports.ws_loop = asyncio.get_event_loop() #give midiports the event loop for thread-safe puts
-
-        try:
-            while True:
-                event = await queue.get() #blocks until a MIDI event arrives — zero CPU when idle
-
-                batch = [event]
-
-                while not queue.empty(): #drain any additional events that arrived simultaneously
-                    batch.append(queue.get_nowait())
-
-                await websocket.send(json.dumps(batch)) #push the batch immediately
-
-        except websockets.exceptions.ConnectionClosed:
-            pass
-        except Exception as e:
-            logger.warning(f"midi websocket error: {e}")
-        finally:
-            webinterface.midiports.ws_queue = None #clear the queue reference on disconnect so msg_callback stops pushing
-            webinterface.midiports.ws_loop = None
-
     async def handler(websocket):
         if websocket.path == "/learning":
             await learning(websocket)
@@ -127,41 +99,5 @@ def stop_server(loop):
         task.cancel()
     loop.stop()
 
-def start_midi_server(loop, midiports):
-    async def midi(websocket):
-        queue = asyncio.Queue()
-        midiports.ws_queue = queue
-        midiports.ws_loop = asyncio.get_event_loop()
-        try:
-            while True:
-                event = await queue.get()
-                batch = [event]
-                while not queue.empty():
-                    batch.append(queue.get_nowait())
-                await websocket.send(json.dumps(batch))
-        except websockets.exceptions.ConnectionClosed:
-            pass
-        except Exception as e:
-            logger.warning(f"midi websocket error: {e}")
-        finally:
-            midiports.ws_queue = None
-            midiports.ws_loop = None
-
-    async def main():
-        logger.info("MIDI WebSocket listening on: " + str(get_ip_address()) + ":8766")
-        async with websockets.serve(midi, "0.0.0.0", 8766):
-            await asyncio.Future()
-
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
-
-
-def stop_midi_server(loop):
-    for task in asyncio.all_tasks(loop=loop):
-        task.cancel()
-    loop.stop()
-
-
-from webinterface import views, views_api, views_settings  # noqa: F401 E402
 
 from webinterface import views, views_api, views_settings  # noqa: F401 E402
