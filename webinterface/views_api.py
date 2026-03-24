@@ -1,13 +1,14 @@
-import ast
-import json
-import os
-import random
-import re
 import subprocess
-import time
-import shutil
-import mido
+import threading
 import psutil
+import random
+import shutil
+import time
+import mido
+import json
+import ast
+import re
+import os
 from flask import jsonify, redirect, request, send_file, send_from_directory, url_for
 
 import lib.colormaps as cmap
@@ -251,7 +252,7 @@ def load_local_midi():
     full_path = resolve_song_path(filename)
     if not full_path:
         return jsonify(success=False, error="song not found")
-    webinterface.learning.load_midi(full_path)
+    threading.Thread(target=webinterface.learning.load_midi, args=(full_path,), daemon=True).start()
     return jsonify(success=True)
 
 @webinterface.route("/api/delete_song", methods=["POST"])
