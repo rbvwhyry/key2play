@@ -187,7 +187,7 @@ platform.manage_hotspot(usersettings, midiports, first_run=True)
 def hotspot_watchdog():
     """Background thread that checks WiFi connectivity and starts hotspot if needed."""
     while True:
-        time.sleep(30)  #check every 30 seconds instead of blocking the main loop
+        time.sleep(120)
         try:
             platform.manage_hotspot(usersettings, midiports)
         except Exception as e:
