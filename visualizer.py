@@ -177,7 +177,8 @@ def hotspot_watchdog():
     while True:
         time.sleep(120)
         try:
-            platform.manage_hotspot(usersettings, midiports)
+            if not PlatformRasp._hotspot_active:
+                platform.manage_hotspot(usersettings, midiports)
         except Exception as e:
             logger.warning(f"Hotspot watchdog error: {e}")
 
