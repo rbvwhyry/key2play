@@ -31,7 +31,8 @@ def upload_file():
         file = request.files["file"]
         filename = file.filename
         
-        if os.path.exists(os.path.join("Songs_User_Upload", filename)):
+        overwrite = request.form.get("overwrite") == "true"
+        if os.path.exists(os.path.join("Songs_User_Upload", filename)) and not overwrite:
             return jsonify(
                 success=False, error="file already exists", song_name=filename
             )
