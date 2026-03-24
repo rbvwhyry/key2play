@@ -419,16 +419,16 @@ class PlatformRasp(PlatformBase):
             return False, "Error occurred while getting Wi-Fi information.", ""
 
     def check_if_connected_to_wifi(self) -> bool:
-    try:
-        import socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.connect(('8.8.8.8', 80))
-        ip = sock.getsockname()[0]
-        sock.close()
-        return not ip.startswith('10.42.')  #10.42.x.x is the hotspot subnet
-    except Exception as e:
-        logger.error(f"error checking wifi connection, {str(e)}")
-        return False
+        try:
+            import socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.connect(('8.8.8.8', 80))
+            ip = sock.getsockname()[0]
+            sock.close()
+            return not ip.startswith('10.42.')  #10.42.x.x is the hotspot subnet
+        except Exception as e:
+            logger.error(f"error checking wifi connection, {str(e)}")
+            return False
 
     # ===== WiFi: connect / disconnect / forget =====
 
