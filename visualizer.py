@@ -109,18 +109,6 @@ t.start()
 
 learning = LearnMIDI(usersettings, ledsettings, midiports, ledstrip)
 
-def prewarm_cache():
-    import glob
-    import time
-    time.sleep(3)
-    for path in sorted(glob.glob("Songs_Default/*.mid") + glob.glob("Songs_User_Upload/*.mid")):
-        try:
-            learning.load_midi(os.path.abspath(path))
-        except Exception:
-            pass
-
-threading.Thread(target=prewarm_cache, daemon=True).start()
-
 z = 0
 display_cycle = 0
 screen_hold_time = 16
