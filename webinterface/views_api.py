@@ -321,6 +321,11 @@ def save_recording():
             if evt_type not in ("note_on", "note_off") or note is None:
                 continue
 
+            note_int = int(note)
+            velocity_int = int(velocity)
+            if not (0 <= note_int <= 127) or not (0 <= velocity_int <= 127):
+                continue #skip malformed MIDI values — out of range would crash mido
+
             #convert millisecond delta to ticks
             delta_ms = max(0, time_ms - prev_time_ms)
             delta_ticks = int(delta_ms * 480 / 500)  #at 120 BPM: 500ms per beat, 480 ticks per beat
@@ -328,7 +333,7 @@ def save_recording():
             if evt_type == "note_off":
                 velocity = 0
 
-            track.append(mido.Message(evt_type, note=int(note), velocity=int(velocity), time=delta_ticks))
+            track.append(mido.Message(evt_type, note=note_int, velocity=velocity_int, time=delta_ticks))
             prev_time_ms = time_ms
 
         mid.save(save_path)
@@ -436,10 +441,13 @@ def set_many_lights():
     if not lights:
         return jsonify(success=True)
     strip = webinterface.ledstrip.strip
+    num_pixels = strip.numPixels()
     for light_num, color in lights:
-        red = int(color["r"])
-        blue = int(color["b"])
-        green = int(color["g"])
+        if not isinstance(light_num, int) or light_num < 0 or light_num >= num_pixels:
+            continue #skip out-of-range or malformed indices silently
+        red = min(255, max(0, int(color["r"])))
+        blue = min(255, max(0, int(color["b"])))
+        green = min(255, max(0, int(color["g"])))
         color = Color(red, green, blue)
         strip.setPixelColor(light_num, color)
     strip.setBrightness(brightest)
@@ -456,8 +464,11 @@ def off_many_lights():
     if not indices:
         return jsonify(success=True)
     strip = webinterface.ledstrip.strip
+    num_pixels = strip.numPixels()
+    black = Color(0, 0, 0)
     for index in indices:
-        black = Color(0, 0, 0)
+        if not isinstance(index, int) or index < 0 or index >= num_pixels:
+            continue #skip out-of-range or malformed indices silently
         strip.setPixelColor(index, black)
     strip.setBrightness(brightest)
     strip.show()
@@ -608,6 +619,8 @@ def backup_config_file_and_reset_to_factory():
 
 @webinterface.route("/api/get_row/<key>", methods=["GET"])
 def get_row(key):
+    if not key or not _SAFE_CONFIG_KEY.match(key):
+        return jsonify(success=False, error="invalid key"), 400
     value = webinterface.appmap.get_midi_led_row(key)
     return jsonify(success=True, value=value)
 
