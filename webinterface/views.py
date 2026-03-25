@@ -1,10 +1,9 @@
-import os
-import time
-import shutil
-
 from flask import jsonify, render_template, request, send_from_directory
-
+from werkzeug.utils import secure_filename
 from webinterface import webinterface
+import shutil
+import time
+import os
 
 ALLOWED_EXTENSIONS = {"mid", "midi", "musicxml", "mxl", "xml", "abc"}
 
@@ -52,7 +51,9 @@ def upload_file():
         if not allowed_file(file.filename):
             return jsonify(success=False, error="not a midi file", song_name=filename)
 
-        filename = filename.replace("'", "")
+        filename = secure_filename(filename) #strips path separators, traversal sequences, and unsafe chars
+        if not filename: #secure_filename can return empty string for pathological inputs
+            return jsonify(success=False, error="invalid filename", song_name=file.filename)
         save_path = os.path.join(webinterface.config["UPLOAD_FOLDER"], filename)
         file.save(save_path)
 
