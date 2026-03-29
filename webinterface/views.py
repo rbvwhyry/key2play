@@ -51,9 +51,13 @@ def upload_file():
         if not allowed_file(file.filename):
             return jsonify(success=False, error="not a midi file", song_name=filename)
 
-        filename = secure_filename(filename) #strips path separators, traversal sequences, and unsafe chars
-        if not filename: #secure_filename can return empty string for pathological inputs
+        import unicodedata
+        filename = secure_filename(filename)
+        filename = unicodedata.normalize('NFC', filename) #normalize unicode so é and é aren't treated as different
+        if not filename or not filename.strip():
             return jsonify(success=False, error="invalid filename", song_name=file.filename)
+        if len(filename.encode('utf-8')) > 251: #255 byte linux limit minus 4 for ".mid"
+            return jsonify(success=False, error="filename too long", song_name=file.filename)
         save_path = os.path.join(webinterface.config["UPLOAD_FOLDER"], filename)
         file.save(save_path)
 
