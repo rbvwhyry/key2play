@@ -369,60 +369,67 @@ def _startup_sweep(strip, num_leds, brightness, duration, timing):
         time.sleep(0.05)
 
 
-def _startup_comet(strip, num_leds, brightness, duration, timing, color_a):
-    """Comet with tail travels right then left in user color, then clears."""
-    tail_length = 14
-    speed = max(0.003, timing * 0.005)  # timing 1-5 → 5-25ms per step
-    color_rgb = _hex_to_rgb_tuple(color_a, brightness)
-
-    def make_pass(direction):  # direction: +1 = left→right, -1 = right→left
-        start = 0 if direction == 1 else num_leds - 1
-        total_steps = num_leds + tail_length
-        for step in range(total_steps):
-            head = start + direction * step
-            for tail in range(tail_length):
-                pos = head - direction * tail
-                if 0 <= pos < num_leds:
-                    tail_factor = (1 - tail / tail_length) ** 2
-                    strip.setPixelColor(pos, Color(
-                        int(color_rgb[0] * tail_factor),
-                        int(color_rgb[1] * tail_factor),
-                        int(color_rgb[2] * tail_factor)
-                    ))
-            erase = head - direction * tail_length
-            if 0 <= erase < num_leds:
-                strip.setPixelColor(erase, Color(0, 0, 0))
-            strip.show()
-            time.sleep(speed)
-
-    make_pass(1)   # left → right
-    time.sleep(0.08)
-    make_pass(-1)  # right → left
-    time.sleep(0.4)
-
-
 def _startup_sparkle(strip, num_leds, brightness, duration, timing, color_a):
-    """Random LEDs light up in user color, hold, then turn off in reverse."""
+    """Each LED gets a random independent fade-in time, peak brightness, fade-out time, and optional re-ignition — genuinely sparkly."""
     import random
-    num_sparks = min(int(num_leds * 0.6), 120)
-    delay = max(0.008, timing * 0.012)  # timing 1-5 → 12-60ms per spark
-    color_rgb = _hex_to_rgb_tuple(color_a, brightness)
 
-    indices = list(range(num_leds))
-    random.shuffle(indices)
-    chosen = indices[:num_sparks]
+    color_rgb = _hex_to_rgb_tuple(color_a, 1.0) #base color at full brightness; individual brightness applied per particle
 
-    for led in chosen:
-        strip.setPixelColor(led, Color(color_rgb[0], color_rgb[1], color_rgb[2]))
+    class Particle:
+        def __init__(self, led):
+            self.led = led
+            self.reset(initial=True)
+
+        def reset(self, initial=False):
+            self.peak = random.uniform(0.3, 1.0) * brightness #each particle has its own peak brightness
+            self.fade_in = random.uniform(0.05, 0.6) #seconds to reach peak
+            self.hold = random.uniform(0.0, 0.4) #seconds at peak
+            self.fade_out = random.uniform(0.1, 0.8) #seconds to fade to black
+            self.delay = random.uniform(0.0, duration * 0.8) if initial else random.uniform(0.1, 0.5) #stagger entries
+            self.elapsed = -self.delay #negative = waiting to start
+            self.reignite = random.random() < 0.4 #40% chance of flaring back up
+            self.done = False
+
+        def brightness_at(self, t):
+            if t < 0:
+                return 0.0
+            if t < self.fade_in:
+                return self.peak * (t / self.fade_in) #ramp up
+            t -= self.fade_in
+            if t < self.hold:
+                return self.peak #at peak
+            t -= self.hold
+            if t < self.fade_out:
+                return self.peak * (1.0 - t / self.fade_out) #ramp down
+            return -1.0 #signal done
+
+    tick = 0.04 #40ms per frame
+    num_active = min(int(num_leds * 0.65), 130)
+    indices = random.sample(range(num_leds), min(num_active, num_leds))
+    particles = [Particle(i) for i in indices]
+    total_time = duration + 1.5 #run slightly past duration so late starters finish
+    elapsed_total = 0.0
+
+    while elapsed_total < total_time:
+        for p in particles:
+            p.elapsed += tick
+            b = p.brightness_at(p.elapsed)
+
+            if b < 0: #particle finished one life
+                if p.reignite and elapsed_total < duration * 0.7: #reignite if still early enough
+                    p.reset()
+                else:
+                    p.done = True
+                    strip.setPixelColor(p.led, Color(0, 0, 0))
+            else:
+                r = int(color_rgb[0] * b)
+                g = int(color_rgb[1] * b)
+                bv = int(color_rgb[2] * b)
+                strip.setPixelColor(p.led, Color(r, g, bv))
+
         strip.show()
-        time.sleep(delay)
-
-    time.sleep(duration)
-
-    for led in reversed(chosen):
-        strip.setPixelColor(led, Color(0, 0, 0))
-        strip.show()
-        time.sleep(0.018)
+        time.sleep(tick)
+        elapsed_total += tick
 
 
 def _startup_ripple(strip, num_leds, brightness, duration, timing, color_a, color_b):
@@ -480,14 +487,12 @@ def startup_animation(ledstrip, ledsettings, appconfig=None):
 
     if randomize:
         import random
-        sequence = random.choice(['sweep', 'comet', 'sparkle', 'ripple'])
+        sequence = random.choice(['sweep', 'sparkle', 'ripple'])
 
     logger.info(f"startup_animation: sequence={sequence} brightness={brightness} duration={duration} timing={timing}")
 
     if sequence == 'none':
         return
-    elif sequence == 'comet':
-        _startup_comet(strip, num_leds, brightness, duration, timing, color_a)
     elif sequence == 'sparkle':
         _startup_sparkle(strip, num_leds, brightness, duration, timing, color_a)
     elif sequence == 'ripple':
