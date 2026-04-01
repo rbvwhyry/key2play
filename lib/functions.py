@@ -304,54 +304,197 @@ def wheel(pos, ledsettings):
         return Color(0, int((pos * 3) * brightness), int((255 - pos * 3) * brightness))
 
 
-def startup_animation(
-    ledstrip, ledsettings, duration_ms=15000, max_leds=180
-):  # duration doesn't seem to change real timing
-    strip = ledstrip.strip
-    total_pixels = strip.numPixels()
+def _hsv_to_rgb_tuple(hue, brightness=1.0):
+    """Convert hue (0-360) and brightness (0.0-1.0) to (r, g, b) tuple."""
+    h = hue / 60.0
+    i = int(h) % 6
+    f = h - int(h)
+    v = brightness
+    p, q, t_val = 0.0, v * (1 - f), v * f
+    if i == 0:   r, g, b = v, t_val, p
+    elif i == 1: r, g, b = q, v, p
+    elif i == 2: r, g, b = p, v, t_val
+    elif i == 3: r, g, b = p, q, v
+    elif i == 4: r, g, b = t_val, p, v
+    else:        r, g, b = v, p, q
+    return int(r * 255), int(g * 255), int(b * 255)
 
-    num_red_leds = max_leds // 3
-    num_blue_leds = max_leds // 3
-    num_green_leds = max_leds - num_red_leds - num_blue_leds
 
-    start_red_led = (total_pixels - max_leds) // 2
-    start_blue_led = start_red_led + num_red_leds
-    start_green_led = start_blue_led + num_blue_leds
+def _hex_to_rgb_tuple(hex_str, brightness=1.0):
+    """Convert hex color string (with or without #) to (r, g, b) tuple with brightness applied."""
+    h = hex_str.lstrip('#')
+    if len(h) != 6:
+        return int(255 * brightness), 0, 0
+    r = int(int(h[0:2], 16) * brightness)
+    g = int(int(h[2:4], 16) * brightness)
+    b = int(int(h[4:6], 16) * brightness)
+    return r, g, b
 
-    brightness = 0.0
 
-    num_steps = 200
+def _interpolate_rgb(rgb_a, rgb_b, t):
+    """Linearly interpolate between two (r, g, b) tuples; t=0 returns a, t=1 returns b."""
+    return (
+        int(rgb_a[0] + (rgb_b[0] - rgb_a[0]) * t),
+        int(rgb_a[1] + (rgb_b[1] - rgb_a[1]) * t),
+        int(rgb_a[2] + (rgb_b[2] - rgb_a[2]) * t),
+    )
 
-    step_delay = duration_ms / num_steps / 1000.0
 
-    brightness_increment = 1.0 / num_steps
+def _startup_sweep(strip, num_leds, brightness, duration, timing):
+    """Rainbow sweep left to right in batches, hold, then smooth fade out."""
+    batch_size = 4
+    delay = max(0.004, timing * 0.004)  # timing 1-5 → 4-20ms per batch
 
-    for step in range(num_steps):
-        if brightness < 0:
-            break
-        red = int(255 * brightness)
-        blue = int(255 * brightness)
-        green = int(255 * brightness)
+    rgb_colors = []
+    for i in range(num_leds):
+        hue = (i / max(1, num_leds - 1)) * 270.0
+        rgb_colors.append(_hsv_to_rgb_tuple(hue, brightness))
 
-        for i in range(start_red_led, start_blue_led):
-            if check_if_led_can_be_overwrite(i, ledstrip, ledsettings):
-                strip.setPixelColor(i, Color(red, 0, 0))
-        for i in range(start_blue_led, start_green_led):
-            if check_if_led_can_be_overwrite(i, ledstrip, ledsettings):
-                strip.setPixelColor(i, Color(0, 0, blue))
-        for i in range(start_green_led, start_green_led + num_green_leds):
-            if check_if_led_can_be_overwrite(i, ledstrip, ledsettings):
-                strip.setPixelColor(i, Color(0, green, 0))
-
+    for batch_start in range(0, num_leds, batch_size):
+        for i in range(batch_start, min(batch_start + batch_size, num_leds)):
+            r, g, b = rgb_colors[i]
+            strip.setPixelColor(i, Color(r, g, b))
         strip.show()
-        brightness += brightness_increment
+        time.sleep(delay)
 
-        if brightness > 0.5:
-            brightness_increment *= -1
+    time.sleep(duration)
 
-        time.sleep(int(step_delay))
+    fade_steps = 12
+    for step in range(1, fade_steps + 1):
+        factor = 1.0 - step / fade_steps
+        for i in range(num_leds):
+            r, g, b = rgb_colors[i]
+            strip.setPixelColor(i, Color(int(r * factor), int(g * factor), int(b * factor)))
+        strip.show()
+        time.sleep(0.05)
 
-    for i in range(total_pixels):
-        strip.setPixelColor(i, 0)
 
+def _startup_comet(strip, num_leds, brightness, duration, timing, color_a):
+    """Comet with tail travels right then left in user color, then clears."""
+    tail_length = 14
+    speed = max(0.003, timing * 0.005)  # timing 1-5 → 5-25ms per step
+    color_rgb = _hex_to_rgb_tuple(color_a, brightness)
+
+    def make_pass(direction):  # direction: +1 = left→right, -1 = right→left
+        start = 0 if direction == 1 else num_leds - 1
+        total_steps = num_leds + tail_length
+        for step in range(total_steps):
+            head = start + direction * step
+            for tail in range(tail_length):
+                pos = head - direction * tail
+                if 0 <= pos < num_leds:
+                    tail_factor = (1 - tail / tail_length) ** 2
+                    strip.setPixelColor(pos, Color(
+                        int(color_rgb[0] * tail_factor),
+                        int(color_rgb[1] * tail_factor),
+                        int(color_rgb[2] * tail_factor)
+                    ))
+            erase = head - direction * tail_length
+            if 0 <= erase < num_leds:
+                strip.setPixelColor(erase, Color(0, 0, 0))
+            strip.show()
+            time.sleep(speed)
+
+    make_pass(1)   # left → right
+    time.sleep(0.08)
+    make_pass(-1)  # right → left
+    time.sleep(0.4)
+
+
+def _startup_sparkle(strip, num_leds, brightness, duration, timing, color_a):
+    """Random LEDs light up in user color, hold, then turn off in reverse."""
+    import random
+    num_sparks = min(int(num_leds * 0.6), 120)
+    delay = max(0.008, timing * 0.012)  # timing 1-5 → 12-60ms per spark
+    color_rgb = _hex_to_rgb_tuple(color_a, brightness)
+
+    indices = list(range(num_leds))
+    random.shuffle(indices)
+    chosen = indices[:num_sparks]
+
+    for led in chosen:
+        strip.setPixelColor(led, Color(color_rgb[0], color_rgb[1], color_rgb[2]))
+        strip.show()
+        time.sleep(delay)
+
+    time.sleep(duration)
+
+    for led in reversed(chosen):
+        strip.setPixelColor(led, Color(0, 0, 0))
+        strip.show()
+        time.sleep(0.018)
+
+
+def _startup_ripple(strip, num_leds, brightness, duration, timing, color_a, color_b):
+    """Color wave expands from center outward using gradient between color A and B, holds, then collapses."""
+    center = num_leds // 2
+    max_radius = center
+    speed = max(0.004, timing * 0.005)  # timing 1-5 → 5-25ms per step
+    rgb_a = _hex_to_rgb_tuple(color_a, brightness)
+    rgb_b = _hex_to_rgb_tuple(color_b, brightness)
+
+    for radius in range(max_radius + 1):
+        t = radius / max(1, max_radius)
+        rgb = _interpolate_rgb(rgb_a, rgb_b, t)
+        color = Color(rgb[0], rgb[1], rgb[2])
+        left, right = center - radius, center + radius
+        if left >= 0: strip.setPixelColor(left, color)
+        if right < num_leds and right != left: strip.setPixelColor(right, color)
+        strip.show()
+        time.sleep(speed)
+
+    time.sleep(duration)
+
+    for radius in range(max_radius, -1, -1):
+        left, right = center - radius, center + radius
+        if left >= 0: strip.setPixelColor(left, Color(0, 0, 0))
+        if right < num_leds and right != left: strip.setPixelColor(right, Color(0, 0, 0))
+        strip.show()
+        time.sleep(speed)
+
+
+def startup_animation(ledstrip, ledsettings, appconfig=None):
+    """Reads saved startup config from DB and plays the appropriate animation once at Pi boot."""
+    strip = ledstrip.strip
+    num_leds = strip.numPixels()
+
+    sequence  = 'sweep'
+    brightness = 0.8
+    duration   = 6.0
+    timing     = 3.0
+    color_a    = '#ff0000'
+    color_b    = '#4b0082'
+    randomize  = False
+
+    if appconfig:
+        try:
+            val = appconfig.get_config('startupSequence');  sequence  = val if val else sequence
+            val = appconfig.get_config('startupBrightness'); brightness = float(val) / 100.0 if val else brightness
+            val = appconfig.get_config('startupDuration');   duration   = float(val) if val else duration
+            val = appconfig.get_config('startupTiming');     timing     = float(val) if val else timing
+            val = appconfig.get_config('startupColorA');     color_a    = val if val else color_a
+            val = appconfig.get_config('startupColorB');     color_b    = val if val else color_b
+            val = appconfig.get_config('startupRandomize');  randomize  = (val == 'true') if val else randomize
+        except Exception as exc:
+            logger.warning(f"startup_animation: config read failed: {exc}")
+
+    if randomize:
+        import random
+        sequence = random.choice(['sweep', 'comet', 'sparkle', 'ripple'])
+
+    logger.info(f"startup_animation: sequence={sequence} brightness={brightness} duration={duration} timing={timing}")
+
+    if sequence == 'none':
+        return
+    elif sequence == 'comet':
+        _startup_comet(strip, num_leds, brightness, duration, timing, color_a)
+    elif sequence == 'sparkle':
+        _startup_sparkle(strip, num_leds, brightness, duration, timing, color_a)
+    elif sequence == 'ripple':
+        _startup_ripple(strip, num_leds, brightness, duration, timing, color_a, color_b)
+    else:
+        _startup_sweep(strip, num_leds, brightness, duration, timing)
+
+    for i in range(num_leds):
+        strip.setPixelColor(i, Color(0, 0, 0))
     strip.show()
