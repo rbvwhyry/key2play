@@ -104,7 +104,7 @@ cmap.gradients.update(cmap.load_colormaps())
 cmap.generate_colormaps(cmap.gradients, ledstrip.led_gamma)
 cmap.update_multicolor(ledsettings.multicolor_range, ledsettings.multicolor)
 
-t = threading.Thread(target=startup_animation, args=(ledstrip, ledsettings))
+t = threading.Thread(target=startup_animation, args=(ledstrip, ledsettings, appconfig))
 t.start()
 
 learning = LearnMIDI(usersettings, ledsettings, midiports, ledstrip)
