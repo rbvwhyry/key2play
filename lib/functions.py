@@ -359,17 +359,15 @@ def _startup_sweep(strip, num_leds, brightness, duration, timing):
 
     time.sleep(duration)
 
-    fade_steps = 12
-    for step in range(1, fade_steps + 1):
-        factor = 1.0 - step / fade_steps
-        for i in range(num_leds):
-            r, g, b = rgb_colors[i]
-            strip.setPixelColor(i, Color(int(r * factor), int(g * factor), int(b * factor)))
+    batch_size = 4 #sweep off right → left in same batch size as sweep on
+    for batch_start in range(num_leds - batch_size, -batch_size, -batch_size):
+        for i in range(min(batch_start + batch_size, num_leds) - 1, max(batch_start - 1, -1), -1):
+            strip.setPixelColor(i, Color(0, 0, 0))
         strip.show()
-        time.sleep(0.05)
+        time.sleep(delay)
 
 
-def _startup_sparkle(strip, num_leds, brightness, duration, timing, color_a):
+def _startup_sparkle(strip, num_leds, brightness, duration, color_a):
     """Each LED gets a random independent fade-in time, peak brightness, fade-out time, and optional re-ignition — genuinely sparkly."""
     import random
 
@@ -432,11 +430,11 @@ def _startup_sparkle(strip, num_leds, brightness, duration, timing, color_a):
         elapsed_total += tick
 
 
-def _startup_ripple(strip, num_leds, brightness, duration, timing, color_a, color_b):
+def _startup_ripple(strip, num_leds, brightness, duration, color_a, color_b):
     """Color wave expands from center outward using gradient between color A and B, holds, then collapses."""
     center = num_leds // 2
     max_radius = center
-    speed = max(0.004, timing * 0.005)  # timing 1-5 → 5-25ms per step
+    speed = 0.010 #fixed 10ms per step — clean consistent speed
     rgb_a = _hex_to_rgb_tuple(color_a, brightness)
     rgb_b = _hex_to_rgb_tuple(color_b, brightness)
 
@@ -473,30 +471,49 @@ def startup_animation(ledstrip, ledsettings, appconfig=None):
     color_b    = '#4b0082'
     randomize  = False
 
+    randomize_colors     = False
+    randomize_brightness = False
+    randomize_duration   = False
+
     if appconfig:
         try:
-            val = appconfig.get_config('startupSequence');  sequence  = val if val else sequence
-            val = appconfig.get_config('startupBrightness'); brightness = float(val) / 100.0 if val else brightness
-            val = appconfig.get_config('startupDuration');   duration   = float(val) if val else duration
-            val = appconfig.get_config('startupTiming');     timing     = float(val) if val else timing
-            val = appconfig.get_config('startupColorA');     color_a    = val if val else color_a
-            val = appconfig.get_config('startupColorB');     color_b    = val if val else color_b
-            val = appconfig.get_config('startupRandomize');  randomize  = (val == 'true') if val else randomize
+            val = appconfig.get_config('startupSequence');         sequence           = val if val else sequence
+            val = appconfig.get_config('startupBrightness');       brightness          = float(val) / 100.0 if val else brightness
+            val = appconfig.get_config('startupDuration');         duration            = float(val) if val else duration
+            val = appconfig.get_config('startupColorA');           color_a             = val if val else color_a
+            val = appconfig.get_config('startupColorB');           color_b             = val if val else color_b
+            val = appconfig.get_config('startupRandomize');        randomize           = (val == 'true') if val else randomize
+            val = appconfig.get_config('startupRandomizeColors');  randomize_colors    = (val == 'true') if val else randomize_colors
+            val = appconfig.get_config('startupRandomizeBrightness'); randomize_brightness = (val == 'true') if val else randomize_brightness
+            val = appconfig.get_config('startupRandomizeDuration'); randomize_duration  = (val == 'true') if val else randomize_duration
         except Exception as exc:
             logger.warning(f"startup_animation: config read failed: {exc}")
 
+    import random
+
     if randomize:
-        import random
-        sequence = random.choice(['sweep', 'sparkle', 'ripple'])
+        sequence = random.choice(['sweep', 'sparkle', 'ripple']) #never picks none
+
+    if randomize_colors:
+        def rand_hex():
+            return '#{:02x}{:02x}{:02x}'.format(random.randint(0,255), random.randint(0,255), random.randint(0,255))
+        color_a = rand_hex()
+        color_b = rand_hex()
+
+    if randomize_brightness:
+        brightness = random.uniform(0.2, 1.0)
+
+    if randomize_duration:
+        duration = random.uniform(1.0, 5.0)
 
     logger.info(f"startup_animation: sequence={sequence} brightness={brightness} duration={duration} timing={timing}")
 
     if sequence == 'none':
         return
     elif sequence == 'sparkle':
-        _startup_sparkle(strip, num_leds, brightness, duration, timing, color_a)
+        _startup_sparkle(strip, num_leds, brightness, duration, color_a)
     elif sequence == 'ripple':
-        _startup_ripple(strip, num_leds, brightness, duration, timing, color_a, color_b)
+        _startup_ripple(strip, num_leds, brightness, duration, color_a, color_b)
     else:
         _startup_sweep(strip, num_leds, brightness, duration, timing)
 
