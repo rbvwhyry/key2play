@@ -1,5 +1,4 @@
 from flask import jsonify, render_template, request, send_from_directory
-from werkzeug.utils import secure_filename
 from webinterface import webinterface
 import shutil
 import time
@@ -52,9 +51,9 @@ def upload_file():
             return jsonify(success=False, error="not a midi file", song_name=filename)
 
         import unicodedata
-        filename = secure_filename(filename)
+        filename = os.path.basename(filename) #strip path traversal attempts only; preserve spaces, accents, punctuation
         filename = unicodedata.normalize('NFC', filename) #normalize unicode so é and é aren't treated as different
-        if not filename or not filename.strip():
+        if not filename or filename.startswith('.') or not filename.strip():
             return jsonify(success=False, error="invalid filename", song_name=file.filename)
         if len(filename.encode('utf-8')) > 251: #255 byte linux limit minus 4 for ".mid"
             return jsonify(success=False, error="filename too long", song_name=file.filename)
