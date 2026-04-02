@@ -555,6 +555,24 @@ def wifi_forget():
 
     return jsonify(success=True, forgotten=forgotten, count=len(forgotten))
 
+@webinterface.route("/api/wifi/forget_network", methods=["POST"])
+def wifi_forget_network():
+    ssid = request.values.get("ssid", "").strip()
+
+    if not ssid:
+        return jsonify(success=False, error="no ssid provided")
+
+    forgotten = webinterface.platform.forget_wifi_network(ssid)
+
+    if forgotten: #if we just forgot the active connection, start hotspot
+        is_connected, current_ssid, _ = webinterface.platform.get_current_connections()
+
+        if not is_connected:
+            webinterface.platform.enable_hotspot()
+            webinterface.usersettings.change_setting_value("is_hotspot_active", 1)
+
+    return jsonify(success=True, forgotten=forgotten)
+
 @webinterface.route("/api/connect_to_wifi", methods=["POST"])
 def connect_to_wifi():
     ssid = request.values.get("ssid")
