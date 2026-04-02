@@ -504,6 +504,26 @@ class PlatformRasp(PlatformBase):
 
         return forgotten
 
+    @staticmethod
+    def forget_wifi_network(ssid):
+        """Deletes the saved NetworkManager profile for a single SSID. Returns True if deleted."""
+        try:
+            result = subprocess.run(
+                ["sudo", "nmcli", "connection", "delete", ssid],
+                capture_output=True, text=True
+            )
+
+            if result.returncode == 0:
+                logger.info(f"Forgot WiFi network: {ssid}")
+                return True
+
+            logger.warning(f"Could not forget {ssid}: {result.stderr.strip()}")
+            return False
+
+        except Exception as e:
+            logger.warning(f"Error forgetting WiFi network {ssid}: {e}")
+            return False
+
     # ===== WiFi: scanning =====
 
     @staticmethod
