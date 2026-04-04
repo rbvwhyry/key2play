@@ -169,7 +169,7 @@ for i in range(0, numPixels):
     strip.setPixelColor(i, Color(0, 0, 0))
 strip.show()
 
-platform.ensure_hostname("ami")
+platform.ensure_hostname("key2play")
 platform.manage_hotspot(usersettings, midiports, first_run=True)
 
 

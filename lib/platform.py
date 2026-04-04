@@ -37,7 +37,7 @@ class PlatformRasp(PlatformBase):
     # ===== hostname =====
 
     @staticmethod
-    def ensure_hostname(name="ami"):
+    def ensure_hostname(name="key2play"):
         """Sets the Pi's hostname so it's reachable at name.local via mDNS."""
         try:
             current = subprocess.check_output(["hostname"], text=True).strip()
