@@ -37,7 +37,7 @@ class PlatformRasp(PlatformBase):
     # ===== hostname =====
 
     @staticmethod
-    def ensure_hostname(name="key2play"):
+    def ensure_hostname(name="ami"):
         """Sets the Pi's hostname so it's reachable at name.local via mDNS."""
         try:
             current = subprocess.check_output(["hostname"], text=True).strip()
@@ -193,7 +193,7 @@ class PlatformRasp(PlatformBase):
 
         # clean up old profiles and dnsmasq config from previous versions
         subprocess.run(
-            ["sudo", "nmcli", "connection", "delete", "key2play-hotspot"],
+            ["sudo", "nmcli", "connection", "delete", "ami-hotspot"],
             capture_output=True,
         )
         old_conf = "/etc/dnsmasq.d/captive.conf"
