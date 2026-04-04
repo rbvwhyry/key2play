@@ -8,8 +8,8 @@ set -u # treat unset variables as an error
 set -x # print the commands being executed
 
 TIMESTAMP="$(date +%Y-%m-%d_%H_%M_%S)"
-TMPDIR=${TMPDIR-/tmp}
-TEMPFILE="$(mktemp "sdcard_image_$(date +%Y-%m-%d_%H_%M_%S).img.gz.XXXXXXXXX")"
+TMPDIR=${TMPDIR-.}
+TEMPFILE="$(mktemp "sdcard_image_${TIMESTAMP}.img.gz.XXXXXXXXX")"
 DESTFILE="sdcard_image_${TIMESTAMP}.img.gz"
 
 # copied from https://raspberrypi.stackexchange.com/a/72047
