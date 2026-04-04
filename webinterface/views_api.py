@@ -14,7 +14,12 @@ from flask import jsonify, redirect, request, send_file, send_from_directory, ur
 import lib.colormaps as cmap
 from lib.functions import fastColorWipe, find_between, get_last_logs
 from lib.rpi_drivers import GPIO, Color
-from lib.song_info import get_all_songs_info, resolve_song_path, DIR_SONGS_DEFAULT, DIR_SONGS_USER
+from lib.song_info import (
+    get_all_songs_info,
+    resolve_song_path,
+    DIR_SONGS_DEFAULT,
+    DIR_SONGS_USER,
+)
 from lib.log_setup import logger
 from webinterface import webinterface
 from webinterface.views import allowed_file
@@ -41,20 +46,27 @@ brightest = 222
 
 ### ===== captive portal ===== ###
 
+
 @webinterface.before_request
 def captive_portal_intercept():
     """When hotspot is active, serve the captive portal page for any non-API browser request."""
-    if not hasattr(webinterface, 'platform'):
-        return None  #platform not initialized yet
+    if not hasattr(webinterface, "platform"):
+        return None  # platform not initialized yet
 
     path = request.path
 
-    #let API calls and static files through
-    if path.startswith('/api/') or path.startswith('/static/'):
+    # let API calls and static files through
+    if path.startswith("/api/") or path.startswith("/static/"):
         return None
 
-    #let captive portal detection URLs be handled by their own route
-    if path in ('/generate_204', '/gen_204', '/hotspot-detect.html', '/library/test/success.html', '/connecttest.txt'):
+    # let captive portal detection URLs be handled by their own route
+    if path in (
+        "/generate_204",
+        "/gen_204",
+        "/hotspot-detect.html",
+        "/library/test/success.html",
+        "/connecttest.txt",
+    ):
         return None
 
     try:
@@ -63,7 +75,8 @@ def captive_portal_intercept():
     except Exception:
         pass
 
-    return None  #not in hotspot mode — let normal routes handle it
+    return None  # not in hotspot mode — let normal routes handle it
+
 
 @webinterface.route("/generate_204")
 @webinterface.route("/gen_204")
@@ -76,6 +89,7 @@ def captive_portal_redirect():
 
     return build_captive_html(), 200
 
+
 def build_captive_html():
     """Builds the captive portal page with cached networks pre-rendered in the HTML."""
     try:
@@ -83,24 +97,30 @@ def build_captive_html():
     except Exception:
         networks = []
 
-    #build network rows as raw HTML — no JavaScript fetch needed
+    # build network rows as raw HTML — no JavaScript fetch needed
     if networks:
         rows = ""
         for n in networks:
-            ssid_safe = n["ssid"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            ssid_safe = (
+                n["ssid"]
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
             ssid_attr = ssid_safe.replace("'", "\\'").replace('"', "&quot;")
             lock = "" if n.get("is_open") else "&#x1f512; "
             rows += (
                 f'<div class="net" onclick="pick(\'{ssid_attr}\',{str(n.get("is_open", False)).lower()})">'
                 f'<span class="net-name">{lock}{ssid_safe}</span>'
                 f'<span class="net-info">{n["signal"]}%</span>'
-                f'</div>'
+                f"</div>"
             )
         network_html = rows
     else:
         network_html = '<p class="msg">No networks found</p>'
 
     return CAPTIVE_TEMPLATE.replace("{{NETWORKS}}", network_html)
+
 
 CAPTIVE_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -221,18 +241,23 @@ function connect(){
 
 ### ===== songs: list / load / delete / download / record ===== ###
 
+
 @webinterface.route("/api/get_songs", methods=["GET"])
 def get_songs():
-    default_songs = os.listdir(DIR_SONGS_DEFAULT) if os.path.isdir(DIR_SONGS_DEFAULT) else []
+    default_songs = (
+        os.listdir(DIR_SONGS_DEFAULT) if os.path.isdir(DIR_SONGS_DEFAULT) else []
+    )
     user_songs = os.listdir(DIR_SONGS_USER) if os.path.isdir(DIR_SONGS_USER) else []
     combined = list(set(filter(allowed_file, default_songs + user_songs)))
     combined.sort()
     return jsonify(combined)
 
+
 @webinterface.route("/api/get_songs_info", methods=["GET"])
 def get_songs_info():
     info = get_all_songs_info()
     return jsonify(success=True, songs=info)
+
 
 @webinterface.route("/api/get_current_song", methods=["GET"])
 def get_current_song():
@@ -241,8 +266,9 @@ def get_current_song():
     return jsonify(
         tracks=song_tracks,
         ticks_per_beat=webinterface.learning.ticks_per_beat,
-        tempo=webinterface.learning.song_tempo
+        tempo=webinterface.learning.song_tempo,
     )
+
 
 @webinterface.route("/api/load_local_midi", methods=["POST"])
 def load_local_midi():
@@ -252,8 +278,11 @@ def load_local_midi():
     full_path = resolve_song_path(filename)
     if not full_path:
         return jsonify(success=False, error="song not found")
-    threading.Thread(target=webinterface.learning.load_midi, args=(full_path,), daemon=True).start()
+    threading.Thread(
+        target=webinterface.learning.load_midi, args=(full_path,), daemon=True
+    ).start()
     return jsonify(success=True)
+
 
 @webinterface.route("/api/delete_song", methods=["POST"])
 def delete_song():
@@ -266,12 +295,14 @@ def delete_song():
     os.remove(path)
     return jsonify(success=True)
 
+
 @webinterface.route("/api/download_song/<filename>", methods=["GET"])
 def download_song(filename):
     path = resolve_song_path(filename)
     if not path:
         return jsonify(success=False, error="song not found"), 404
     return send_file(os.path.abspath(path), as_attachment=True, download_name=filename)
+
 
 @webinterface.route("/api/save_recording", methods=["POST"])
 def save_recording():
@@ -287,9 +318,15 @@ def save_recording():
     if not events:
         return jsonify(success=False, error="no events recorded")
 
-    #sanitize filename — strip path separators, traversal, and non-printable chars
-    filename = filename.replace("'", "").replace("/", "").replace("\\", "").replace("..", "").replace("\x00", "")
-    filename = filename.strip(". ")  #no leading dots or spaces
+    # sanitize filename — strip path separators, traversal, and non-printable chars
+    filename = (
+        filename.replace("'", "")
+        .replace("/", "")
+        .replace("\\", "")
+        .replace("..", "")
+        .replace("\x00", "")
+    )
+    filename = filename.strip(". ")  # no leading dots or spaces
     if not filename:
         return jsonify(success=False, error="invalid filename")
     if not filename.lower().endswith((".mid", ".midi")):
@@ -305,9 +342,9 @@ def save_recording():
         track = mido.MidiTrack()
         mid.tracks.append(track)
 
-        track.append(mido.MetaMessage('set_tempo', tempo=500000))  #120 BPM default
+        track.append(mido.MetaMessage("set_tempo", tempo=500000))  # 120 BPM default
 
-        #sort events by time just in case
+        # sort events by time just in case
         events.sort(key=lambda e: e.get("time", 0))
 
         prev_time_ms = 0
@@ -324,16 +361,22 @@ def save_recording():
             note_int = int(note)
             velocity_int = int(velocity)
             if not (0 <= note_int <= 127) or not (0 <= velocity_int <= 127):
-                continue #skip malformed MIDI values — out of range would crash mido
+                continue  # skip malformed MIDI values — out of range would crash mido
 
-            #convert millisecond delta to ticks
+            # convert millisecond delta to ticks
             delta_ms = max(0, time_ms - prev_time_ms)
-            delta_ticks = int(delta_ms * 480 / 500)  #at 120 BPM: 500ms per beat, 480 ticks per beat
+            delta_ticks = int(
+                delta_ms * 480 / 500
+            )  # at 120 BPM: 500ms per beat, 480 ticks per beat
 
             if evt_type == "note_off":
                 velocity = 0
 
-            track.append(mido.Message(evt_type, note=note_int, velocity=velocity_int, time=delta_ticks))
+            track.append(
+                mido.Message(
+                    evt_type, note=note_int, velocity=velocity_int, time=delta_ticks
+                )
+            )
             prev_time_ms = time_ms
 
         mid.save(save_path)
@@ -341,8 +384,9 @@ def save_recording():
 
     except Exception as e:
         if os.path.exists(save_path):
-            os.remove(save_path)  #clean up partial file
+            os.remove(save_path)  # clean up partial file
         return jsonify(success=False, error=str(e))
+
 
 @webinterface.route("/api/get_storage_info", methods=["GET"])
 def get_storage_info():
@@ -362,27 +406,30 @@ def get_storage_info():
         success=True,
         available_bytes=usage.free,
         songs_count=count,
-        songs_total_bytes=total_size
+        songs_total_bytes=total_size,
     )
 
+
 ### ===== MIDI: keys / events / ports ===== ###
+
 
 @webinterface.route("/api/currently_pressed_keys", methods=["GET"])
 def currently_pressed_keys():
     with webinterface.midiports._keys_lock:
         snapshot = list(webinterface.midiports.currently_pressed_keys)
-    result = [
-        {"note": msg.note, "velocity": msg.velocity}
-        for msg in snapshot
-    ]
+    result = [{"note": msg.note, "velocity": msg.velocity} for msg in snapshot]
     return jsonify(result)
+
 
 @webinterface.route("/api/drain_midi_events", methods=["GET"])
 def drain_midi_events():
     events = []
-    while webinterface.midiports.frontend_events:  #drain all accumulated events since last poll
+    while (
+        webinterface.midiports.frontend_events
+    ):  # drain all accumulated events since last poll
         events.append(webinterface.midiports.frontend_events.popleft())
     return jsonify(events)
+
 
 @webinterface.route("/api/get_ports", methods=["GET"])
 def get_ports():
@@ -400,6 +447,7 @@ def get_ports():
     }
     return jsonify(response)
 
+
 @webinterface.route("/api/switch_ports", methods=["GET"])
 def switch_ports():
     active_input = webinterface.usersettings.get_setting_value("input_port")
@@ -412,7 +460,9 @@ def switch_ports():
     fastColorWipe(webinterface.ledstrip.strip, True, webinterface.ledsettings)
     return jsonify(success=True)
 
+
 ### ===== LEDs ===== ###
+
 
 @webinterface.route("/api/set_light/<light_num>")
 def set_light(light_num):
@@ -431,6 +481,7 @@ def set_light(light_num):
     strip.show()
     return jsonify(success=True)
 
+
 @webinterface.route("/api/set_many_lights", methods=["POST"])
 def set_many_lights():
     lights = request.values.get("lights")
@@ -444,7 +495,7 @@ def set_many_lights():
     num_pixels = strip.numPixels()
     for light_num, color in lights:
         if not isinstance(light_num, int) or light_num < 0 or light_num >= num_pixels:
-            continue #skip out-of-range or malformed indices silently
+            continue  # skip out-of-range or malformed indices silently
         red = min(255, max(0, int(color["r"])))
         blue = min(255, max(0, int(color["b"])))
         green = min(255, max(0, int(color["g"])))
@@ -453,6 +504,7 @@ def set_many_lights():
     strip.setBrightness(brightest)
     strip.show()
     return jsonify(success=True)
+
 
 @webinterface.route("/api/off_many_lights", methods=["POST"])
 def off_many_lights():
@@ -468,11 +520,12 @@ def off_many_lights():
     black = Color(0, 0, 0)
     for index in indices:
         if not isinstance(index, int) or index < 0 or index >= num_pixels:
-            continue #skip out-of-range or malformed indices silently
+            continue  # skip out-of-range or malformed indices silently
         strip.setPixelColor(index, black)
     strip.setBrightness(brightest)
     strip.show()
     return jsonify(success=True)
+
 
 @webinterface.route("/api/set_all_lights", methods=["POST"])
 def set_all_lights():
@@ -493,7 +546,9 @@ def set_all_lights():
     strip.show()
     return jsonify(success=True)
 
+
 ### ===== WiFi ===== ###
+
 
 @webinterface.route("/api/wifi/status", methods=["GET"])
 def wifi_status():
@@ -506,13 +561,15 @@ def wifi_status():
         hotspot_active=is_hotspot,
         ssid=ssid if is_connected else None,
         ip=address if is_connected else None,
-        hotspot_name="ami"
+        hotspot_name="ami",
     )
+
 
 @webinterface.route("/api/wifi/scan", methods=["GET"])
 def wifi_scan():
     networks = webinterface.platform.scan_wifi_networks()
     return jsonify(success=True, networks=networks)
+
 
 @webinterface.route("/api/wifi/deep_scan", methods=["GET"])
 def wifi_deep_scan():
@@ -521,7 +578,7 @@ def wifi_deep_scan():
 
     if was_hotspot:
         webinterface.platform.disable_hotspot()
-        time.sleep(2)  #give the radio time to switch back to station mode
+        time.sleep(2)  # give the radio time to switch back to station mode
 
     networks = webinterface.platform.scan_wifi_networks()
 
@@ -529,6 +586,7 @@ def wifi_deep_scan():
         webinterface.platform.enable_hotspot()
 
     return jsonify(success=True, networks=networks)
+
 
 @webinterface.route("/api/wifi/connect", methods=["POST"])
 def wifi_connect():
@@ -538,12 +596,18 @@ def wifi_connect():
     if not ssid:
         return jsonify(success=False, error="no SSID provided")
 
-    result = webinterface.platform.connect_to_wifi(ssid, password, webinterface.usersettings)
+    result = webinterface.platform.connect_to_wifi(
+        ssid, password, webinterface.usersettings
+    )
 
     if result:
         return jsonify(success=True, message=f"Connected to {ssid}")
 
-    return jsonify(success=False, message="Wrong password or network unavailable. Hotspot restarted — reconnect to ami and try again.")
+    return jsonify(
+        success=False,
+        message="Wrong password or network unavailable. Hotspot restarted — reconnect to ami and try again.",
+    )
+
 
 @webinterface.route("/api/wifi/forget", methods=["POST"])
 def wifi_forget():
@@ -555,6 +619,7 @@ def wifi_forget():
 
     return jsonify(success=True, forgotten=forgotten, count=len(forgotten))
 
+
 @webinterface.route("/api/wifi/forget_network", methods=["POST"])
 def wifi_forget_network():
     ssid = request.values.get("ssid", "").strip()
@@ -564,7 +629,7 @@ def wifi_forget_network():
 
     forgotten = webinterface.platform.forget_wifi_network(ssid)
 
-    if forgotten: #if we just forgot the active connection, start hotspot
+    if forgotten:  # if we just forgot the active connection, start hotspot
         is_connected, current_ssid, _ = webinterface.platform.get_current_connections()
 
         if not is_connected:
@@ -573,6 +638,7 @@ def wifi_forget_network():
 
     return jsonify(success=True, forgotten=forgotten)
 
+
 @webinterface.route("/api/connect_to_wifi", methods=["POST"])
 def connect_to_wifi():
     ssid = request.values.get("ssid")
@@ -580,10 +646,12 @@ def connect_to_wifi():
     webinterface.platform.connect_to_wifi(ssid, psk, webinterface.usersettings)
     return jsonify(success=True)
 
+
 @webinterface.route("/api/disconnect_from_wifi", methods=["POST"])
 def disconnect_from_wifi():
     webinterface.platform.disconnect_from_wifi(webinterface.usersettings)
     return jsonify(success=True)
+
 
 @webinterface.route("/api/get_wifi_list", methods=["GET"])
 def get_wifi_list():
@@ -596,7 +664,9 @@ def get_wifi_list():
     }
     return jsonify(response)
 
+
 ### ===== database: config table ===== ###
+
 
 @webinterface.route("/api/get_config/<key>", methods=["GET"])
 def get_config(key):
@@ -605,6 +675,7 @@ def get_config(key):
     value = webinterface.appconfig.get_config(key)
     return jsonify(success=True, value=value)
 
+
 @webinterface.route("/api/set_config/<key>", methods=["POST"])
 def set_config(key):
     if not key or not _SAFE_CONFIG_KEY.match(key):
@@ -612,9 +683,10 @@ def set_config(key):
     value = request.values.get("value")
     if value is None:
         return jsonify(success=False, error="no value"), 400
-    value = str(value)[:1000]  #cap length to prevent oversized entries
+    value = str(value)[:1000]  # cap length to prevent oversized entries
     webinterface.appconfig.set_config(key, value)
     return jsonify(success=True)
+
 
 @webinterface.route("/api/delete_config/<key>", methods=["DELETE"])
 def delete_config(key):
@@ -623,17 +695,21 @@ def delete_config(key):
     webinterface.appconfig.delete_config(key)
     return jsonify(success=True)
 
+
 @webinterface.route("/api/get_config_dump", methods=["GET"])
 def get_config_dump():
     dump = webinterface.appconfig.get_sqlite_dump()
     return jsonify(success=True, dump=dump)
+
 
 @webinterface.route("/api/backup_config_file_and_reset_to_factory", methods=["POST"])
 def backup_config_file_and_reset_to_factory():
     webinterface.appconfig.backup_config_file_and_reset_to_factory()
     return jsonify(success=True)
 
+
 ### ===== database: map table ===== ###
+
 
 @webinterface.route("/api/get_row/<key>", methods=["GET"])
 def get_row(key):
@@ -641,6 +717,7 @@ def get_row(key):
         return jsonify(success=False, error="invalid key"), 400
     value = webinterface.appmap.get_midi_led_row(key)
     return jsonify(success=True, value=value)
+
 
 @webinterface.route("/api/set_row/<key>", methods=["POST"])
 def set_row(key):
@@ -658,12 +735,14 @@ def set_row(key):
     webinterface.appmap.set_midi_led_row(key, led_index, r, g, b, time_on, time_off)
     return jsonify(success=True)
 
+
 @webinterface.route("/api/delete_row/<key>", methods=["DELETE"])
 def delete_row(key):
     if not key or not _SAFE_CONFIG_KEY.match(key):
         return jsonify(success=False, error="invalid key"), 400
     webinterface.appmap.delete_midi_led_row(key)
     return jsonify(success=True)
+
 
 @webinterface.route("/api/get_map", methods=["GET"])
 def get_map():
@@ -683,12 +762,15 @@ def get_map():
         )
     return jsonify(success=True, mappings=result)
 
+
 @webinterface.route("/api/delete_all_maps", methods=["POST"])
 def delete_all_maps():
     webinterface.appmap.delete_all_maps()
     return jsonify(success=True)
 
+
 ### ===== system / misc ===== ###
+
 
 @webinterface.route("/api/get_homepage_data")
 def get_homepage_data():
@@ -724,6 +806,7 @@ def get_homepage_data():
     }
     return jsonify(homepage_data)
 
+
 @webinterface.route("/api/get_learning_status", methods=["GET"])
 def get_learning_status():
     response = {
@@ -754,18 +837,20 @@ def get_learning_status():
     }
     return jsonify(response)
 
+
 @webinterface.route("/api/update_to_release", methods=["POST"])
 def update_to_release():
     release = request.values.get("release", default=None)
     if not release:
         return jsonify(success=False, error="no release specified")
-    #validate release name — only allow safe filenames ending in .zip
-    if not re.match(r'^[a-zA-Z0-9._-]+\.zip$', release):
+    # validate release name — only allow safe filenames ending in .zip
+    if not re.match(r"^[a-zA-Z0-9._-]+\.zip$", release):
         return jsonify(success=False, error="invalid release name"), 400
-    if '..' in release or '/' in release or '\\' in release:
+    if ".." in release or "/" in release or "\\" in release:
         return jsonify(success=False, error="invalid release name"), 400
     logger.info(f"updating to release {release}")
     import requests
+
     req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}", timeout=60)
     if req.status_code != 200:
         return jsonify(success=False, error=f"download failed: HTTP {req.status_code}")
@@ -777,6 +862,7 @@ def update_to_release():
     subprocess.run(["unzip", "-o", release, "-d", releasedir])
     subprocess.run(["cp", "-R", f"{releasedir}/", "."])
     return jsonify(success=True)
+
 
 @webinterface.route("/api/get_random_gif", methods=["GET"])
 def get_random_gif():
@@ -800,14 +886,19 @@ def get_random_gif():
     sub, name = random.choice(pool)
     return jsonify(success=True, url=url_for("static", filename=f"{sub}/{name}"))
 
+
 @webinterface.route("/static/js/listenWorker.js")
 def serve_worker():
-    return send_from_directory("static/js", "listenWorker.js", mimetype="application/javascript")
+    return send_from_directory(
+        "static/js", "listenWorker.js", mimetype="application/javascript"
+    )
+
 
 @webinterface.route("/api/get_logs", methods=["GET"])
 def get_logs():
     last_logs = request.args.get("last_logs")
     return get_last_logs(last_logs)
+
 
 @webinterface.route("/api/get_colormap_gradients", methods=["GET"])
 def get_colormap_gradients():

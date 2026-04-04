@@ -154,11 +154,15 @@ class LearnMIDI:
     def load_song_from_cache(self, song_path):
         # Load song from cache
         try:
-            cache_path = "cache/" + os.path.basename(song_path) + ".p"  #cache uses just the filename, not the folder path
+            cache_path = (
+                "cache/" + os.path.basename(song_path) + ".p"
+            )  # cache uses just the filename, not the folder path
             if os.path.isfile(cache_path):
                 logger.info("Loading song from cache")
                 with open(cache_path, "rb") as handle:
-                    cache = pickle.load(handle)  #deserialization holds GIL but only for CPU work, not disk wait
+                    cache = pickle.load(
+                        handle
+                    )  # deserialization holds GIL but only for CPU work, not disk wait
                     self.song_tempo = cache["song_tempo"]
                     self.ticks_per_beat = cache["ticks_per_beat"]
                     self.song_tracks = cache["song_tracks"]
@@ -191,7 +195,8 @@ class LearnMIDI:
         try:
             # Load the midi file
             mid = mido.MidiFile(
-                song_path, clip=True  #song_path is now the full resolved path from the caller
+                song_path,
+                clip=True,  # song_path is now the full resolved path from the caller
             )  # clip=True fixes some midi files
 
             # Get tempo and Ticks per beat
@@ -207,7 +212,9 @@ class LearnMIDI:
             for k in range(len(mid.tracks)):
                 for msg in mid.tracks[k]:
                     if not msg.is_meta and msg.type in ["note_on", "note_off"]:
-                        msg.channel = min(k + offset, 15)  #clamp to valid MIDI channel range (0-15); songs with 16+ tracks would overflow otherwise
+                        msg.channel = min(
+                            k + offset, 15
+                        )  # clamp to valid MIDI channel range (0-15); songs with 16+ tracks would overflow otherwise
                         if msg.type == "note_off":
                             msg.velocity = 0
 
@@ -224,8 +231,10 @@ class LearnMIDI:
             fastColorWipe(self.ledstrip.strip, True, self.ledsettings)
 
             # Save to cache
-            os.makedirs("cache", exist_ok=True)  #ensure cache folder exists
-            cache_path = "cache/" + os.path.basename(song_path) + ".p"  #just the filename for cache key
+            os.makedirs("cache", exist_ok=True)  # ensure cache folder exists
+            cache_path = (
+                "cache/" + os.path.basename(song_path) + ".p"
+            )  # just the filename for cache key
             with open(cache_path, "wb") as handle:
                 cache = {
                     "song_tempo": self.song_tempo,
@@ -529,16 +538,18 @@ class LearnMIDI:
                 keep_looping = False
 
     def convert_midi_to_abc(self, midi_file):
-        abc_path = os.path.join("Songs_User_Upload", midi_file.replace(".mid", ".abc"))  #generated files go to user folder
+        abc_path = os.path.join(
+            "Songs_User_Upload", midi_file.replace(".mid", ".abc")
+        )  # generated files go to user folder
         if not os.path.isfile(abc_path):
             # subprocess.call(['midi2abc',  'Songs/' + midi_file, '-o', 'Songs/' + midi_file.replace(".mid", ".abc")])
             try:
                 subprocess.check_output(
                     [
                         "midi2abc",
-                        midi_file,  #already a full path from the caller
+                        midi_file,  # already a full path from the caller
                         "-o",
-                        abc_path,  #save generated abc to user folder
+                        abc_path,  # save generated abc to user folder
                     ]
                 )
             except Exception as e:

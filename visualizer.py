@@ -172,6 +172,7 @@ strip.show()
 platform.ensure_hostname("ami")
 platform.manage_hotspot(usersettings, midiports, first_run=True)
 
+
 def hotspot_watchdog():
     """Background thread that checks WiFi connectivity and starts hotspot if needed."""
     while True:
@@ -181,6 +182,7 @@ def hotspot_watchdog():
                 platform.manage_hotspot(usersettings, midiports)
         except Exception as e:
             logger.warning(f"Hotspot watchdog error: {e}")
+
 
 threading.Thread(target=hotspot_watchdog, daemon=True).start()
 

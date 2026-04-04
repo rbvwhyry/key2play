@@ -84,7 +84,9 @@ def play_midi(song_path, midiports, saving, menu, ledsettings, ledstrip):
     saving.t = threading.currentThread()
 
     try:
-        mid = mido.MidiFile(song_path)  #song_path is now the full resolved path from the caller
+        mid = mido.MidiFile(
+            song_path
+        )  # song_path is now the full resolved path from the caller
         fastColorWipe(ledstrip.strip, True, ledsettings)
         # length = mid.length
         t0 = False
@@ -311,18 +313,24 @@ def _hsv_to_rgb_tuple(hue, brightness=1.0):
     f = h - int(h)
     v = brightness
     p, q, t_val = 0.0, v * (1 - f), v * f
-    if i == 0:   r, g, b = v, t_val, p
-    elif i == 1: r, g, b = q, v, p
-    elif i == 2: r, g, b = p, v, t_val
-    elif i == 3: r, g, b = p, q, v
-    elif i == 4: r, g, b = t_val, p, v
-    else:        r, g, b = v, p, q
+    if i == 0:
+        r, g, b = v, t_val, p
+    elif i == 1:
+        r, g, b = q, v, p
+    elif i == 2:
+        r, g, b = p, v, t_val
+    elif i == 3:
+        r, g, b = p, q, v
+    elif i == 4:
+        r, g, b = t_val, p, v
+    else:
+        r, g, b = v, p, q
     return int(r * 255), int(g * 255), int(b * 255)
 
 
 def _hex_to_rgb_tuple(hex_str, brightness=1.0):
     """Convert hex color string (with or without #) to (r, g, b) tuple with brightness applied."""
-    h = hex_str.lstrip('#')
+    h = hex_str.lstrip("#")
     if len(h) != 6:
         return int(255 * brightness), 0, 0
     r = int(int(h[0:2], 16) * brightness)
@@ -359,9 +367,11 @@ def _startup_sweep(strip, num_leds, brightness, duration, timing):
 
     time.sleep(duration)
 
-    batch_size = 4 #sweep off right → left in same batch size as sweep on
+    batch_size = 4  # sweep off right → left in same batch size as sweep on
     for batch_start in range(num_leds - batch_size, -batch_size, -batch_size):
-        for i in range(min(batch_start + batch_size, num_leds) - 1, max(batch_start - 1, -1), -1):
+        for i in range(
+            min(batch_start + batch_size, num_leds) - 1, max(batch_start - 1, -1), -1
+        ):
             strip.setPixelColor(i, Color(0, 0, 0))
         strip.show()
         time.sleep(delay)
@@ -371,7 +381,9 @@ def _startup_sparkle(strip, num_leds, brightness, duration, color_a):
     """Each LED gets a random independent fade-in time, peak brightness, fade-out time, and optional re-ignition — genuinely sparkly."""
     import random
 
-    color_rgb = _hex_to_rgb_tuple(color_a, 1.0) #base color at full brightness; individual brightness applied per particle
+    color_rgb = _hex_to_rgb_tuple(
+        color_a, 1.0
+    )  # base color at full brightness; individual brightness applied per particle
 
     class Particle:
         def __init__(self, led):
@@ -379,33 +391,39 @@ def _startup_sparkle(strip, num_leds, brightness, duration, color_a):
             self.reset(initial=True)
 
         def reset(self, initial=False):
-            self.peak = random.uniform(0.3, 1.0) * brightness #each particle has its own peak brightness
-            self.fade_in = random.uniform(0.05, 0.6) #seconds to reach peak
-            self.hold = random.uniform(0.0, 0.4) #seconds at peak
-            self.fade_out = random.uniform(0.1, 0.8) #seconds to fade to black
-            self.delay = random.uniform(0.0, duration * 0.8) if initial else random.uniform(0.1, 0.5) #stagger entries
-            self.elapsed = -self.delay #negative = waiting to start
-            self.reignite = random.random() < 0.4 #40% chance of flaring back up
+            self.peak = (
+                random.uniform(0.3, 1.0) * brightness
+            )  # each particle has its own peak brightness
+            self.fade_in = random.uniform(0.05, 0.6)  # seconds to reach peak
+            self.hold = random.uniform(0.0, 0.4)  # seconds at peak
+            self.fade_out = random.uniform(0.1, 0.8)  # seconds to fade to black
+            self.delay = (
+                random.uniform(0.0, duration * 0.8)
+                if initial
+                else random.uniform(0.1, 0.5)
+            )  # stagger entries
+            self.elapsed = -self.delay  # negative = waiting to start
+            self.reignite = random.random() < 0.4  # 40% chance of flaring back up
             self.done = False
 
         def brightness_at(self, t):
             if t < 0:
                 return 0.0
             if t < self.fade_in:
-                return self.peak * (t / self.fade_in) #ramp up
+                return self.peak * (t / self.fade_in)  # ramp up
             t -= self.fade_in
             if t < self.hold:
-                return self.peak #at peak
+                return self.peak  # at peak
             t -= self.hold
             if t < self.fade_out:
-                return self.peak * (1.0 - t / self.fade_out) #ramp down
-            return -1.0 #signal done
+                return self.peak * (1.0 - t / self.fade_out)  # ramp down
+            return -1.0  # signal done
 
-    tick = 0.04 #40ms per frame
+    tick = 0.04  # 40ms per frame
     num_active = min(int(num_leds * 0.65), 130)
     indices = random.sample(range(num_leds), min(num_active, num_leds))
     particles = [Particle(i) for i in indices]
-    total_time = duration + 1.5 #run slightly past duration so late starters finish
+    total_time = duration + 1.5  # run slightly past duration so late starters finish
     elapsed_total = 0.0
 
     while elapsed_total < total_time:
@@ -413,8 +431,10 @@ def _startup_sparkle(strip, num_leds, brightness, duration, color_a):
             p.elapsed += tick
             b = p.brightness_at(p.elapsed)
 
-            if b < 0: #particle finished one life
-                if p.reignite and elapsed_total < duration * 0.7: #reignite if still early enough
+            if b < 0:  # particle finished one life
+                if (
+                    p.reignite and elapsed_total < duration * 0.7
+                ):  # reignite if still early enough
                     p.reset()
                 else:
                     p.done = True
@@ -434,7 +454,7 @@ def _startup_ripple(strip, num_leds, brightness, duration, color_a, color_b):
     """Color wave expands from center outward using gradient between color A and B, holds, then collapses."""
     center = num_leds // 2
     max_radius = center
-    speed = 0.010 #fixed 10ms per step — clean consistent speed
+    speed = 0.010  # fixed 10ms per step — clean consistent speed
     rgb_a = _hex_to_rgb_tuple(color_a, brightness)
     rgb_b = _hex_to_rgb_tuple(color_b, brightness)
 
@@ -443,8 +463,10 @@ def _startup_ripple(strip, num_leds, brightness, duration, color_a, color_b):
         rgb = _interpolate_rgb(rgb_a, rgb_b, t)
         color = Color(rgb[0], rgb[1], rgb[2])
         left, right = center - radius, center + radius
-        if left >= 0: strip.setPixelColor(left, color)
-        if right < num_leds and right != left: strip.setPixelColor(right, color)
+        if left >= 0:
+            strip.setPixelColor(left, color)
+        if right < num_leds and right != left:
+            strip.setPixelColor(right, color)
         strip.show()
         time.sleep(speed)
 
@@ -452,8 +474,10 @@ def _startup_ripple(strip, num_leds, brightness, duration, color_a, color_b):
 
     for radius in range(max_radius, -1, -1):
         left, right = center - radius, center + radius
-        if left >= 0: strip.setPixelColor(left, Color(0, 0, 0))
-        if right < num_leds and right != left: strip.setPixelColor(right, Color(0, 0, 0))
+        if left >= 0:
+            strip.setPixelColor(left, Color(0, 0, 0))
+        if right < num_leds and right != left:
+            strip.setPixelColor(right, Color(0, 0, 0))
         strip.show()
         time.sleep(speed)
 
@@ -463,40 +487,53 @@ def startup_animation(ledstrip, ledsettings, appconfig=None):
     strip = ledstrip.strip
     num_leds = strip.numPixels()
 
-    sequence  = 'sweep'
+    sequence = "sweep"
     brightness = 0.8
-    duration   = 6.0
-    timing     = 3.0
-    color_a    = '#ff0000'
-    color_b    = '#4b0082'
-    randomize  = False
+    duration = 6.0
+    timing = 3.0
+    color_a = "#ff0000"
+    color_b = "#4b0082"
+    randomize = False
 
-    randomize_colors     = False
+    randomize_colors = False
     randomize_brightness = False
-    randomize_duration   = False
+    randomize_duration = False
 
     if appconfig:
         try:
-            val = appconfig.get_config('startupSequence');         sequence           = val if val else sequence
-            val = appconfig.get_config('startupBrightness');       brightness          = float(val) / 100.0 if val else brightness
-            val = appconfig.get_config('startupDuration');         duration            = float(val) if val else duration
-            val = appconfig.get_config('startupColorA');           color_a             = val if val else color_a
-            val = appconfig.get_config('startupColorB');           color_b             = val if val else color_b
-            val = appconfig.get_config('startupRandomize');        randomize           = (val == 'true') if val else randomize
-            val = appconfig.get_config('startupRandomizeColors');  randomize_colors    = (val == 'true') if val else randomize_colors
-            val = appconfig.get_config('startupRandomizeBrightness'); randomize_brightness = (val == 'true') if val else randomize_brightness
-            val = appconfig.get_config('startupRandomizeDuration'); randomize_duration  = (val == 'true') if val else randomize_duration
+            val = appconfig.get_config("startupSequence")
+            sequence = val if val else sequence
+            val = appconfig.get_config("startupBrightness")
+            brightness = float(val) / 100.0 if val else brightness
+            val = appconfig.get_config("startupDuration")
+            duration = float(val) if val else duration
+            val = appconfig.get_config("startupColorA")
+            color_a = val if val else color_a
+            val = appconfig.get_config("startupColorB")
+            color_b = val if val else color_b
+            val = appconfig.get_config("startupRandomize")
+            randomize = (val == "true") if val else randomize
+            val = appconfig.get_config("startupRandomizeColors")
+            randomize_colors = (val == "true") if val else randomize_colors
+            val = appconfig.get_config("startupRandomizeBrightness")
+            randomize_brightness = (val == "true") if val else randomize_brightness
+            val = appconfig.get_config("startupRandomizeDuration")
+            randomize_duration = (val == "true") if val else randomize_duration
         except Exception as exc:
             logger.warning(f"startup_animation: config read failed: {exc}")
 
     import random
 
     if randomize:
-        sequence = random.choice(['sweep', 'sparkle', 'ripple']) #never picks none
+        sequence = random.choice(["sweep", "sparkle", "ripple"])  # never picks none
 
     if randomize_colors:
+
         def rand_hex():
-            return '#{:02x}{:02x}{:02x}'.format(random.randint(0,255), random.randint(0,255), random.randint(0,255))
+            return "#{:02x}{:02x}{:02x}".format(
+                random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+            )
+
         color_a = rand_hex()
         color_b = rand_hex()
 
@@ -506,13 +543,15 @@ def startup_animation(ledstrip, ledsettings, appconfig=None):
     if randomize_duration:
         duration = random.uniform(1.0, 5.0)
 
-    logger.info(f"startup_animation: sequence={sequence} brightness={brightness} duration={duration} timing={timing}")
+    logger.info(
+        f"startup_animation: sequence={sequence} brightness={brightness} duration={duration} timing={timing}"
+    )
 
-    if sequence == 'none':
+    if sequence == "none":
         return
-    elif sequence == 'sparkle':
+    elif sequence == "sparkle":
         _startup_sparkle(strip, num_leds, brightness, duration, color_a)
-    elif sequence == 'ripple':
+    elif sequence == "ripple":
         _startup_ripple(strip, num_leds, brightness, duration, color_a, color_b)
     else:
         _startup_sweep(strip, num_leds, brightness, duration, timing)

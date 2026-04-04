@@ -12,12 +12,12 @@ defaults = {
     "keys_calibrated": False,
     "reinitialize_network_on_boot": True,
     "is_hotspot_active": False,
-    "color2x": "#0074DE", #blue-ish; https://htmlcolorcodes.com/
-    "color1x": "#B100B5", #purple-ish
-    "color1":  "#33BF00", #green-ish
-    "color2":  "#F5EC00", #yellow-ish
-    "color3":  "#CCCCCC", #light-gray-ish
-    "previewDepth": 1, #for use with the preview depth slider
+    "color2x": "#0074DE",  # blue-ish; https://htmlcolorcodes.com/
+    "color1x": "#B100B5",  # purple-ish
+    "color1": "#33BF00",  # green-ish
+    "color2": "#F5EC00",  # yellow-ish
+    "color3": "#CCCCCC",  # light-gray-ish
+    "previewDepth": 1,  # for use with the preview depth slider
 }
 
 
@@ -36,9 +36,13 @@ class SimpleConfigKV(Base):
 
 class Config:
     def __init__(self):
-        self._engine = create_engine(CONNECTION_STRING) #shared engine — created once, reused for all queries
-        self._cache = {} #in-memory cache for config values; invalidated on write
-        with Session(self._engine) as session: #enable WAL mode — allows reads to proceed concurrently during writes
+        self._engine = create_engine(
+            CONNECTION_STRING
+        )  # shared engine — created once, reused for all queries
+        self._cache = {}  # in-memory cache for config values; invalidated on write
+        with (
+            Session(self._engine) as session
+        ):  # enable WAL mode — allows reads to proceed concurrently during writes
             session.execute(text("PRAGMA journal_mode=WAL"))
             session.commit()
         self.create_schema()
@@ -48,8 +52,8 @@ class Config:
         timestamp = now.strftime("%Y%m%d_%H%M%S")
         backup_filename = f"key2play.{timestamp}.sqlite"
         _exitcode = subprocess.call(["mv", "key2play.sqlite", backup_filename])
-        self._engine = create_engine(CONNECTION_STRING) #new file — new engine
-        self._cache = {} #clear cache after reset
+        self._engine = create_engine(CONNECTION_STRING)  # new file — new engine
+        self._cache = {}  # clear cache after reset
         self.create_schema()
 
     def create_schema(self):
@@ -61,7 +65,7 @@ class Config:
         )
 
     def get_config(self, key: str) -> str:
-        if key in self._cache: #return cached value instantly — no SQLite hit
+        if key in self._cache:  # return cached value instantly — no SQLite hit
             return self._cache[key]
 
         with Session(self._engine) as session:
@@ -75,12 +79,14 @@ class Config:
             else:
                 result = None
 
-        self._cache[key] = result #cache for next time
+        self._cache[key] = result  # cache for next time
 
         return result
 
     def set_config(self, key: str, value):
-        self._cache.pop(key, None) #invalidate cache on write so next read gets fresh value
+        self._cache.pop(
+            key, None
+        )  # invalidate cache on write so next read gets fresh value
 
         with Session(self._engine) as session:
             stmt = (
@@ -92,7 +98,7 @@ class Config:
             session.commit()
 
     def delete_config(self, key: str):
-        self._cache.pop(key, None) #invalidate cache on delete
+        self._cache.pop(key, None)  # invalidate cache on delete
 
         with Session(self._engine) as session:
             stmt = delete(SimpleConfigKV).where(SimpleConfigKV.key == key)
@@ -156,7 +162,9 @@ class MidiLedMap(Base):
 
 class MidiToLedMapping:
     def __init__(self):
-        self._engine = create_engine(CONNECTION_STRING) #shared engine — created once, reused for all queries
+        self._engine = create_engine(
+            CONNECTION_STRING
+        )  # shared engine — created once, reused for all queries
 
     def set_midi_led_row(
         self,

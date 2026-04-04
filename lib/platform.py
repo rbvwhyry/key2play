@@ -28,8 +28,8 @@ class PlatformNull(PlatformBase):
 
 
 class PlatformRasp(PlatformBase):
-    cached_scan_results = []  #cached WiFi scan from before hotspot started; single-radio Pi can't scan in AP mode
-    _hotspot_active = False  #cached hotspot state; updated by enable/disable to avoid subprocess on every HTTP request
+    cached_scan_results = []  # cached WiFi scan from before hotspot started; single-radio Pi can't scan in AP mode
+    _hotspot_active = False  # cached hotspot state; updated by enable/disable to avoid subprocess on every HTTP request
 
     def __init__(self, appconfig):
         self.appconfig = appconfig
@@ -191,13 +191,20 @@ class PlatformRasp(PlatformBase):
             logger.info("ami-hotspot profile already exists. Skipping creation.")
             return
 
-        #clean up old profiles and dnsmasq config from previous versions
-        subprocess.run(["sudo", "nmcli", "connection", "delete", "key2play-hotspot"], capture_output=True)
+        # clean up old profiles and dnsmasq config from previous versions
+        subprocess.run(
+            ["sudo", "nmcli", "connection", "delete", "key2play-hotspot"],
+            capture_output=True,
+        )
         old_conf = "/etc/dnsmasq.d/captive.conf"
         if os.path.exists(old_conf):
             subprocess.run(["sudo", "rm", "-f", old_conf], capture_output=True)
-            subprocess.run(["sudo", "systemctl", "stop", "dnsmasq"], capture_output=True)
-            subprocess.run(["sudo", "systemctl", "disable", "dnsmasq"], capture_output=True)
+            subprocess.run(
+                ["sudo", "systemctl", "stop", "dnsmasq"], capture_output=True
+            )
+            subprocess.run(
+                ["sudo", "systemctl", "disable", "dnsmasq"], capture_output=True
+            )
             logger.info("Cleaned up old dnsmasq captive portal config")
 
         logger.info("Creating new ami-hotspot profile...")
@@ -254,12 +261,12 @@ class PlatformRasp(PlatformBase):
     def enable_hotspot():
         logger.info("Enabling ami-hotspot")
 
-        #scan for networks BEFORE starting the hotspot — single-radio Pi can't scan in AP mode
+        # scan for networks BEFORE starting the hotspot — single-radio Pi can't scan in AP mode
         logger.info("Pre-scanning WiFi networks before hotspot start...")
         PlatformRasp.cached_scan_results = PlatformRasp.scan_wifi_networks()
         logger.info(f"Cached {len(PlatformRasp.cached_scan_results)} networks")
 
-        #write the captive portal DNS config BEFORE starting the hotspot so NM's dnsmasq picks it up on launch
+        # write the captive portal DNS config BEFORE starting the hotspot so NM's dnsmasq picks it up on launch
         nm_dnsmasq_dir = "/etc/NetworkManager/dnsmasq-shared.d"
         os.makedirs(nm_dnsmasq_dir, exist_ok=True)
 
@@ -269,7 +276,7 @@ class PlatformRasp(PlatformBase):
         subprocess.run(["sudo", "nmcli", "connection", "down", "preconfigured"])
         subprocess.run(["sudo", "nmcli", "connection", "up", "ami-hotspot"])
 
-        #iptables rules go after the interface is up
+        # iptables rules go after the interface is up
         PlatformRasp.enable_captive_portal()
         PlatformRasp._hotspot_active = True
 
@@ -286,29 +293,70 @@ class PlatformRasp(PlatformBase):
     def enable_captive_portal():
         """Redirects all HTTP/HTTPS/DNS traffic to the Pi using nftables so phones auto-open the captive portal."""
         try:
-            #delete old table if it exists (clean slate)
-            subprocess.run(["sudo", "nft", "delete", "table", "ip", "captive"], capture_output=True)
+            # delete old table if it exists (clean slate)
+            subprocess.run(
+                ["sudo", "nft", "delete", "table", "ip", "captive"], capture_output=True
+            )
 
-            #create the table and chain
+            # create the table and chain
             subprocess.run(["sudo", "nft", "add", "table", "ip", "captive"], check=True)
-            subprocess.run([
-                "sudo", "nft", "add", "chain", "ip", "captive", "prerouting",
-                "{ type nat hook prerouting priority -100 ; }"
-            ], check=True)
+            subprocess.run(
+                [
+                    "sudo",
+                    "nft",
+                    "add",
+                    "chain",
+                    "ip",
+                    "captive",
+                    "prerouting",
+                    "{ type nat hook prerouting priority -100 ; }",
+                ],
+                check=True,
+            )
 
-            #redirect DNS (udp 53) to the Pi so all domains resolve to 10.42.0.1
-            subprocess.run([
-                "sudo", "nft", "add", "rule", "ip", "captive", "prerouting",
-                "iifname", "wlan0", "udp", "dport", "53",
-                "dnat", "to", "10.42.0.1:53"
-            ], check=True)
+            # redirect DNS (udp 53) to the Pi so all domains resolve to 10.42.0.1
+            subprocess.run(
+                [
+                    "sudo",
+                    "nft",
+                    "add",
+                    "rule",
+                    "ip",
+                    "captive",
+                    "prerouting",
+                    "iifname",
+                    "wlan0",
+                    "udp",
+                    "dport",
+                    "53",
+                    "dnat",
+                    "to",
+                    "10.42.0.1:53",
+                ],
+                check=True,
+            )
 
-            #redirect HTTP (tcp 80) to the Pi's web server
-            subprocess.run([
-                "sudo", "nft", "add", "rule", "ip", "captive", "prerouting",
-                "iifname", "wlan0", "tcp", "dport", "80",
-                "dnat", "to", "10.42.0.1:80"
-            ], check=True)
+            # redirect HTTP (tcp 80) to the Pi's web server
+            subprocess.run(
+                [
+                    "sudo",
+                    "nft",
+                    "add",
+                    "rule",
+                    "ip",
+                    "captive",
+                    "prerouting",
+                    "iifname",
+                    "wlan0",
+                    "tcp",
+                    "dport",
+                    "80",
+                    "dnat",
+                    "to",
+                    "10.42.0.1:80",
+                ],
+                check=True,
+            )
 
             logger.info("Captive portal enabled (nftables)")
 
@@ -319,7 +367,9 @@ class PlatformRasp(PlatformBase):
     def disable_captive_portal():
         """Removes the captive portal nftables rules and DNS redirect."""
         try:
-            subprocess.run(["sudo", "nft", "delete", "table", "ip", "captive"], capture_output=True)
+            subprocess.run(
+                ["sudo", "nft", "delete", "table", "ip", "captive"], capture_output=True
+            )
 
             captive_conf = "/etc/NetworkManager/dnsmasq-shared.d/captive.conf"
 
@@ -346,7 +396,7 @@ class PlatformRasp(PlatformBase):
                 text=True,
             )
             active = "ami-hotspot" in result.stdout
-            PlatformRasp._hotspot_active = active  #sync cache with real state
+            PlatformRasp._hotspot_active = active  # sync cache with real state
             return active
         except Exception as e:
             logger.warning(f"Error checking hotspot status: {str(e)}")
@@ -370,8 +420,8 @@ class PlatformRasp(PlatformBase):
                 else:
                     logger.info("ami-hotspot is already running")
 
-        #if we're supposed to be connected to a wifi, but we aren't:
-        #eventually turn on hotspot mode
+        # if we're supposed to be connected to a wifi, but we aren't:
+        # eventually turn on hotspot mode
         if (
             not int(usersettings.get("is_hotspot_active"))
             and not self.check_if_connected_to_wifi()
@@ -487,14 +537,17 @@ class PlatformRasp(PlatformBase):
 
         try:
             output = subprocess.check_output(
-                ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"],
-                text=True
+                ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"], text=True
             )
 
             for line in output.strip().split("\n"):
                 parts = line.split(":")
 
-                if len(parts) >= 2 and parts[1] == "802-11-wireless" and parts[0] != "ami-hotspot":
+                if (
+                    len(parts) >= 2
+                    and parts[1] == "802-11-wireless"
+                    and parts[0] != "ami-hotspot"
+                ):
                     subprocess.run(["sudo", "nmcli", "connection", "delete", parts[0]])
                     forgotten.append(parts[0])
                     logger.info(f"Forgot WiFi network: {parts[0]}")
@@ -510,7 +563,8 @@ class PlatformRasp(PlatformBase):
         try:
             result = subprocess.run(
                 ["sudo", "nmcli", "connection", "delete", ssid],
-                capture_output=True, text=True
+                capture_output=True,
+                text=True,
             )
 
             if result.returncode == 0:
@@ -594,13 +648,24 @@ class PlatformRasp(PlatformBase):
     def scan_wifi_networks():
         """Scans for nearby WiFi networks using nmcli. Returns a sorted list of dicts."""
         try:
-            #try a rescan; will silently fail in AP mode but that's ok
-            subprocess.run(["nmcli", "dev", "wifi", "rescan"], capture_output=True, timeout=10)
+            # try a rescan; will silently fail in AP mode but that's ok
+            subprocess.run(
+                ["nmcli", "dev", "wifi", "rescan"], capture_output=True, timeout=10
+            )
             time.sleep(2)
 
             output = subprocess.check_output(
-                ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,BARS", "dev", "wifi", "list"],
-                text=True, timeout=15
+                [
+                    "nmcli",
+                    "-t",
+                    "-f",
+                    "SSID,SIGNAL,SECURITY,BARS",
+                    "dev",
+                    "wifi",
+                    "list",
+                ],
+                text=True,
+                timeout=15,
             )
 
             networks = {}
@@ -613,7 +678,7 @@ class PlatformRasp(PlatformBase):
                 if len(parts) < 4:
                     continue
 
-                #SSID may contain colons — everything except the last 3 fields is the SSID
+                # SSID may contain colons — everything except the last 3 fields is the SSID
                 ssid = ":".join(parts[:-3]).strip()
                 signal_str = parts[-3]
                 security = parts[-2].strip()
@@ -629,18 +694,22 @@ class PlatformRasp(PlatformBase):
                         "signal": signal,
                         "security": security,
                         "bars": bars,
-                        "is_open": security == "" or security == "--"
+                        "is_open": security == "" or security == "--",
                     }
 
             result = sorted(networks.values(), key=lambda n: n["signal"], reverse=True)
 
             if result:
-                PlatformRasp.cached_scan_results = result  #update cache with fresh results
+                PlatformRasp.cached_scan_results = (
+                    result  # update cache with fresh results
+                )
                 return result
 
-            #no live results (probably in AP mode) — return cached
+            # no live results (probably in AP mode) — return cached
             if PlatformRasp.cached_scan_results:
-                logger.info(f"Returning {len(PlatformRasp.cached_scan_results)} cached scan results (AP mode)")
+                logger.info(
+                    f"Returning {len(PlatformRasp.cached_scan_results)} cached scan results (AP mode)"
+                )
                 return PlatformRasp.cached_scan_results
 
             return []
@@ -648,7 +717,7 @@ class PlatformRasp(PlatformBase):
         except Exception as e:
             logger.warning(f"Error scanning WiFi networks: {e}")
 
-            #return cached on error too
+            # return cached on error too
             if PlatformRasp.cached_scan_results:
                 return PlatformRasp.cached_scan_results
 

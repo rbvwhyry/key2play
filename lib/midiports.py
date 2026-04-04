@@ -12,7 +12,9 @@ class MidiPorts:
     def __init__(self, config, usersettings):
         self.config = config
         self.usersettings = usersettings
-        self.midifile_queue = deque() #midi queue will contain a tuple (midi_msg, timestamp)
+        self.midifile_queue = (
+            deque()
+        )  # midi queue will contain a tuple (midi_msg, timestamp)
         self.midi_queue = deque()
         self.last_activity = 0
         self.inport = None
@@ -20,7 +22,7 @@ class MidiPorts:
         self.midipending = None
         self.currently_pressed_keys = []
         self._keys_lock = threading.Lock()
-        self.frontend_events = deque() #drained by /api/drain_midi_events on each poll
+        self.frontend_events = deque()  # drained by /api/drain_midi_events on each poll
 
         # mido backend python-rtmidi has a bug on some (debian-based) systems
         # involving the library location of alsa plugins
@@ -124,13 +126,20 @@ class MidiPorts:
             logger.info("Can't reconnect play port: " + port)
 
     def msg_callback(self, msg):
-        if msg.type not in ("note_on", "note_off"): #reject everything that isn't a real key press or release
+        if msg.type not in (
+            "note_on",
+            "note_off",
+        ):  # reject everything that isn't a real key press or release
             return
 
-        if not hasattr(msg, "note") or not hasattr(msg, "velocity"): #safety net for malformed messages
+        if not hasattr(msg, "note") or not hasattr(
+            msg, "velocity"
+        ):  # safety net for malformed messages
             return
 
-        if msg.note < 21 or msg.note > 108: #reject notes outside 88-key piano range (A0=21 to C8=108)
+        if (
+            msg.note < 21 or msg.note > 108
+        ):  # reject notes outside 88-key piano range (A0=21 to C8=108)
             return
 
         with self._keys_lock:

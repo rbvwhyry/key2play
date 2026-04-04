@@ -17,11 +17,14 @@ from webinterface import webinterface
 
 import socket
 
+
 @webinterface.route("/api/wifi/ip", methods=["GET"])
 def get_wifi_ip():
     try:
         Sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        Sock.connect(('8.8.8.8', 80)) #connect to external address to find outbound interface IP
+        Sock.connect(
+            ("8.8.8.8", 80)
+        )  # connect to external address to find outbound interface IP
         Ip = Sock.getsockname()[0]
         Sock.close()
 
@@ -31,10 +34,12 @@ def get_wifi_ip():
 
         return jsonify(success=False, ip=None)
 
+
 # ----- ----- ----- ----- -----
 
 DIR_SONGS_DEFAULT = "Songs_Default/"
 DIR_SONGS_USER = "Songs_User_Upload/"
+
 
 def resolve_song_path(filename):
     """Same helper as views_api.py. User folder first, then defaults."""
@@ -45,16 +50,21 @@ def resolve_song_path(filename):
     if os.path.exists(default_path):
         return default_path
     return None
+
+
 # ----- ----- ----- ----- -----
+
 
 def pretty_print(dom):
     return "\n".join(
         [line for line in dom.toprettyxml(indent=" " * 4).split("\n") if line.strip()]
     )
 
+
 def pretty_save(file_path, sequences_tree):
     with open(file_path, "w", encoding="utf8") as outfile:
         outfile.write(pretty_print(sequences_tree))
+
 
 @webinterface.route("/api/change_setting", methods=["GET"])
 def change_setting():
@@ -1161,11 +1171,26 @@ def change_setting():
             zipObj.close()
             if songs_count == 1:
                 os.remove(zip_path)
-                return send_file(safe_join("../", path), mimetype="application/x-csv", download_name=value, as_attachment=True)
+                return send_file(
+                    safe_join("../", path),
+                    mimetype="application/x-csv",
+                    download_name=value,
+                    as_attachment=True,
+                )
             else:
-                return send_file(safe_join("../", zip_path), mimetype="application/x-csv", download_name=value.replace(".mid", "") + ".zip", as_attachment=True)
+                return send_file(
+                    safe_join("../", zip_path),
+                    mimetype="application/x-csv",
+                    download_name=value.replace(".mid", "") + ".zip",
+                    as_attachment=True,
+                )
         else:
-            return send_file(safe_join("../", path), mimetype="application/x-csv", download_name=value, as_attachment=True)
+            return send_file(
+                safe_join("../", path),
+                mimetype="application/x-csv",
+                download_name=value,
+                as_attachment=True,
+            )
 
     if setting_name == "download_sheet_music":
         file_types = [".musicxml", ".xml", ".mxl", ".abc"]
@@ -1175,13 +1200,23 @@ def change_setting():
                 new_name = value.replace(".mid", file_types[i])
                 path = resolve_song_path(new_name)
                 if path:
-                    return send_file(safe_join("../", path), mimetype="application/x-csv", download_name=new_name, as_attachment=True)
+                    return send_file(
+                        safe_join("../", path),
+                        mimetype="application/x-csv",
+                        download_name=new_name,
+                        as_attachment=True,
+                    )
             except Exception:
                 pass
             i += 1
         webinterface.learning.convert_midi_to_abc(value)
         try:
-            return send_file(safe_join("../", DIR_SONGS_USER, value.replace(".mid", ".abc")), mimetype="application/x-csv", download_name=value.replace(".mid", ".abc"), as_attachment=True)
+            return send_file(
+                safe_join("../", DIR_SONGS_USER, value.replace(".mid", ".abc")),
+                mimetype="application/x-csv",
+                download_name=value.replace(".mid", ".abc"),
+                as_attachment=True,
+            )
         except Exception:
             logger.warning("Converting failed")
 
@@ -1208,7 +1243,7 @@ def change_setting():
         fastColorWipe(webinterface.ledstrip.strip, True, webinterface.ledsettings)
 
         return jsonify(success=True, reload_songs=True)
-    
+
     if setting_name == "learning_load_song":
         full_path = resolve_song_path(value)
         if not full_path:

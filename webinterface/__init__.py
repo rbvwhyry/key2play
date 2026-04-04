@@ -6,11 +6,15 @@ from lib.functions import get_ip_address
 from lib.log_setup import logger
 import os
 
-DIR_SONGS_DEFAULT = "Songs_Default/"  #bundled songs — tracked by git, can be updated
-DIR_SONGS_USER = "Songs_User_Upload/"  #user uploads — gitignored
-UPLOAD_FOLDER = DIR_SONGS_USER  #tells Flask where file.save() should write uploaded files
+DIR_SONGS_DEFAULT = "Songs_Default/"  # bundled songs — tracked by git, can be updated
+DIR_SONGS_USER = "Songs_User_Upload/"  # user uploads — gitignored
+UPLOAD_FOLDER = (
+    DIR_SONGS_USER  # tells Flask where file.save() should write uploaded files
+)
 
-os.makedirs(DIR_SONGS_USER, exist_ok=True)  #create folder if missing; exist_ok means no crash if already there
+os.makedirs(
+    DIR_SONGS_USER, exist_ok=True
+)  # create folder if missing; exist_ok means no crash if already there
 
 webinterface = Flask(__name__, template_folder="templates")
 webinterface.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -82,7 +86,7 @@ def start_server(loop):
         elif websocket.path == "/ledemu":
             await asyncio.gather(ledemu(websocket), ledemu_recv(websocket))
         else:
-            return  #no handler for this path — close connection
+            return  # no handler for this path — close connection
 
     async def main():
         logger.info("WebSocket listening on: " + str(get_ip_address()) + ":8765")
