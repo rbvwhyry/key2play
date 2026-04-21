@@ -1,4 +1,4 @@
-from flask import jsonify, render_template, request, send_from_directory
+from flask import jsonify, request, send_from_directory
 from webinterface import webinterface
 import shutil
 import time
@@ -13,15 +13,15 @@ def allowed_file(filename):
 
 @webinterface.route("/")
 def index():
-    return render_template("index.html")
-
-
-@webinterface.route("/favicon.ico")
-def favicon():
     return send_from_directory(
-        os.path.join(webinterface.root_path, "static"),
-        "favicon.ico",
-        mimetype="image/vnd.microsoft.icon",
+        os.path.join(webinterface.root_path, "crazy_sky_dist"), "index.html"
+    )
+
+
+@webinterface.route("/assets/<filename>")
+def assets(filename):
+    return send_from_directory(
+        os.path.join(webinterface.root_path, "crazy_sky_dist", "assets"), filename
     )
 
 
