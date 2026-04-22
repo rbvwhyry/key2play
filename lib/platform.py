@@ -7,6 +7,7 @@ import subprocess
 import time
 from collections import defaultdict
 from shutil import copyfile
+from statemachine import StateChart, State
 
 from lib.log_setup import logger
 
@@ -25,6 +26,17 @@ class PlatformNull(PlatformBase):
 
     def pass_func(self, *args, **kwargs):
         pass
+
+
+class WifiState(StateChart):
+    running_as_ap = State()
+    joined_wifi_for_task = State()
+    running_on_wifi = State()
+
+    join_wifi_for_task = running_as_ap.to(joined_wifi_for_task)
+    join_wifi_permanently = running_as_ap.to(running_on_wifi)
+    leave_wifi_permanently = running_on_wifi.to(running_as_ap)
+    task_finished = joined_wifi_for_task.to(running_as_ap)
 
 
 class PlatformRasp(PlatformBase):
