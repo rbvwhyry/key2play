@@ -13,6 +13,7 @@ dependencies = [
     "python-rtmidi>=1.5.8",
     "requests>=2.32.3",
     "sqlalchemy~=2.0.39",
+    "statemachine>=0.1",
     "waitress~=3.0.1",
     "webcolors~=1.13",
     "websockets~=11.0.3",
