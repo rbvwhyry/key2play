@@ -9,7 +9,8 @@ set -x # print the commands being executed
 
 TIMESTAMP="$(date +%Y-%m-%d_%H_%M_%S)"
 TMPDIR=${TMPDIR-.}
-TEMPFILE="$(mktemp "sdcard_image_${TIMESTAMP}.img.gz.XXXXXXXXX")"
+TEMPFILENAME="$(mktemp "sdcard_image_${TIMESTAMP}.img.gz.XXXXXXXXX")"
+TEMPFILEPATH="$TMPDIR/$TEMPFILENAME"
 DESTFILE="sdcard_image_${TIMESTAMP}.img.gz"
 
 # copied from https://raspberrypi.stackexchange.com/a/72047
@@ -27,8 +28,8 @@ diskutil unmountDisk /dev/$DSK
 echo "please wait - This takes some time"
 echo "Ctl+T to show progress!"
 
-time sudo dd if=/dev/r$DSK bs=4m status=progress | gzip -9 > "$TMPDIR/$TEMPFILE"
+time sudo dd if=/dev/r$DSK bs=4m status=progress | gzip -9 > "${TEMPFILEPATH}"
 
 echo "imaging completed - now renaming tempfile to destination"
 
-mv -n "$TMPDIR/$TEMPFILE" "$DESTFILE"
+mv -n "${TEMPFILEPATH}" "$DESTFILE"
