@@ -9,6 +9,7 @@ shopt -s nullglob
 
 
 pushd crazy-sky-250204
+npm install
 npm run build
 popd
 
