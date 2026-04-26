@@ -848,7 +848,8 @@ def update_to_release():
         return jsonify(success=False, error="invalid release name"), 400
     if ".." in release or "/" in release or "\\" in release:
         return jsonify(success=False, error="invalid release name"), 400
-    logger.info(f"updating to release {release}")
+
+    webinterface.platform.update_to_release(release)
     return jsonify(success=True)
 
 
