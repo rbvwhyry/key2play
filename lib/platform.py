@@ -151,10 +151,13 @@ class PlatformRasp(PlatformBase):
     @staticmethod
     def update_to_release(release: str):
         import requests
+
         print(f"platform.py update_to_release {release}")
         req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}", timeout=60)
         if req.status_code != 200:
-            return jsonify(success=False, error=f"download failed: HTTP {req.status_code}")
+            return jsonify(
+                success=False, error=f"download failed: HTTP {req.status_code}"
+            )
         with open(release, "wb") as fd:
             for chunk in req.iter_content(chunk_size=128):
                 fd.write(chunk)
