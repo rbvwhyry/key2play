@@ -149,6 +149,23 @@ class PlatformRasp(PlatformBase):
     # ===== system commands =====
 
     @staticmethod
+    def update_to_release(release: str):
+        import requests
+        print(f"platform.py update_to_release {release}")
+        req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}", timeout=60)
+        if req.status_code != 200:
+            return jsonify(success=False, error=f"download failed: HTTP {req.status_code}")
+        with open(release, "wb") as fd:
+            for chunk in req.iter_content(chunk_size=128):
+                fd.write(chunk)
+        logger.info(f"downloaded release to {release}")
+        releasedir = release.removesuffix(".zip")
+        subprocess.run(["unzip", "-o", release, "-d", releasedir])
+        subprocess.run(["cp", "-R", f"{releasedir}/", "."])
+        subprocess.run(["rm", "-rf", f"./{releasedir}"])
+        subprocess.run(["sudo", "systemctl", "restart", "key2play.service"])
+
+    @staticmethod
     def update_visualizer():
         call("sudo git reset --hard HEAD", shell=True)
         call("sudo git checkout .", shell=True)

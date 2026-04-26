@@ -849,18 +849,6 @@ def update_to_release():
     if ".." in release or "/" in release or "\\" in release:
         return jsonify(success=False, error="invalid release name"), 400
     logger.info(f"updating to release {release}")
-    import requests
-
-    req = requests.get(f"https://rbvwhyry.github.io/key2play/{release}", timeout=60)
-    if req.status_code != 200:
-        return jsonify(success=False, error=f"download failed: HTTP {req.status_code}")
-    with open(release, "wb") as fd:
-        for chunk in req.iter_content(chunk_size=128):
-            fd.write(chunk)
-    logger.info(f"downloaded release to {release}")
-    releasedir = release.removesuffix(".zip")
-    subprocess.run(["unzip", "-o", release, "-d", releasedir])
-    subprocess.run(["cp", "-R", f"{releasedir}/", "."])
     return jsonify(success=True)
 
 
