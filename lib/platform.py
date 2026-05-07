@@ -156,7 +156,7 @@ class PlatformRasp(PlatformBase):
         url = f"https://rbvwhyry.github.io/key2play/{release}"
         req = requests.get(url, timeout=60)
         if req.status_code != 200:
-            raise f"github returned {req.status_code} for {url}"
+            raise Exception(f"github returned {req.status_code} for {url}")
         with open(release, "wb") as fd:
             for chunk in req.iter_content(chunk_size=128):
                 fd.write(chunk)
