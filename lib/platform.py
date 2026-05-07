@@ -163,7 +163,7 @@ class PlatformRasp(PlatformBase):
         logger.info(f"downloaded release to {release}")
         releasedir = release.removesuffix(".zip")
         subprocess.run(["unzip", release, "-d", releasedir], check=True)
-        subprocess.run(["cp", "-R", f"{releasedir}/", "."], check=True)
+        subprocess.run(["rsync", "-avp", f"{releasedir}/", "."], check=True)
         subprocess.run(["rm", "-rf", f"./{releasedir}"], check=True)
         subprocess.run(["venv/bin/pip3", "install", "-r", "requirements.txt"], check=True)
         subprocess.run(["sudo", "systemctl", "restart", "key2play.service"], check=True)
