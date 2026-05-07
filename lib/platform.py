@@ -166,6 +166,7 @@ class PlatformRasp(PlatformBase):
         subprocess.run(["unzip", "-o", release, "-d", releasedir])
         subprocess.run(["cp", "-R", f"{releasedir}/", "."])
         subprocess.run(["rm", "-rf", f"./{releasedir}"])
+        subprocess.run(["venv/bin/pip3", "install", "-r", "requirements.txt"])
         subprocess.run(["sudo", "systemctl", "restart", "key2play.service"])
 
     @staticmethod
