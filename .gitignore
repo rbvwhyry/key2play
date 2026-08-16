@@ -11,3 +11,4 @@ key2play.sqlite
 key2play.sqlite-shm
 key2play.sqlite-wal
 default.profraw
+.DS_Store
